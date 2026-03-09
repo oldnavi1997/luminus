@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { CartItem } from "@/types";
-import { formatARS } from "@/lib/utils";
+import { formatPEN } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart";
 
 interface CartItemProps {
@@ -14,29 +14,46 @@ export function CartItemComponent({ item }: CartItemProps) {
   const { updateQuantity, removeItem } = useCartStore();
 
   return (
-    <div className="flex gap-4 py-4 border-b border-gray-100 last:border-0">
-      <div className="relative w-20 h-20 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
+    <div className="flex gap-4 py-5 border-b border-[#111111]/6 last:border-0">
+      {/* Image */}
+      <div className="relative w-20 h-20 flex-shrink-0 bg-[#f8f7f4] overflow-hidden">
         {item.imageUrl ? (
           <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="80px" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-2xl text-gray-300">👓</div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 48 48" fill="none" className="text-[#111111]/20">
+              <path d="M6 24C6 24 10 16 24 16C38 16 42 24 42 24C42 24 38 32 24 32C10 32 6 24 6 24Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+              <circle cx="24" cy="24" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            </svg>
+          </div>
         )}
       </div>
+
+      {/* Details */}
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-[#1a1a2e] text-sm line-clamp-2">{item.name}</h3>
-        <p className="text-[#c9a84c] font-semibold mt-1">{formatARS(item.price)}</p>
-        <div className="flex items-center gap-2 mt-2">
-          <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+        <h3
+          className="font-light text-[#111111] text-sm line-clamp-2 leading-snug"
+          style={{ fontFamily: "var(--font-playfair, serif)" }}
+        >
+          {item.name}
+        </h3>
+        <p className="text-[#d4af37] text-sm font-semibold mt-1">{formatPEN(item.price)}</p>
+
+        {/* Quantity controls */}
+        <div className="flex items-center gap-3 mt-3">
+          <div className="flex items-center border border-[#111111]/12">
             <button
               onClick={() => updateQuantity(item.id, item.quantity - 1)}
-              className="px-2 py-1 hover:bg-gray-100 transition-colors"
+              className="w-7 h-7 flex items-center justify-center text-[#111111]/50 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors"
             >
               <Minus className="h-3 w-3" />
             </button>
-            <span className="px-3 py-1 text-sm font-medium">{item.quantity}</span>
+            <span className="px-3 text-sm font-medium text-[#111111] min-w-[2rem] text-center">
+              {item.quantity}
+            </span>
             <button
               onClick={() => updateQuantity(item.id, item.quantity + 1)}
-              className="px-2 py-1 hover:bg-gray-100 transition-colors"
+              className="w-7 h-7 flex items-center justify-center text-[#111111]/50 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               disabled={item.quantity >= item.stock}
             >
               <Plus className="h-3 w-3" />
@@ -44,14 +61,18 @@ export function CartItemComponent({ item }: CartItemProps) {
           </div>
           <button
             onClick={() => removeItem(item.id)}
-            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-1.5 text-[#111111]/25 hover:text-red-500 transition-colors"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
+
+      {/* Total */}
       <div className="text-right flex-shrink-0">
-        <span className="font-semibold text-[#1a1a2e]">{formatARS(item.price * item.quantity)}</span>
+        <span className="font-semibold text-sm text-[#111111]">
+          {formatPEN(item.price * item.quantity)}
+        </span>
       </div>
     </div>
   );

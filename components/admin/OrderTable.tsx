@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Eye } from "lucide-react";
 import { OrderWithItems } from "@/types";
-import { formatARS } from "@/lib/utils";
+import { formatPEN } from "@/lib/utils";
 import { OrderStatusBadge, PaymentStatusBadge } from "./OrderStatusBadge";
 
 interface OrderTableProps {
@@ -11,45 +11,75 @@ interface OrderTableProps {
 }
 
 export function OrderTable({ orders }: OrderTableProps) {
+  if (orders.length === 0) {
+    return (
+      <div className="text-center py-16 text-[#111111]/30">
+        <p className="text-sm font-light" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+          No hay pedidos todavía
+        </p>
+      </div>
+    );
+  }
+
   return (
+    <div>
+      <div className="px-5 py-4 border-b border-[#111111]/6">
+        <p className="text-[10px] text-[#111111]/40 uppercase tracking-[0.2em]">
+          {orders.length} {orders.length === 1 ? "pedido" : "pedidos"}
+        </p>
+      </div>
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-100">
-            <th className="text-left py-3 px-4 font-medium text-gray-500">Orden</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-500">Cliente</th>
-            <th className="text-right py-3 px-4 font-medium text-gray-500">Total</th>
-            <th className="text-center py-3 px-4 font-medium text-gray-500">Pago</th>
-            <th className="text-center py-3 px-4 font-medium text-gray-500">Estado</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-500">Fecha</th>
-            <th className="text-right py-3 px-4 font-medium text-gray-500">Acciones</th>
+          <tr className="border-b border-[#111111]/6">
+            {["Orden", "Cliente", "Total", "Pago", "Estado", "Fecha", ""].map((h) => (
+              <th
+                key={h}
+                className={`py-3 px-4 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em] ${
+                  h === "Total" ? "text-right" : h === "Pago" || h === "Estado" ? "text-center" : h === "" ? "" : "text-left"
+                }`}
+              >
+                {h}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {orders.map((order) => (
-            <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-              <td className="py-3 px-4 font-mono font-medium">{order.orderNumber}</td>
-              <td className="py-3 px-4">
-                <p>{order.shippingName}</p>
-                <p className="text-xs text-gray-400">{order.shippingEmail}</p>
+            <tr
+              key={order.id}
+              className="border-b border-[#111111]/4 hover:bg-[#f8f7f4]/60 transition-colors"
+            >
+              <td className="py-3.5 px-4 font-mono text-xs text-[#111111]/60">
+                {order.orderNumber}
               </td>
-              <td className="py-3 px-4 text-right font-medium">{formatARS(Number(order.total))}</td>
-              <td className="py-3 px-4 text-center">
+              <td className="py-3.5 px-4">
+                <p className="font-medium text-[#111111] text-sm">{order.shippingName}</p>
+                <p className="text-[10px] text-[#111111]/35 mt-0.5">{order.shippingEmail}</p>
+              </td>
+              <td className="py-3.5 px-4 text-right font-semibold text-sm text-[#111111]">
+                {formatPEN(Number(order.total))}
+              </td>
+              <td className="py-3.5 px-4 text-center">
                 <PaymentStatusBadge status={order.paymentStatus} />
               </td>
-              <td className="py-3 px-4 text-center">
+              <td className="py-3.5 px-4 text-center">
                 <OrderStatusBadge status={order.orderStatus} />
               </td>
-              <td className="py-3 px-4 text-gray-500">
-                {new Date(order.createdAt).toLocaleDateString("es-PE")}
+              <td className="py-3.5 px-4 text-[10px] text-[#111111]/40">
+                {new Date(order.createdAt).toLocaleDateString("es-PE", {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })}
               </td>
-              <td className="py-3 px-4">
+              <td className="py-3.5 px-4">
                 <div className="flex justify-end">
                   <Link
                     href={`/admin/pedidos/${order.id}`}
-                    className="p-1.5 text-gray-500 hover:text-[#1a1a2e] hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-1.5 text-[#111111]/30 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors"
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3.5 w-3.5" />
                   </Link>
                 </div>
               </td>
@@ -57,11 +87,7 @@ export function OrderTable({ orders }: OrderTableProps) {
           ))}
         </tbody>
       </table>
-      {orders.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
-          No hay pedidos todavía.
-        </div>
-      )}
+    </div>
     </div>
   );
 }

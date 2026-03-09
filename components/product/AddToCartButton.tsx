@@ -17,9 +17,11 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
 
   if (product.stock === 0) {
     return (
-      <Button disabled className="w-full">
-        Sin stock
-      </Button>
+      <div className="border border-[#111111]/10 px-6 py-3.5 text-center">
+        <span className="text-[10px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+          Sin stock disponible
+        </span>
+      </div>
     );
   }
 
@@ -38,28 +40,37 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-600">Cantidad:</span>
-        <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+    <div className="space-y-4">
+      {/* Quantity */}
+      <div className="flex items-center gap-4">
+        <p className="text-[10px] font-medium text-[#111111]/50 uppercase tracking-[0.15em]">
+          Cantidad
+        </p>
+        <div className="flex items-center border border-[#111111]/15">
           <button
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            className="px-3 py-1.5 hover:bg-gray-100 transition-colors"
+            className="w-9 h-9 flex items-center justify-center text-[#111111]/50 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors"
           >
-            <Minus className="h-4 w-4" />
+            <Minus className="h-3.5 w-3.5" />
           </button>
-          <span className="px-4 py-1.5 font-medium text-sm min-w-[2rem] text-center">{quantity}</span>
+          <span className="px-4 text-sm font-medium text-[#111111] min-w-[2.5rem] text-center">
+            {quantity}
+          </span>
           <button
             onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-            className="px-3 py-1.5 hover:bg-gray-100 transition-colors"
+            className="w-9 h-9 flex items-center justify-center text-[#111111]/50 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
           </button>
         </div>
-        <span className="text-xs text-gray-400">{product.stock} disponibles</span>
+        <p className="text-[10px] text-[#111111]/30 uppercase tracking-wide">
+          {product.stock} disponibles
+        </p>
       </div>
-      <Button onClick={handleAdd} className="w-full gap-2">
-        <ShoppingBag className="h-5 w-5" />
+
+      {/* CTA */}
+      <Button onClick={handleAdd} className="w-full gap-2.5" size="lg" variant="secondary">
+        <ShoppingBag className="h-4 w-4" />
         Agregar al carrito
       </Button>
     </div>

@@ -57,7 +57,7 @@ export default function AdminOrderDetailPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1a1a2e]">{order.orderNumber}</h1>
+          <h1 className="text-2xl font-bold text-[#111111]">{order.orderNumber}</h1>
           <p className="text-sm text-gray-500 mt-1">
             {new Date(order.createdAt).toLocaleDateString("es-PE", { dateStyle: "full" })}
           </p>
@@ -70,7 +70,7 @@ export default function AdminOrderDetailPage({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="font-semibold text-[#1a1a2e] mb-4">Datos de envío</h2>
+          <h2 className="font-semibold text-[#111111] mb-4">Datos de envío</h2>
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">
               <dt className="text-gray-500">Nombre</dt>
@@ -96,7 +96,7 @@ export default function AdminOrderDetailPage({
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="font-semibold text-[#1a1a2e] mb-4">Actualizar estado</h2>
+          <h2 className="font-semibold text-[#111111] mb-4">Actualizar estado</h2>
           <div className="space-y-3">
             <Select
               value={newStatus}
@@ -123,7 +123,7 @@ export default function AdminOrderDetailPage({
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="font-semibold text-[#1a1a2e] mb-4">Productos</h2>
+        <h2 className="font-semibold text-[#111111] mb-4">Productos</h2>
         <div className="space-y-3">
           {order.items.map((item) => (
             <div key={item.id} className="flex justify-between text-sm py-2 border-b border-gray-50 last:border-0">
@@ -143,7 +143,7 @@ export default function AdminOrderDetailPage({
             <span>Envío</span>
             <span>{formatARS(Number(order.shippingCost))}</span>
           </div>
-          <div className="flex justify-between font-bold text-[#1a1a2e] text-base mt-2">
+          <div className="flex justify-between font-bold text-[#111111] text-base mt-2">
             <span>Total</span>
             <span>{formatARS(Number(order.total))}</span>
           </div>

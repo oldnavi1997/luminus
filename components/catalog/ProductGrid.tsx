@@ -8,16 +8,26 @@ interface ProductGridProps {
 export function ProductGrid({ products }: ProductGridProps) {
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-        <span className="text-5xl mb-4">🔍</span>
-        <p className="text-lg font-medium">No se encontraron productos</p>
-        <p className="text-sm mt-1">Intenta ajustar los filtros</p>
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="w-16 h-16 border border-[#111111]/10 flex items-center justify-center mb-6">
+          <svg width="28" height="28" viewBox="0 0 48 48" fill="none" className="text-[#111111]/20">
+            <path d="M6 24C6 24 10 16 24 16C38 16 42 24 42 24C42 24 38 32 24 32C10 32 6 24 6 24Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            <circle cx="24" cy="24" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+            <line x1="8" y1="8" x2="40" y2="40" stroke="currentColor" strokeWidth="1.5"/>
+          </svg>
+        </div>
+        <p className="text-sm font-light text-[#111111]/50" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+          No se encontraron productos
+        </p>
+        <p className="text-[11px] text-[#111111]/30 mt-2 uppercase tracking-[0.15em]">
+          Intenta ajustar los filtros
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}

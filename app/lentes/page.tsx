@@ -5,7 +5,6 @@ import { prisma } from "@/lib/prisma";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { FilterSidebar } from "@/components/catalog/FilterSidebar";
 import { SortSelect } from "@/components/catalog/SortSelect";
-import { Spinner } from "@/components/ui/Spinner";
 import { Prisma } from "@/app/generated/prisma/client";
 
 interface SearchParams {
@@ -24,9 +23,7 @@ interface SearchParams {
 async function getProducts(params: SearchParams) {
   const where: Prisma.ProductWhereInput = { active: true };
 
-  if (params.category) {
-    where.category = { slug: params.category };
-  }
+  if (params.category) where.category = { slug: params.category };
   if (params.brand) where.brand = params.brand;
   if (params.frameType) where.frameType = params.frameType;
   if (params.gender) where.gender = params.gender;
@@ -81,11 +78,22 @@ export default async function LentesPage({
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10">
+      {/* Page header */}
+      <div className="flex items-end justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#1a1a2e]">Catálogo</h1>
-          <p className="text-sm text-gray-500 mt-1">{total} productos</p>
+          <p className="text-[9px] font-medium text-[#d4af37] uppercase tracking-[0.3em] mb-2">
+            Tienda
+          </p>
+          <h1
+            className="text-2xl font-light text-[#111111]"
+            style={{ fontFamily: "var(--font-playfair, serif)" }}
+          >
+            Catálogo
+          </h1>
+          <p className="text-[10px] text-[#111111]/35 mt-1 uppercase tracking-[0.15em]">
+            {total} {total === 1 ? "producto" : "productos"}
+          </p>
         </div>
         <Suspense>
           <SortSelect />
@@ -100,16 +108,17 @@ export default async function LentesPage({
         <div className="flex-1">
           <ProductGrid products={products} />
 
+          {/* Pagination */}
           {pages > 1 && (
-            <div className="flex justify-center gap-2 mt-8">
+            <div className="flex justify-center gap-1.5 mt-10">
               {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
                 <a
                   key={p}
                   href={`?${new URLSearchParams({ ...params, page: String(p) }).toString()}`}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`w-9 h-9 flex items-center justify-center text-[11px] font-medium uppercase tracking-[0.1em] transition-colors ${
                     p === page
-                      ? "bg-[#1a1a2e] text-white"
-                      : "bg-white border border-gray-200 text-gray-700 hover:border-[#1a1a2e]"
+                      ? "bg-[#111111] text-white"
+                      : "bg-white border border-[#111111]/10 text-[#111111]/50 hover:border-[#111111]/40 hover:text-[#111111]"
                   }`}
                 >
                   {p}

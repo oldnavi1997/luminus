@@ -60,51 +60,68 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8f7f4] px-4">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-[#1a1a2e]">Crear cuenta</h1>
-          <p className="text-gray-500 text-sm mt-1">Unite a Luminus</p>
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="text-center mb-10">
+          <span
+            className="text-[15px] tracking-[0.3em] text-[#111111] uppercase font-light"
+            style={{ fontFamily: "var(--font-playfair, serif)" }}
+          >
+            Luminus
+          </span>
+          <div className="flex items-center gap-3 mt-6 justify-center">
+            <div className="h-px flex-1 bg-[#111111]/10 max-w-[60px]" />
+            <p className="text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.25em]">
+              Crear cuenta
+            </p>
+            <div className="h-px flex-1 bg-[#111111]/10 max-w-[60px]" />
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Input
-            label="Nombre completo"
-            placeholder="Juan Pérez"
-            error={errors.name?.message}
-            {...register("name")}
-          />
-          <Input
-            label="Email"
-            type="email"
-            placeholder="tu@email.com"
-            error={errors.email?.message}
-            {...register("email")}
-          />
-          <Input
-            label="Contraseña"
-            type="password"
-            placeholder="Mínimo 8 caracteres"
-            error={errors.password?.message}
-            {...register("password")}
-          />
-          <Input
-            label="Confirmar contraseña"
-            type="password"
-            placeholder="Repetí tu contraseña"
-            error={errors.confirmPassword?.message}
-            {...register("confirmPassword")}
-          />
-          <Button type="submit" className="w-full" size="lg" loading={loading}>
-            Crear cuenta
-          </Button>
-        </form>
+        {/* Form card */}
+        <div className="bg-white border border-[#111111]/8 p-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <Input
+              label="Nombre completo"
+              placeholder="Juan Pérez"
+              error={errors.name?.message}
+              {...register("name")}
+            />
+            <Input
+              label="Email"
+              type="email"
+              placeholder="tu@email.com"
+              error={errors.email?.message}
+              {...register("email")}
+            />
+            <Input
+              label="Contraseña"
+              type="password"
+              placeholder="Mínimo 8 caracteres"
+              error={errors.password?.message}
+              {...register("password")}
+            />
+            <Input
+              label="Confirmar contraseña"
+              type="password"
+              placeholder="Repetí tu contraseña"
+              error={errors.confirmPassword?.message}
+              {...register("confirmPassword")}
+            />
+            <div className="pt-1">
+              <Button type="submit" className="w-full" size="lg" loading={loading}>
+                Crear cuenta
+              </Button>
+            </div>
+          </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
-          ¿Ya tienes cuenta?{" "}
-          <Link href="/auth/login" className="text-[#c9a84c] hover:underline font-medium">
-            Inicia sesión
-          </Link>
-        </p>
+          <p className="text-center text-[11px] text-[#111111]/40 mt-6 uppercase tracking-[0.1em]">
+            ¿Ya tienes cuenta?{" "}
+            <Link href="/auth/login" className="text-[#d4af37] hover:text-[#b4952f] transition-colors font-medium">
+              Inicia sesión
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

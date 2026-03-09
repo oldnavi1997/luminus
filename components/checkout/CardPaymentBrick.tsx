@@ -67,7 +67,7 @@ export function CardPaymentBrick({ total, orderId, onPaymentResult }: CardPaymen
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <h2 className="text-lg font-semibold text-[#1a1a2e] mb-4">Datos de pago</h2>
+      <h2 className="text-lg font-semibold text-[#111111] mb-4">Datos de pago</h2>
       <CardPayment
         initialization={initialization}
         customization={customization}

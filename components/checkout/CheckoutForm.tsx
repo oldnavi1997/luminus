@@ -46,7 +46,7 @@ export function CheckoutForm({ onSubmit, loading }: CheckoutFormProps) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <h2 className="text-lg font-semibold text-[#1a1a2e]">Datos de envío</h2>
+      <h2 className="text-lg font-semibold text-[#111111]">Datos de envío</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input

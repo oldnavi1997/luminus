@@ -1,4 +1,4 @@
-import { formatARS } from "@/lib/utils";
+import { formatPEN } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 
@@ -9,30 +9,46 @@ interface CartSummaryProps {
 
 export function CartSummary({ subtotal, itemCount }: CartSummaryProps) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4 sticky top-24">
-      <h2 className="text-lg font-semibold text-[#1a1a2e]">Resumen del pedido</h2>
-      <div className="space-y-2 text-sm">
-        <div className="flex justify-between text-gray-600">
-          <span>Subtotal ({itemCount} {itemCount === 1 ? "producto" : "productos"})</span>
-          <span>{formatARS(subtotal)}</span>
+    <div className="bg-white border border-[#111111]/6 p-6 space-y-5 sticky top-24">
+      <h2
+        className="text-lg font-light text-[#111111]"
+        style={{ fontFamily: "var(--font-playfair, serif)" }}
+      >
+        Resumen
+      </h2>
+
+      <div className="h-px bg-[#111111]/6" />
+
+      <div className="space-y-3 text-sm">
+        <div className="flex justify-between text-[#111111]/60">
+          <span>{itemCount} {itemCount === 1 ? "producto" : "productos"}</span>
+          <span>{formatPEN(subtotal)}</span>
         </div>
-        <div className="flex justify-between text-gray-600">
+        <div className="flex justify-between text-[#111111]/60">
           <span>Envío</span>
-          <span className="text-green-600">Calculado en checkout</span>
+          <span className="text-emerald-600 text-[11px] uppercase tracking-wide">A coordinar</span>
         </div>
       </div>
-      <div className="border-t border-gray-100 pt-3">
-        <div className="flex justify-between font-bold text-[#1a1a2e]">
-          <span>Total estimado</span>
-          <span>{formatARS(subtotal)}</span>
-        </div>
+
+      <div className="h-px bg-[#111111]/6" />
+
+      <div className="flex justify-between items-baseline">
+        <span className="text-[10px] font-medium text-[#111111]/50 uppercase tracking-[0.15em]">
+          Total estimado
+        </span>
+        <span className="text-xl font-semibold text-[#111111]">{formatPEN(subtotal)}</span>
       </div>
+
       <Link href="/checkout" className="block">
-        <Button className="w-full" size="lg">
-          Ir al checkout
+        <Button className="w-full" size="lg" variant="secondary">
+          Continuar al pago
         </Button>
       </Link>
-      <Link href="/lentes" className="block text-center text-sm text-gray-500 hover:text-[#1a1a2e] transition-colors">
+
+      <Link
+        href="/lentes"
+        className="block text-center text-[10px] text-[#111111]/40 hover:text-[#111111]/70 uppercase tracking-[0.2em] transition-colors"
+      >
         Seguir comprando
       </Link>
     </div>

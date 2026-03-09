@@ -121,7 +121,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-        <h2 className="font-semibold text-[#1a1a2e]">Información básica</h2>
+        <h2 className="font-semibold text-[#111111]">Información básica</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
             label="Nombre *"
@@ -138,7 +138,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
           <textarea
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] min-h-[100px]"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[100px]"
             {...register("description")}
           />
         </div>
@@ -155,7 +155,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-        <h2 className="font-semibold text-[#1a1a2e]">Precio y stock</h2>
+        <h2 className="font-semibold text-[#111111]">Precio y stock</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input
             label="Precio (PEN) *"
@@ -181,7 +181,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-        <h2 className="font-semibold text-[#1a1a2e]">Atributos</h2>
+        <h2 className="font-semibold text-[#111111]">Atributos</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Input label="Marca" {...register("brand")} />
           <Input label="Tipo de armazón" {...register("frameType")} />
@@ -198,10 +198,10 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-        <h2 className="font-semibold text-[#1a1a2e]">Imágenes</h2>
+        <h2 className="font-semibold text-[#111111]">Imágenes</h2>
         <p className="text-sm text-gray-500">Pegá las URLs de Cloudinary separadas por líneas</p>
         <textarea
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a1a2e] min-h-[80px] font-mono"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[80px] font-mono"
           value={images.join("\n")}
           onChange={(e) => setImages(e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))}
           placeholder="https://res.cloudinary.com/..."
@@ -209,14 +209,14 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="font-semibold text-[#1a1a2e] mb-4">Visibilidad</h2>
+        <h2 className="font-semibold text-[#111111] mb-4">Visibilidad</h2>
         <div className="flex gap-6">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" {...register("active")} className="accent-[#1a1a2e]" />
+            <input type="checkbox" {...register("active")} className="accent-[#111111]" />
             <span className="text-sm">Activo (visible en tienda)</span>
           </label>
           <label className="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" {...register("featured")} className="accent-[#1a1a2e]" />
+            <input type="checkbox" {...register("featured")} className="accent-[#111111]" />
             <span className="text-sm">Destacado</span>
           </label>
         </div>

@@ -1,15 +1,12 @@
 import { prisma } from "@/lib/prisma";
-import { OrderTable } from "@/components/admin/OrderTable";
+import { CategoryTable } from "@/components/admin/CategoryTable";
 
-export const metadata = { title: "Pedidos | Admin" };
+export const metadata = { title: "Categorías | Admin" };
 
-export default async function AdminOrdersPage() {
-  const orders = await prisma.order.findMany({
-    include: {
-      items: { include: { product: true } },
-      user: true,
-    },
-    orderBy: { createdAt: "desc" },
+export default async function AdminCategoriasPage() {
+  const categories = await prisma.category.findMany({
+    orderBy: { name: "asc" },
+    include: { _count: { select: { products: true } } },
   });
 
   return (
@@ -22,11 +19,11 @@ export default async function AdminOrdersPage() {
           className="text-2xl font-light text-[#111111]"
           style={{ fontFamily: "var(--font-playfair, serif)" }}
         >
-          Pedidos
+          Categorías
         </h1>
       </div>
       <div className="bg-white border border-[#111111]/6">
-        <OrderTable orders={orders} />
+        <CategoryTable categories={categories} />
       </div>
     </div>
   );

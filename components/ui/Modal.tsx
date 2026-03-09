@@ -26,17 +26,30 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className={cn("relative bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-auto", className)}>
+      <div className="absolute inset-0 bg-[#111111]/40 backdrop-blur-sm" onClick={onClose} />
+      <div
+        className={cn(
+          "relative bg-white border border-[#111111]/8 w-full max-w-lg max-h-[90vh] overflow-auto animate-[scale-in_0.2s_ease-out_both]",
+          className
+        )}
+      >
         {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b">
-            <h2 className="text-lg font-semibold">{title}</h2>
-            <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-              <X className="h-5 w-5" />
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#111111]/6">
+            <h2
+              className="text-base font-light text-[#111111]"
+              style={{ fontFamily: "var(--font-playfair, serif)" }}
+            >
+              {title}
+            </h2>
+            <button
+              onClick={onClose}
+              className="p-1.5 text-[#111111]/30 hover:text-[#111111] transition-colors"
+            >
+              <X className="h-4 w-4" />
             </button>
           </div>
         )}
-        <div className="px-6 py-4">{children}</div>
+        <div className="px-6 py-5">{children}</div>
       </div>
     </div>
   );
