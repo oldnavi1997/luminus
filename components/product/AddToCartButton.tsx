@@ -14,6 +14,7 @@ interface AddToCartButtonProps {
 export function AddToCartButton({ product }: AddToCartButtonProps) {
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((s) => s.addItem);
+  const openDrawer = useCartStore((s) => s.openDrawer);
 
   if (product.stock === 0) {
     return (
@@ -36,6 +37,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
       slug: product.slug,
       stock: product.stock,
     });
+    openDrawer();
     toast.success(`${product.name} agregado al carrito`);
   };
 
