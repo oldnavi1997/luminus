@@ -1,5 +1,5 @@
 import { CartItem } from "@/types";
-import { formatARS } from "@/lib/utils";
+import { formatPEN } from "@/lib/utils";
 
 interface OrderSummaryProps {
   items: CartItem[];
@@ -16,14 +16,14 @@ export function OrderSummary({ items, subtotal }: OrderSummaryProps) {
             <span className="text-gray-700">
               {item.name} <span className="text-gray-400">x{item.quantity}</span>
             </span>
-            <span className="font-medium">{formatARS(item.price * item.quantity)}</span>
+            <span className="font-medium">{formatPEN(item.price * item.quantity)}</span>
           </div>
         ))}
       </div>
       <div className="border-t border-gray-100 mt-4 pt-4">
         <div className="flex justify-between font-bold text-[#111111]">
           <span>Total</span>
-          <span>{formatARS(subtotal)}</span>
+          <span>{formatPEN(subtotal)}</span>
         </div>
       </div>
     </div>

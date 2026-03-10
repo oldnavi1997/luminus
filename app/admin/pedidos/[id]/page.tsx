@@ -7,7 +7,7 @@ import { OrderWithItems } from "@/types";
 import { OrderStatusBadge, PaymentStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
-import { formatARS } from "@/lib/utils";
+import { formatPEN } from "@/lib/utils";
 import { OrderStatus } from "@/app/generated/prisma/client";
 
 export default function AdminOrderDetailPage({
@@ -130,22 +130,22 @@ export default function AdminOrderDetailPage({
               <span className="text-gray-700">
                 {item.product.name} <span className="text-gray-400">x{item.quantity}</span>
               </span>
-              <span className="font-medium">{formatARS(Number(item.total))}</span>
+              <span className="font-medium">{formatPEN(Number(item.total))}</span>
             </div>
           ))}
         </div>
         <div className="mt-4 pt-4 border-t border-gray-100 space-y-1 text-sm">
           <div className="flex justify-between text-gray-600">
             <span>Subtotal</span>
-            <span>{formatARS(Number(order.subtotal))}</span>
+            <span>{formatPEN(Number(order.subtotal))}</span>
           </div>
           <div className="flex justify-between text-gray-600">
             <span>Envío</span>
-            <span>{formatARS(Number(order.shippingCost))}</span>
+            <span>{formatPEN(Number(order.shippingCost))}</span>
           </div>
           <div className="flex justify-between font-bold text-[#111111] text-base mt-2">
             <span>Total</span>
-            <span>{formatARS(Number(order.total))}</span>
+            <span>{formatPEN(Number(order.total))}</span>
           </div>
         </div>
       </div>

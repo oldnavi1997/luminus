@@ -4,13 +4,14 @@ import { OrderTable } from "@/components/admin/OrderTable";
 export const metadata = { title: "Pedidos | Admin" };
 
 export default async function AdminOrdersPage() {
-  const orders = await prisma.order.findMany({
+  const raw = await prisma.order.findMany({
     include: {
       items: { include: { product: true } },
       user: true,
     },
     orderBy: { createdAt: "desc" },
   });
+  const orders = JSON.parse(JSON.stringify(raw));
 
   return (
     <div>

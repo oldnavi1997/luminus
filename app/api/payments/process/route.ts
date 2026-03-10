@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { paymentClient } from "@/lib/mercadopago";
+import { sendOrderConfirmation } from "@/lib/email";
 
 const processSchema = z.object({
   orderId: z.string(),
@@ -26,6 +27,28 @@ function mapMpStatusToPaymentStatus(mpStatus: string) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+
+    if (body.devBypass === true && process.env.NODE_ENV === "development") {
+      const { orderId } = body;
+      if (!orderId || typeof orderId !== "string") {
+        return NextResponse.json({ error: "orderId requerido" }, { status: 400 });
+      }
+      const order = await prisma.order.findUnique({ where: { id: orderId } });
+      if (!order) return NextResponse.json({ error: "Orden no encontrada" }, { status: 404 });
+      if (order.paymentStatus !== "PENDING") return NextResponse.json({ error: "La orden ya fue procesada" }, { status: 400 });
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          mpPaymentId: "dev-bypass",
+          mpStatus: "approved",
+          paymentStatus: "APPROVED",
+          orderStatus: "PAID",
+        },
+      });
+      sendOrderConfirmation(orderId).catch(console.error);
+      return NextResponse.json({ status: "approved", paymentId: "dev-bypass", statusDetail: "accredited" });
+    }
+
     const data = processSchema.parse(body);
 
     // Verify order exists and is PENDING
@@ -68,6 +91,10 @@ export async function POST(request: NextRequest) {
         orderStatus: paymentStatus === "APPROVED" ? "PAID" : "PENDING",
       },
     });
+
+    if (paymentStatus === "APPROVED") {
+      sendOrderConfirmation(order.id).catch(console.error);
+    }
 
     return NextResponse.json({
       status: mpStatus,

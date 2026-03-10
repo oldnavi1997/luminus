@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/Button";
 export const metadata = { title: "Productos | Admin" };
 
 export default async function AdminProductsPage() {
-  const products = await prisma.product.findMany({
+  const raw = await prisma.product.findMany({
     include: { category: true },
     orderBy: { createdAt: "desc" },
   });
+  const products = JSON.parse(JSON.stringify(raw));
 
   return (
     <div>

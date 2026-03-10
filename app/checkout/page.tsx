@@ -30,12 +30,12 @@ export default function CheckoutPage() {
   const sub = subtotal();
 
   useEffect(() => {
-    if (itemList.length === 0) {
+    if (itemList.length === 0 && step !== "result") {
       router.push("/carrito");
     }
-  }, [itemList.length, router]);
+  }, [itemList.length, step, router]);
 
-  if (itemList.length === 0) return null;
+  if (itemList.length === 0 && step !== "result") return null;
 
   const handleShippingSubmit = async (shippingData: ShippingFormData) => {
     setLoadingOrder(true);
