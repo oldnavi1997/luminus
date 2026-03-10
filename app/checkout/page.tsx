@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/stores/cart";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
@@ -29,10 +29,13 @@ export default function CheckoutPage() {
   const itemList = items;
   const sub = subtotal();
 
-  if (itemList.length === 0) {
-    router.push("/carrito");
-    return null;
-  }
+  useEffect(() => {
+    if (itemList.length === 0) {
+      router.push("/carrito");
+    }
+  }, [itemList.length, router]);
+
+  if (itemList.length === 0) return null;
 
   const handleShippingSubmit = async (shippingData: ShippingFormData) => {
     setLoadingOrder(true);
