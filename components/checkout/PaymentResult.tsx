@@ -1,10 +1,8 @@
 "use client";
 
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { XCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { useCartStore } from "@/stores/cart";
-import { useEffect } from "react";
 
 interface PaymentResultProps {
   status: string;
@@ -14,31 +12,7 @@ interface PaymentResultProps {
   onRetry?: () => void;
 }
 
-export function PaymentResult({ status, paymentId, statusDetail, error, onRetry }: PaymentResultProps) {
-  const clearCart = useCartStore((s) => s.clearCart);
-
-  useEffect(() => {
-    if (status === "approved") {
-      clearCart();
-    }
-  }, [status, clearCart]);
-
-  if (status === "approved") {
-    return (
-      <div className="bg-white rounded-xl shadow-sm border border-green-100 p-8 text-center">
-        <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-[#111111] mb-2">¡Pago aprobado!</h2>
-        <p className="text-gray-600 mb-2">Tu pedido fue confirmado exitosamente.</p>
-        {paymentId && (
-          <p className="text-sm text-gray-400 mb-6">ID de pago: {paymentId}</p>
-        )}
-        <Link href="/lentes">
-          <Button variant="primary">Seguir comprando</Button>
-        </Link>
-      </div>
-    );
-  }
-
+export function PaymentResult({ status, statusDetail, error, onRetry }: PaymentResultProps) {
   if (status === "in_process" || status === "pending") {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-yellow-100 p-8 text-center">

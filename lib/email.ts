@@ -1,15 +1,11 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: Number(process.env.EMAIL_PORT) || 465,
-  secure: process.env.EMAIL_SECURE === "true",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+let _resend: Resend | null = null;
+function getResend() {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+  return _resend;
+}
 
 function formatPEN(amount: number): string {
   return new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(amount);
@@ -130,8 +126,8 @@ export async function sendOrderConfirmation(orderId: string): Promise<void> {
 </body>
 </html>`;
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+    await getResend().emails.send({
+      from: process.env.EMAIL_FROM!,
       to: order.shippingEmail,
       subject: `Confirmación de pedido ${order.orderNumber} — Luminus`,
       html,

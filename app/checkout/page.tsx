@@ -19,7 +19,7 @@ interface PaymentResultData {
 }
 
 export default function CheckoutPage() {
-  const { items, subtotal } = useCartStore();
+  const { items, subtotal, clearCart } = useCartStore();
   const router = useRouter();
   const [step, setStep] = useState<Step>("form");
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -67,6 +67,12 @@ export default function CheckoutPage() {
   };
 
   const handlePaymentResult = (result: PaymentResultData) => {
+    if (result.status === "approved" && orderId) {
+      setStep("result"); // evita que useEffect redirija a /carrito al vaciarlo
+      clearCart();
+      router.push(`/pedido/confirmacion/${orderId}`);
+      return;
+    }
     setPaymentResult(result);
     setStep("result");
   };
@@ -105,9 +111,11 @@ export default function CheckoutPage() {
           )}
         </div>
 
-        <div>
-          <OrderSummary items={itemList} subtotal={sub} />
-        </div>
+        {step !== "result" && (
+          <div>
+            <OrderSummary items={itemList} subtotal={sub} />
+          </div>
+        )}
       </div>
     </div>
   );
