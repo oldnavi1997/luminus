@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import useEmblaCarousel from "embla-carousel-react";
 
 interface ImageGalleryProps {
   images: string[];
@@ -10,6 +11,11 @@ interface ImageGalleryProps {
 
 export function ImageGallery({ images, name }: ImageGalleryProps) {
   const [selectedIdx, setSelectedIdx] = useState(0);
+  const [emblaRef] = useEmblaCarousel({
+    dragFree: true,
+    align: "start",
+    containScroll: "trimSnaps",
+  });
 
   if (images.length === 0) {
     return (
@@ -111,27 +117,25 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
         </div>
       </div>
 
-      {/* Mobile layout: swipeable carousel with peek */}
-      <div
-        className="flex gap-0.5 overflow-x-auto snap-x snap-mandatory scroll-smooth sm:hidden
-                   [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
-                   [-webkit-overflow-scrolling:touch]"
-      >
-        {images.map((img, idx) => (
-          <div
-            key={idx}
-            className="w-[80%] flex-shrink-0 snap-start relative aspect-square bg-[#f5f5f5]"
-          >
-            <Image
-              src={img}
-              alt={`${name} ${idx + 1}`}
-              fill
-              className="object-contain"
-              sizes="80vw"
-              priority={idx === 0}
-            />
-          </div>
-        ))}
+      {/* Mobile layout: free-scroll carousel with peek (Embla) */}
+      <div ref={emblaRef} className="overflow-hidden sm:hidden">
+        <div className="flex gap-0.5">
+          {images.map((img, idx) => (
+            <div
+              key={idx}
+              className="w-[80%] flex-shrink-0 relative aspect-square bg-[#f5f5f5]"
+            >
+              <Image
+                src={img}
+                alt={`${name} ${idx + 1}`}
+                fill
+                className="object-contain"
+                sizes="80vw"
+                priority={idx === 0}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
