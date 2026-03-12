@@ -31,18 +31,23 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const navCategories = await prisma.category.findMany({
-    where: { parentId: null, slug: { notIn: ["sin-categorizar", "uncategorized"] } },
-    include: {
-      children: {
-        orderBy: { name: "asc" },
-        include: {
-          children: { orderBy: { name: "asc" }, select: { id: true, name: true, slug: true } },
+  let navCategories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+  try {
+    navCategories = await prisma.category.findMany({
+      where: { parentId: null, slug: { notIn: ["sin-categorizar", "uncategorized"] } },
+      include: {
+        children: {
+          orderBy: { name: "asc" },
+          include: {
+            children: { orderBy: { name: "asc" }, select: { id: true, name: true, slug: true } },
+          },
         },
       },
-    },
-    orderBy: { name: "asc" },
-  });
+      orderBy: { name: "asc" },
+    });
+  } catch {
+    // DB unavailable during build (e.g. Railway build phase)
+  }
 
   return (
     <html lang="es" className={`${playfair.variable} ${dmSans.variable}`}>
