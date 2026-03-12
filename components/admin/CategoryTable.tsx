@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Edit, Trash2, Plus, Tag } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { formatPEN } from "@/lib/utils";
 
 interface Category {
   id: string;
@@ -16,6 +18,17 @@ interface Category {
   parentId: string | null;
   parent: { id: string; name: string } | null;
   _count: { products: number };
+}
+
+interface ProductItem {
+  id: string;
+  name: string;
+  brand: string | null;
+  price: string;
+  stock: number;
+  active: boolean;
+  images: string[];
+  slug: string;
 }
 
 interface CategoryTableProps {
@@ -40,8 +53,27 @@ export function CategoryTable({ categories }: CategoryTableProps) {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", slug: "", description: "", parentId: "" });
 
-  // Only root categories (no parent) can be selected as parent
-  const parentOptions = categories.filter((c) => !c.parentId);
+  const [productsModal, setProductsModal] = useState<{
+    category: Category;
+    items: ProductItem[];
+  } | null>(null);
+  const [productsLoading, setProductsLoading] = useState(false);
+
+  const openProducts = async (cat: Category) => {
+    if (cat._count.products === 0) return;
+    setProductsLoading(true);
+    try {
+      const res = await fetch(`/api/products?category=${cat.slug}&admin=true&limit=100`);
+      const data = await res.json();
+      setProductsModal({ category: cat, items: data.products ?? [] });
+    } catch {
+      toast.error("Error al cargar productos");
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const parentOptions = categories;
 
   const openCreate = () => {
     setEditing(null);
@@ -176,15 +208,17 @@ export function CategoryTable({ categories }: CategoryTableProps) {
                     <span className="line-clamp-1">{cat.description ?? "—"}</span>
                   </td>
                   <td className="py-3.5 px-5 text-center">
-                    <span
-                      className={
-                        cat._count.products > 0
-                          ? "text-sm font-medium text-[#111111]"
-                          : "text-sm text-[#111111]/30"
-                      }
-                    >
-                      {cat._count.products}
-                    </span>
+                    {cat._count.products > 0 ? (
+                      <button
+                        onClick={() => openProducts(cat)}
+                        className="text-sm font-medium text-[#111111] hover:text-[#d4af37] underline-offset-2 hover:underline transition-colors"
+                        title="Ver productos"
+                      >
+                        {productsLoading ? "..." : cat._count.products}
+                      </button>
+                    ) : (
+                      <span className="text-sm text-[#111111]/30">0</span>
+                    )}
                   </td>
                   <td className="py-3.5 px-5">
                     <div className="flex items-center justify-end gap-1">
@@ -214,6 +248,94 @@ export function CategoryTable({ categories }: CategoryTableProps) {
           </table>
         </div>
       )}
+
+      {/* Products Modal */}
+      <Modal
+        open={!!productsModal}
+        onClose={() => setProductsModal(null)}
+        title={`Productos en "${productsModal?.category.name}"`}
+      >
+        <div className="overflow-y-auto max-h-[60vh]">
+          {productsModal?.items.length === 0 ? (
+            <p className="text-sm text-[#111111]/40 text-center py-8">Sin productos</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#111111]/6">
+                  <th className="text-left py-2 px-3 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+                    Producto
+                  </th>
+                  <th className="text-right py-2 px-3 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+                    Precio
+                  </th>
+                  <th className="text-center py-2 px-3 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+                    Stock
+                  </th>
+                  <th className="text-center py-2 px-3 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+                    Estado
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {productsModal?.items.map((p) => (
+                  <tr key={p.id} className="border-b border-[#111111]/4 hover:bg-[#f8f7f4]/60">
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-2.5">
+                        {p.images[0] ? (
+                          <div className="relative w-8 h-8 shrink-0 bg-[#f8f7f4] overflow-hidden">
+                            <Image
+                              src={p.images[0]}
+                              alt={p.name}
+                              fill
+                              className="object-cover"
+                              sizes="32px"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-8 h-8 shrink-0 bg-[#f8f7f4]" />
+                        )}
+                        <div>
+                          <p className="font-medium text-[#111111] leading-tight">{p.name}</p>
+                          {p.brand && (
+                            <p className="text-[11px] text-[#111111]/40">{p.brand}</p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3 text-right text-[#111111]/70">
+                      {formatPEN(Number(p.price))}
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <span
+                        className={
+                          p.stock === 0
+                            ? "text-sm font-medium text-red-500"
+                            : p.stock <= 5
+                            ? "text-sm font-medium text-amber-600"
+                            : "text-sm font-medium text-emerald-600"
+                        }
+                      >
+                        {p.stock}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-3 text-center">
+                      <span
+                        className={
+                          p.active
+                            ? "text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5"
+                            : "text-[10px] font-medium text-[#111111]/40 bg-[#f8f7f4] px-2 py-0.5"
+                        }
+                      >
+                        {p.active ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </Modal>
 
       {/* Create / Edit Modal */}
       <Modal
