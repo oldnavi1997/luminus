@@ -13,6 +13,8 @@ interface Category {
   name: string;
   slug: string;
   description: string | null;
+  parentId: string | null;
+  parent: { id: string; name: string } | null;
   _count: { products: number };
 }
 
@@ -36,17 +38,25 @@ export function CategoryTable({ categories }: CategoryTableProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", slug: "", description: "" });
+  const [form, setForm] = useState({ name: "", slug: "", description: "", parentId: "" });
+
+  // Only root categories (no parent) can be selected as parent
+  const parentOptions = categories.filter((c) => !c.parentId);
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: "", slug: "", description: "" });
+    setForm({ name: "", slug: "", description: "", parentId: "" });
     setModalOpen(true);
   };
 
   const openEdit = (cat: Category) => {
     setEditing(cat);
-    setForm({ name: cat.name, slug: cat.slug, description: cat.description ?? "" });
+    setForm({
+      name: cat.name,
+      slug: cat.slug,
+      description: cat.description ?? "",
+      parentId: cat.parentId ?? "",
+    });
     setModalOpen(true);
   };
 
@@ -63,7 +73,12 @@ export function CategoryTable({ categories }: CategoryTableProps) {
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name,
+          slug: form.slug,
+          description: form.description,
+          parentId: form.parentId || null,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -127,6 +142,9 @@ export function CategoryTable({ categories }: CategoryTableProps) {
                   Slug
                 </th>
                 <th className="text-left py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+                  Categoría padre
+                </th>
+                <th className="text-left py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
                   Descripción
                 </th>
                 <th className="text-center py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
@@ -146,6 +164,13 @@ export function CategoryTable({ categories }: CategoryTableProps) {
                     <span className="font-mono text-xs text-[#111111]/50 bg-[#f8f7f4] px-2 py-0.5">
                       {cat.slug}
                     </span>
+                  </td>
+                  <td className="py-3.5 px-5 text-[#111111]/50">
+                    {cat.parent ? (
+                      <span className="text-xs text-[#d4af37]">{cat.parent.name}</span>
+                    ) : (
+                      <span className="text-xs text-[#111111]/25">—</span>
+                    )}
                   </td>
                   <td className="py-3.5 px-5 text-[#111111]/50 max-w-[220px]">
                     <span className="line-clamp-1">{cat.description ?? "—"}</span>
@@ -213,6 +238,26 @@ export function CategoryTable({ categories }: CategoryTableProps) {
             placeholder="lentes-de-sol"
             required
           />
+          {/* Parent category selector */}
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-medium text-[#111111]/60 uppercase tracking-[0.15em]">
+              Categoría padre
+            </label>
+            <select
+              value={form.parentId}
+              onChange={(e) => setForm((f) => ({ ...f, parentId: e.target.value }))}
+              className="w-full px-3.5 py-2.5 bg-white border border-[#111111]/15 text-sm text-[#111111] focus:outline-none focus:border-[#d4af37] transition-colors duration-200 appearance-none"
+            >
+              <option value="">Sin padre (categoría raíz)</option>
+              {parentOptions
+                .filter((c) => !editing || c.id !== editing.id)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+            </select>
+          </div>
           <div className="space-y-1.5">
             <label className="block text-[10px] font-medium text-[#111111]/60 uppercase tracking-[0.15em]">
               Descripción
