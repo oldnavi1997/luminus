@@ -24,12 +24,22 @@ interface NavbarProps {
 export function Navbar({ categories }: NavbarProps) {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [catsOpen, setCatsOpen] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [openCatId, setOpenCatId] = useState<string | null>(null);
+  const [openMobileCatId, setOpenMobileCatId] = useState<string | null>(null);
   const itemCount = useCartStore((s) => s.itemCount());
   const openDrawer = useCartStore((s) => s.openDrawer);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleCatEnter = (id: string) => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpenCatId(id);
+  };
+
+  const handleCatLeave = () => {
+    closeTimer.current = setTimeout(() => setOpenCatId(null), 120);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -46,11 +56,11 @@ export function Navbar({ categories }: NavbarProps) {
     return () => { document.body.style.overflow = ""; };
   }, [menuOpen]);
 
-  // Close dropdown on outside click
+  // Close desktop dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenCatId(null);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -59,10 +69,8 @@ export function Navbar({ categories }: NavbarProps) {
 
   const closeMenu = () => {
     setMenuOpen(false);
-    setCatsOpen(false);
+    setOpenMobileCatId(null);
   };
-
-  const hasCategories = categories.length > 0;
 
   return (
     <>
@@ -88,90 +96,90 @@ export function Navbar({ categories }: NavbarProps) {
             </Link>
 
             {/* Desktop nav */}
-            <div className="hidden md:flex items-center gap-8">
-              {/* Catálogo with dropdown */}
-              <div ref={dropdownRef} className="relative">
-                <button
-                  onClick={() => setDropdownOpen((v) => !v)}
-                  onMouseEnter={() => setDropdownOpen(true)}
-                  className="flex items-center gap-1 text-[11px] font-medium text-[#334155]/60 hover:text-[#1e293b] tracking-[0.2em] uppercase transition-colors duration-200"
-                >
-                  Catálogo
-                  <ChevronDown
-                    className={`h-3 w-3 transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {/* Dropdown panel */}
-                {dropdownOpen && (
+            <div ref={navRef} className="hidden md:flex items-center gap-8">
+              {/* Per-category items */}
+              {categories.map((cat) =>
+                cat.children.length > 0 ? (
                   <div
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 bg-[#F8F7F4] shadow-[0_8px_24px_rgba(0,0,0,0.1)] z-50"
-                    style={{ border: "1px solid #d5d5d5" }}
-                    onMouseLeave={() => setDropdownOpen(false)}
+                    key={cat.id}
+                    className="relative"
+                    onMouseLeave={handleCatLeave}
                   >
-                    {/* Ver todo */}
-                    <Link
-                      href="/lentes"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center px-5 py-3 text-[10px] font-medium tracking-[0.2em] uppercase text-[#334155]/50 hover:text-[#1e293b] hover:bg-white transition-colors border-b border-[#d5d5d5]/60"
+                    <button
+                      onMouseEnter={() => handleCatEnter(cat.id)}
+                      onClick={() => setOpenCatId((v) => v === cat.id ? null : cat.id)}
+                      className="flex items-center gap-1 text-[11px] font-medium text-[#334155]/60 hover:text-[#1e293b] tracking-[0.2em] uppercase transition-colors duration-200"
                     >
-                      Ver todo el catálogo
-                    </Link>
+                      {cat.name}
+                      <ChevronDown
+                        className={`h-3 w-3 transition-transform duration-200 ${openCatId === cat.id ? "rotate-180" : ""}`}
+                      />
+                    </button>
 
-                    {hasCategories ? (
-                      <div className="py-2">
-                        {categories.map((cat) =>
-                          cat.children.length > 0 ? (
-                            <div key={cat.id} className="px-5 py-2">
-                              <p className="text-[9px] font-semibold tracking-[0.25em] uppercase text-[#d4af37] mb-1.5">
-                                {cat.name}
-                              </p>
-                              {cat.children.map((child) =>
-                                child.children.length > 0 ? (
-                                  // Intermediate level → sub-group label + grandchildren
-                                  <div key={child.id} className="mb-1.5">
-                                    <p className="text-[9px] text-[#334155]/40 uppercase tracking-[0.15em] pl-2 mb-0.5">
-                                      {child.name}
-                                    </p>
-                                    {child.children.map((gc) => (
-                                      <Link
-                                        key={gc.id}
-                                        href={`/lentes?category=${gc.slug}`}
-                                        onClick={() => setDropdownOpen(false)}
-                                        className="block pl-4 py-1 text-[11px] text-[#334155]/60 hover:text-[#1e293b] transition-colors"
-                                      >
-                                        {gc.name}
-                                      </Link>
-                                    ))}
-                                  </div>
-                                ) : (
+                    {openCatId === cat.id && (
+                      <div
+                        className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-[#F8F7F4] shadow-[0_8px_24px_rgba(0,0,0,0.1)] z-50"
+                        style={{ border: "1px solid #d5d5d5" }}
+                        onMouseEnter={() => handleCatEnter(cat.id)}
+                      >
+                        <Link
+                          href={`/lentes?category=${cat.slug}`}
+                          onClick={() => setOpenCatId(null)}
+                          className="flex items-center px-5 py-3 text-[10px] font-medium tracking-[0.2em] uppercase text-[#334155]/50 hover:text-[#1e293b] hover:bg-white transition-colors border-b border-[#d5d5d5]/60"
+                        >
+                          Ver todo — {cat.name}
+                        </Link>
+                        <div className="py-2">
+                          {cat.children.map((child) =>
+                            child.children.length > 0 ? (
+                              <div key={child.id} className="px-5 py-2">
+                                <p className="text-[9px] text-[#334155]/40 uppercase tracking-[0.15em] mb-0.5">
+                                  {child.name}
+                                </p>
+                                {child.children.map((gc) => (
                                   <Link
-                                    key={child.id}
-                                    href={`/lentes?category=${child.slug}`}
-                                    onClick={() => setDropdownOpen(false)}
+                                    key={gc.id}
+                                    href={`/lentes?category=${gc.slug}`}
+                                    onClick={() => setOpenCatId(null)}
                                     className="block pl-2 py-1 text-[11px] text-[#334155]/60 hover:text-[#1e293b] transition-colors"
                                   >
-                                    {child.name}
+                                    {gc.name}
                                   </Link>
-                                )
-                              )}
-                            </div>
-                          ) : (
-                            <Link
-                              key={cat.id}
-                              href={`/lentes?category=${cat.slug}`}
-                              onClick={() => setDropdownOpen(false)}
-                              className="flex items-center px-5 py-2 text-[11px] text-[#334155]/60 hover:text-[#1e293b] hover:bg-white transition-colors"
-                            >
-                              {cat.name}
-                            </Link>
-                          )
-                        )}
+                                ))}
+                              </div>
+                            ) : (
+                              <Link
+                                key={child.id}
+                                href={`/lentes?category=${child.slug}`}
+                                onClick={() => setOpenCatId(null)}
+                                className="flex items-center px-5 py-2 text-[11px] text-[#334155]/60 hover:text-[#1e293b] hover:bg-white transition-colors"
+                              >
+                                {child.name}
+                              </Link>
+                            )
+                          )}
+                        </div>
                       </div>
-                    ) : null}
+                    )}
                   </div>
-                )}
-              </div>
+                ) : (
+                  <Link
+                    key={cat.id}
+                    href={`/lentes?category=${cat.slug}`}
+                    className="text-[11px] font-medium text-[#334155]/60 hover:text-[#1e293b] tracking-[0.2em] uppercase transition-colors duration-200"
+                  >
+                    {cat.name}
+                  </Link>
+                )
+              )}
+
+              {/* Ver todo */}
+              <Link
+                href="/lentes"
+                className="text-[11px] font-medium text-[#334155]/40 hover:text-[#1e293b] tracking-[0.2em] uppercase transition-colors duration-200"
+              >
+                Ver todo
+              </Link>
 
               <div className="w-px h-3 bg-[#d5d5d5]" />
 
@@ -295,41 +303,44 @@ export function Navbar({ categories }: NavbarProps) {
 
         {/* Drawer nav links */}
         <nav className="flex-1 px-6 py-8 flex flex-col gap-1 overflow-y-auto">
-          <div className="mb-6 h-px bg-gradient-to-r from-[#d4af37]/40 to-transparent" />
+          <div className="mb-4 h-px bg-gradient-to-r from-[#d4af37]/40 to-transparent" />
 
-          {/* Catálogo toggle */}
-          <button
-            onClick={() => setCatsOpen((v) => !v)}
-            className="flex items-center justify-between py-3 text-[11px] font-medium text-[#334155]/60 hover:text-[#1e293b] uppercase tracking-[0.3em] transition-colors duration-200 w-full"
+          {/* Ver todo */}
+          <Link
+            href="/lentes"
+            onClick={closeMenu}
+            className="py-3 text-[11px] font-medium tracking-[0.2em] uppercase text-[#334155]/50 hover:text-[#1e293b] transition-colors"
           >
-            Catálogo
-            <ChevronDown
-              className={`h-3 w-3 transition-transform duration-200 ${catsOpen ? "rotate-180" : ""}`}
-            />
-          </button>
+            Ver todo
+          </Link>
 
-          {/* Catálogo expanded */}
-          {catsOpen && (
-            <div className="pl-2 pb-2 flex flex-col gap-0.5">
-              {/* Ver todo */}
-              <Link
-                href="/lentes"
-                onClick={closeMenu}
-                className="py-2 text-[10px] font-medium tracking-[0.2em] uppercase text-[#334155]/50 hover:text-[#1e293b] transition-colors"
-              >
-                Ver todo
-              </Link>
+          {/* Per-category items */}
+          {categories.map((cat) =>
+            cat.children.length > 0 ? (
+              <div key={cat.id}>
+                <button
+                  onClick={() => setOpenMobileCatId((v) => v === cat.id ? null : cat.id)}
+                  className="flex items-center justify-between w-full py-3 text-[11px] font-medium text-[#334155]/60 hover:text-[#1e293b] uppercase tracking-[0.3em] transition-colors duration-200"
+                >
+                  {cat.name}
+                  <ChevronDown
+                    className={`h-3 w-3 transition-transform duration-200 ${openMobileCatId === cat.id ? "rotate-180" : ""}`}
+                  />
+                </button>
 
-              {hasCategories && categories.map((cat) =>
-                cat.children.length > 0 ? (
-                  <div key={cat.id} className="mt-2">
-                    <p className="text-[9px] uppercase tracking-[0.25em] text-[#d4af37] mb-1">
-                      {cat.name}
-                    </p>
+                {openMobileCatId === cat.id && (
+                  <div className="pl-2 pb-2 flex flex-col gap-0.5">
+                    <Link
+                      href={`/lentes?category=${cat.slug}`}
+                      onClick={closeMenu}
+                      className="py-1.5 text-[10px] font-medium tracking-[0.15em] uppercase text-[#334155]/40 hover:text-[#1e293b] transition-colors"
+                    >
+                      Ver todo — {cat.name}
+                    </Link>
                     {cat.children.map((child) =>
                       child.children.length > 0 ? (
-                        <div key={child.id} className="mb-1.5">
-                          <p className="text-[9px] text-[#334155]/40 uppercase tracking-[0.15em] pl-2 mb-0.5">
+                        <div key={child.id} className="mt-1.5">
+                          <p className="text-[9px] uppercase tracking-[0.25em] text-[#d4af37] mb-1">
                             {child.name}
                           </p>
                           {child.children.map((gc) => (
@@ -355,19 +366,21 @@ export function Navbar({ categories }: NavbarProps) {
                       )
                     )}
                   </div>
-                ) : (
-                  <Link
-                    key={cat.id}
-                    href={`/lentes?category=${cat.slug}`}
-                    onClick={closeMenu}
-                    className="py-1.5 text-[11px] text-[#334155]/60 hover:text-[#1e293b] transition-colors"
-                  >
-                    {cat.name}
-                  </Link>
-                )
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                key={cat.id}
+                href={`/lentes?category=${cat.slug}`}
+                onClick={closeMenu}
+                className="py-3 text-[11px] font-medium text-[#334155]/60 hover:text-[#1e293b] uppercase tracking-[0.3em] transition-colors duration-200"
+              >
+                {cat.name}
+              </Link>
+            )
           )}
+
+          <div className="mt-4 h-px bg-[#d5d5d5]/60" />
 
           {session ? (
             <>

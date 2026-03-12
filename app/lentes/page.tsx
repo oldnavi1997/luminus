@@ -3,7 +3,6 @@ export const dynamic = "force-dynamic";
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
-import { FilterSidebar } from "@/components/catalog/FilterSidebar";
 import { SortSelect } from "@/components/catalog/SortSelect";
 import { Prisma } from "@/app/generated/prisma/client";
 
@@ -72,10 +71,7 @@ export default async function LentesPage({
   searchParams: Promise<SearchParams>;
 }) {
   const params = await searchParams;
-  const [{ products, total, pages, page }, categories] = await Promise.all([
-    getProducts(params),
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
-  ]);
+  const { products, total, pages, page } = await getProducts(params);
 
   return (
     <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10">
@@ -100,34 +96,26 @@ export default async function LentesPage({
         </Suspense>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <Suspense>
-          <FilterSidebar categories={categories} />
-        </Suspense>
+      <ProductGrid products={products} />
 
-        <div className="flex-1">
-          <ProductGrid products={products} />
-
-          {/* Pagination */}
-          {pages > 1 && (
-            <div className="flex justify-center gap-1.5 mt-10">
-              {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
-                <a
-                  key={p}
-                  href={`?${new URLSearchParams({ ...params, page: String(p) }).toString()}`}
-                  className={`w-9 h-9 flex items-center justify-center text-[11px] font-medium uppercase tracking-[0.1em] transition-colors ${
-                    p === page
-                      ? "bg-[#111111] text-white"
-                      : "bg-white border border-[#111111]/10 text-[#111111]/50 hover:border-[#111111]/40 hover:text-[#111111]"
-                  }`}
-                >
-                  {p}
-                </a>
-              ))}
-            </div>
-          )}
+      {/* Pagination */}
+      {pages > 1 && (
+        <div className="flex justify-center gap-1.5 mt-10">
+          {Array.from({ length: pages }, (_, i) => i + 1).map((p) => (
+            <a
+              key={p}
+              href={`?${new URLSearchParams({ ...params, page: String(p) }).toString()}`}
+              className={`w-9 h-9 flex items-center justify-center text-[11px] font-medium uppercase tracking-[0.1em] transition-colors ${
+                p === page
+                  ? "bg-[#111111] text-white"
+                  : "bg-white border border-[#111111]/10 text-[#111111]/50 hover:border-[#111111]/40 hover:text-[#111111]"
+              }`}
+            >
+              {p}
+            </a>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }

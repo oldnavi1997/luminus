@@ -17,16 +17,16 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       href={`/lentes/${product.slug}`}
-      className="group block bg-white border border-[#111111]/6 overflow-hidden hover:border-[#d4af37]/30 hover:shadow-[0_12px_40px_rgba(26,26,46,0.08)] transition-all duration-400"
+      className="group block bg-white border border-[#dadadd] overflow-hidden hover:border-[#1c1c1c]/20 hover:shadow-sm transition-all duration-400"
     >
       {/* Image container */}
-      <div className="relative aspect-square bg-[#f8f7f4] overflow-hidden">
+      <div className="relative aspect-square bg-[#f9f8f4] overflow-hidden cursor-zoom-in">
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt={product.name}
             fill
-            className="object-cover group-hover:scale-[1.04] transition-transform duration-500"
+            className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
         ) : (
@@ -60,18 +60,18 @@ export function ProductCard({ product }: ProductCardProps) {
             </span>
           </div>
         )}
-
-        {/* Hover gold line */}
-        <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-[#d4af37] group-hover:w-full transition-all duration-500" />
       </div>
 
+      {/* Divider */}
+      <div className="border-t border-[#dadadd]" />
+
       {/* Info */}
-      <div className="p-4">
+      <div className="px-4 py-3.5">
         <p className="text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em] mb-1.5">
           {product.category.name}
         </p>
         <h3
-          className="text-sm font-light text-[#111111] line-clamp-2 leading-snug group-hover:text-[#d4af37] transition-colors duration-300"
+          className="text-sm font-medium text-[#111111] line-clamp-2 leading-snug group-hover:text-[#1c1c1c] transition-colors duration-300"
           style={{ fontFamily: "var(--font-playfair, serif)" }}
         >
           {product.name}

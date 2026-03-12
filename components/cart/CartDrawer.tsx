@@ -69,12 +69,12 @@ export function CartDrawer() {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: "1px solid #d5d5d5" }}>
           <div className="flex items-center gap-3">
-            <h2
+            <h4
               className="text-[15px] font-light text-[#1e293b] tracking-[0.15em] uppercase"
               style={{ fontFamily: "var(--font-playfair, serif)" }}
             >
               Tu carrito
-            </h2>
+            </h4>
             {count > 0 && (
               <span className="bg-[#1e293b] text-white text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide">
                 {count}
@@ -153,12 +153,12 @@ export function CartDrawer() {
                     {/* Info */}
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div className="flex items-start justify-between gap-2">
-                        <h3
+                        <h6
                           className="text-[#1e293b] text-[13px] font-light leading-snug line-clamp-2"
                           style={{ fontFamily: "var(--font-playfair, serif)" }}
                         >
                           {item.name}
-                        </h3>
+                        </h6>
                         <button
                           onClick={() => removeItem(item.id)}
                           className="flex-shrink-0 p-1 text-[#334155]/30 hover:text-red-500 transition-colors mt-0.5"
