@@ -47,10 +47,10 @@ export default async function ProductPage({ params }: Props) {
   ].filter((s) => s.value);
 
   return (
-    <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-5 sm:px-8 sm:py-10">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 mb-8 text-[10px] uppercase tracking-[0.2em] text-[#111111]/35">
-        <Link href="/lentes" className="hover:text-[#d4af37] transition-colors">
+      <nav className="hidden sm:flex items-center gap-2 mb-8 text-[10px] uppercase tracking-[0.2em] text-[#111111]/35">
+        <Link href="/lentes" className="hover:text-[#111111]/60 transition-colors">
           Catálogo
         </Link>
         <span>/</span>
@@ -59,21 +59,20 @@ export default async function ProductPage({ params }: Props) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
         {/* Gallery */}
-        <ImageGallery images={product.images} name={product.name} />
+        <div className="-mx-5 sm:mx-0">
+          <ImageGallery images={product.images} name={product.name} />
+        </div>
 
         {/* Details */}
-        <div className="space-y-7">
+        <div className="space-y-4">
           {/* Category & name */}
           <div>
-            <p className="text-[9px] font-medium text-[#d4af37] uppercase tracking-[0.3em] mb-3">
+            <p className="text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.3em] mb-3">
               {product.category.name}
             </p>
-            <h1
-              className="text-3xl md:text-4xl font-light text-[#111111] leading-tight"
-              style={{ fontFamily: "var(--font-playfair, serif)" }}
-            >
+            <h4 className="text-2xl md:text-3xl font-semibold text-[#111111] leading-tight">
               {product.name}
-            </h1>
+            </h4>
             {product.brand && (
               <p className="text-sm text-[#111111]/40 mt-2 uppercase tracking-[0.1em]">
                 {product.brand}
@@ -82,45 +81,88 @@ export default async function ProductPage({ params }: Props) {
           </div>
 
           {/* Price */}
-          <div className="flex items-baseline gap-4 pb-7 border-b border-[#111111]/8">
-            <span className="text-3xl font-light text-[#111111]">
+          <div className="flex items-baseline gap-4">
+            <span className="text-xl font-normal text-[#111111]">
               {formatPEN(Number(product.price))}
             </span>
             {hasDiscount && (
               <>
-                <span className="text-lg text-[#111111]/25 line-through">
+                <span className="text-base text-[#111111]/25 line-through">
                   {formatPEN(Number(product.comparePrice))}
                 </span>
-                <span className="bg-[#d4af37] text-[#111111] text-[9px] font-bold uppercase tracking-[0.1em] px-2 py-1">
+                <span className="bg-[#111111] text-white text-[9px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded-full">
                   -{discount}%
                 </span>
               </>
             )}
           </div>
 
-          {/* Description */}
-          {product.description && (
-            <p className="text-[#111111]/60 leading-relaxed text-sm">
-              {product.description}
-            </p>
-          )}
-
-          {/* Specs */}
-          {specs.length > 0 && (
-            <div className="grid grid-cols-2 gap-2">
-              {specs.map(({ label, value }) => (
-                <div key={label} className="bg-[#f8f7f4] px-4 py-3">
-                  <p className="text-[9px] text-[#111111]/35 uppercase tracking-[0.2em] mb-1">
-                    {label}
-                  </p>
-                  <p className="text-sm font-medium text-[#111111]">{value}</p>
-                </div>
-              ))}
+          {/* Lens type tag */}
+          {product.lensType && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-[#111111]/50">Lente:</span>
+              <span className="border border-[#111111]/20 text-xs text-[#111111]/70 px-3 py-1 rounded-full">
+                {product.lensType}
+              </span>
             </div>
           )}
 
+          {/* Description inline */}
+          {product.description && (
+            <p className="text-sm text-[#111111]/60 leading-relaxed">{product.description}</p>
+          )}
+
+          {/* Divider */}
+          <div className="border-t border-[#111111]/8" />
+
           {/* Add to cart */}
           <AddToCartButton product={product} />
+
+          {/* Divider */}
+          <div className="border-t border-[#111111]/8" />
+
+          {/* Accordions */}
+          {specs.length > 0 && (
+            <details className="group border-t border-[#dadadd]">
+              <summary className="flex items-center justify-between py-4 cursor-pointer text-sm font-medium text-[#111111] list-none select-none">
+                Especificaciones
+                <span className="text-lg transition-transform duration-200 group-open:rotate-45">+</span>
+              </summary>
+              <div className="pb-4 grid grid-cols-2 gap-x-6 gap-y-3">
+                {specs.map(({ label, value }) => (
+                  <div key={label}>
+                    <p className="text-[10px] text-[#111111]/35 uppercase tracking-[0.15em] mb-0.5">
+                      {label}
+                    </p>
+                    <p className="text-sm text-[#111111]">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+
+          <details className="group border-t border-[#dadadd]">
+            <summary className="flex items-center justify-between py-4 cursor-pointer text-sm font-medium text-[#111111] list-none select-none">
+              Envío
+              <span className="text-lg transition-transform duration-200 group-open:rotate-45">+</span>
+            </summary>
+            <div className="pb-4 text-sm text-[#111111]/60 leading-relaxed space-y-3">
+              <p><span className="font-medium text-[#111111]/80">Método de envío:</span> Olva Courier y Shalom. El envío a ciertas zonas puede verse restringido o cancelado debido a circunstancias locales, como condiciones climáticas adversas, emergencias, huelgas y situaciones similares.</p>
+              <p><span className="font-medium text-[#111111]/80">Área de envío:</span> Nacional.</p>
+              <div>
+                <p className="font-medium text-[#111111]/80 mb-1">Tarifa de envío:</p>
+                <ul className="space-y-0.5 pl-3">
+                  <li>Shalom: 8 soles.</li>
+                  <li>Olva Courier: 10–18 soles, puede variar según la región destino.</li>
+                  <li>Olva Courier vía aérea: 25 soles.</li>
+                </ul>
+              </div>
+              <p><span className="font-medium text-[#111111]/80">Plazo de procesamiento del pedido:</span> 1–2 días laborables, excepto fines de semana y festivos nacionales.</p>
+              <p><span className="font-medium text-[#111111]/80">Plazo de envío:</span> 2–3 días después del procesamiento.</p>
+            </div>
+          </details>
+
+          <div className="border-t border-[#dadadd]" />
         </div>
       </div>
     </div>
