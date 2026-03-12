@@ -10,7 +10,7 @@ type NavLeaf = { id: string; name: string; slug: string };
 
 type NavChild = NavLeaf & { children: NavLeaf[] };
 
-type NavCategory = {
+export type NavCategory = {
   id: string;
   name: string;
   slug: string;

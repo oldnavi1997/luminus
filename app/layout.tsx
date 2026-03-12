@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
-import { Navbar } from "@/components/layout/Navbar";
+import { Navbar, type NavCategory } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { prisma } from "@/lib/prisma";
 
@@ -31,7 +31,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  let navCategories: Awaited<ReturnType<typeof prisma.category.findMany>> = [];
+  let navCategories: NavCategory[] = [];
   try {
     navCategories = await prisma.category.findMany({
       where: { parentId: null, slug: { notIn: ["sin-categorizar", "uncategorized"] } },
