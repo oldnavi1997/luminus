@@ -5,6 +5,15 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/app/generated/prisma/client";
 
+const variantSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  frameColor: true,
+  images: true,
+  active: true,
+} as const;
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -12,10 +21,26 @@ export async function GET(
   const { id } = await params;
   const product = await prisma.product.findUnique({
     where: { id },
-    include: { category: true },
+    include: {
+      category: true,
+      colorVariants: { select: { variant: { select: variantSelect } } },
+      isVariantOf: { select: { product: { select: variantSelect } } },
+    },
   });
   if (!product) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(product);
+
+  const seen = new Set<string>();
+  const variants = [
+    ...product.colorVariants.map((cv) => cv.variant),
+    ...product.isVariantOf.map((cv) => cv.product),
+  ].filter((v) => {
+    if (seen.has(v.id)) return false;
+    seen.add(v.id);
+    return true;
+  });
+
+  const { colorVariants: _cv, isVariantOf: _iv, ...rest } = product;
+  return NextResponse.json({ ...rest, variants });
 }
 
 const updateSchema = z.object({
@@ -35,6 +60,7 @@ const updateSchema = z.object({
   featured: z.boolean().optional(),
   active: z.boolean().optional(),
   categoryId: z.string().optional(),
+  variantIds: z.array(z.string()).optional(),
 });
 
 export async function PUT(
@@ -49,19 +75,34 @@ export async function PUT(
   const { id } = await params;
   try {
     const body = await request.json();
-    const data = updateSchema.parse(body);
+    const { variantIds, ...rest } = updateSchema.parse(body);
 
     const product = await prisma.product.update({
       where: { id },
       data: {
-        ...data,
-        ...(data.price !== undefined && { price: new Prisma.Decimal(data.price) }),
-        ...(data.comparePrice !== undefined && {
-          comparePrice: data.comparePrice ? new Prisma.Decimal(data.comparePrice) : null,
+        ...rest,
+        ...(rest.price !== undefined && { price: new Prisma.Decimal(rest.price) }),
+        ...(rest.comparePrice !== undefined && {
+          comparePrice: rest.comparePrice ? new Prisma.Decimal(rest.comparePrice) : null,
         }),
       },
       include: { category: true },
     });
+
+    if (variantIds !== undefined) {
+      await prisma.$transaction([
+        prisma.productColorVariant.deleteMany({
+          where: { OR: [{ productId: id }, { variantId: id }] },
+        }),
+        prisma.productColorVariant.createMany({
+          data: variantIds.flatMap((vid) => [
+            { productId: id, variantId: vid },
+            { productId: vid, variantId: id },
+          ]),
+          skipDuplicates: true,
+        }),
+      ]);
+    }
 
     return NextResponse.json(product);
   } catch (error) {

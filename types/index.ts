@@ -22,6 +22,15 @@ export type CartItem = {
   stock: number;
 };
 
+export type ColorVariantProduct = {
+  id: string;
+  name: string;
+  slug: string;
+  frameColor: string | null;
+  images: string[];
+  active: boolean;
+};
+
 export type ShippingFormData = {
   name: string;
   email: string;

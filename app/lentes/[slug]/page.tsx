@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { ImageGallery } from "@/components/product/ImageGallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { formatPEN } from "@/lib/utils";
+import { ColorVariantProduct } from "@/types";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -24,14 +26,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+const variantSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  frameColor: true,
+  images: true,
+  active: true,
+} as const;
+
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
   const product = await prisma.product.findUnique({
     where: { slug, active: true },
-    include: { category: true },
+    include: {
+      category: true,
+      colorVariants: { select: { variant: { select: variantSelect } } },
+      isVariantOf: { select: { product: { select: variantSelect } } },
+    },
   });
 
   if (!product) notFound();
+
+  const seen = new Set<string>();
+  const variants: ColorVariantProduct[] = [
+    ...product.colorVariants.map((cv) => cv.variant),
+    ...product.isVariantOf.map((cv) => cv.product),
+  ].filter((v) => {
+    if (!v.active || seen.has(v.id)) return false;
+    seen.add(v.id);
+    return true;
+  });
 
   const hasDiscount = product.comparePrice && Number(product.comparePrice) > Number(product.price);
   const discount = hasDiscount
@@ -57,7 +82,7 @@ export default async function ProductPage({ params }: Props) {
         <span className="text-[#111111]/55">{product.category.name}</span>
       </nav>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-16">
         {/* Gallery */}
         <div className="-mx-5 sm:mx-0">
           <ImageGallery images={product.images} name={product.name} />
@@ -96,6 +121,58 @@ export default async function ProductPage({ params }: Props) {
               </>
             )}
           </div>
+
+          {/* Color variants */}
+          {variants.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.3em]">
+                Colores disponibles
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  { id: product.id, name: product.name, slug: product.slug, frameColor: product.frameColor, images: product.images, active: product.active },
+                  ...variants,
+                ]
+                  .sort((a, b) => a.name.localeCompare(b.name, "es"))
+                  .map((v) =>
+                    v.id === product.id ? (
+                      <div
+                        key={v.id}
+                        className="relative w-17 h-17 rounded overflow-hidden border-2 border-[#111111] flex-shrink-0"
+                        title={v.frameColor ?? v.name}
+                      >
+                        {v.images[0] && (
+                          <Image
+                            src={v.images[0]}
+                            alt={v.name}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <Link
+                        key={v.id}
+                        href={`/lentes/${v.slug}`}
+                        className="relative w-17 h-17 rounded overflow-hidden border border-[#111111]/20 hover:border-[#111111] transition-colors flex-shrink-0"
+                        title={v.frameColor ?? v.name}
+                      >
+                        {v.images[0] && (
+                          <Image
+                            src={v.images[0]}
+                            alt={v.name}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                          />
+                        )}
+                      </Link>
+                    )
+                  )}
+              </div>
+            </div>
+          )}
 
           {/* Lens type tag */}
           {product.lensType && (

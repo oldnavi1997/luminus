@@ -83,20 +83,60 @@ export function Navbar({ categories }: NavbarProps) {
         style={{ borderBottom: "1px solid #d5d5d5" }}
       >
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
-          <div className="flex items-center justify-between h-[60px]">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <span
-                className="text-[15px] tracking-[0.25em] text-[#1e293b] font-light uppercase"
-                style={{ fontFamily: "var(--font-playfair, serif)" }}
-              >
-                Luminus
-              </span>
-              <span className="w-1 h-1 rounded-full bg-[#d4af37] opacity-80 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
-            </Link>
+          <div className="h-[60px] flex items-center">
+
+            {/* Mobile layout: menú | logo | carrito */}
+            <div className="flex w-full items-center md:hidden">
+              <div className="flex-1 flex justify-start">
+                <button
+                  className="text-[#334155]/70 hover:text-[#1e293b] transition-colors"
+                  onClick={() => setMenuOpen(true)}
+                  aria-label="Abrir menú"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="flex-1 flex justify-center">
+                <Link href="/" className="flex items-center gap-2 group">
+                  <span
+                    className="text-[15px] tracking-[0.25em] text-[#1e293b] font-light uppercase"
+                    style={{ fontFamily: "var(--font-playfair, serif)" }}
+                  >
+                    Luminus
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-[#d4af37] opacity-80 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
+                </Link>
+              </div>
+              <div className="flex-1 flex justify-end">
+                <button
+                  onClick={openDrawer}
+                  className="relative text-[#334155]/70"
+                  aria-label="Abrir carrito"
+                >
+                  <ShoppingBag className="h-5 w-5" />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-[#1e293b] text-white text-[9px] font-bold rounded-full h-3.5 w-3.5 flex items-center justify-center">
+                      {itemCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Desktop layout: logo | nav */}
+            <div className="hidden md:flex items-center justify-between w-full">
+              <Link href="/" className="flex items-center gap-2.5 group">
+                <span
+                  className="text-[15px] tracking-[0.25em] text-[#1e293b] font-light uppercase"
+                  style={{ fontFamily: "var(--font-playfair, serif)" }}
+                >
+                  Luminus
+                </span>
+                <span className="w-1 h-1 rounded-full bg-[#d4af37] opacity-80 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
+              </Link>
 
             {/* Desktop nav */}
-            <div ref={navRef} className="hidden md:flex items-center gap-8">
+            <div ref={navRef} className="flex items-center gap-8">
               {/* Per-category items */}
               {categories.map((cat) =>
                 cat.children.length > 0 ? (
@@ -226,29 +266,8 @@ export function Navbar({ categories }: NavbarProps) {
                 )}
               </button>
             </div>
+            </div>{/* end desktop layout */}
 
-            {/* Mobile row */}
-            <div className="flex items-center gap-5 md:hidden">
-              <button
-                onClick={openDrawer}
-                className="relative text-[#334155]/70"
-                aria-label="Abrir carrito"
-              >
-                <ShoppingBag className="h-5 w-5" />
-                {itemCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-[#1e293b] text-white text-[9px] font-bold rounded-full h-3.5 w-3.5 flex items-center justify-center">
-                    {itemCount}
-                  </span>
-                )}
-              </button>
-              <button
-                className="text-[#334155]/70 hover:text-[#1e293b] transition-colors"
-                onClick={() => setMenuOpen(true)}
-                aria-label="Abrir menú"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-            </div>
           </div>
         </div>
       </nav>
