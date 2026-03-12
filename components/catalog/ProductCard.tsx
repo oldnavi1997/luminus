@@ -5,14 +5,55 @@ import { formatPEN } from "@/lib/utils";
 
 interface ProductCardProps {
   product: ProductWithCategory;
+  view?: "dense" | "normal" | "list";
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, view = "dense" }: ProductCardProps) {
   const imageUrl = product.images[0] || null;
   const hasDiscount = product.comparePrice && Number(product.comparePrice) > Number(product.price);
   const discount = hasDiscount
     ? Math.round((1 - Number(product.price) / Number(product.comparePrice)) * 100)
     : 0;
+
+  if (view === "dense") {
+    return (
+      <Link href={`/lentes/${product.slug}`} className="group block">
+        <div className="relative aspect-square bg-[#f5f5f4] overflow-hidden">
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={product.name}
+              fill
+              className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
+              sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg width="32" height="32" viewBox="0 0 48 48" fill="none" className="text-[#111111]/15">
+                <path d="M6 24C6 24 10 16 24 16C38 16 42 24 42 24C42 24 38 32 24 32C10 32 6 24 6 24Z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                <circle cx="24" cy="24" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+              </svg>
+            </div>
+          )}
+          {product.stock === 0 && (
+            <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-[1px]">
+              <span className="text-[10px] font-medium text-[#111111]/50 uppercase tracking-[0.2em] border border-[#111111]/20 px-3 py-1.5">
+                Sin stock
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="mt-2 text-center">
+          <p className="text-xs font-medium text-[#111111] line-clamp-1 leading-snug">
+            {product.name}
+          </p>
+          <p className="text-[11px] text-[#111111]/50 mt-0.5">
+            {formatPEN(Number(product.price))}
+          </p>
+        </div>
+      </Link>
+    );
+  }
 
   return (
     <Link

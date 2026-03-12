@@ -69,12 +69,12 @@ export function CartDrawer() {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: "1px solid #d5d5d5" }}>
           <div className="flex items-center gap-3">
-            <h4
+            <h6
               className="text-[15px] font-light text-[#1e293b] tracking-[0.15em] uppercase"
               style={{ fontFamily: "var(--font-playfair, serif)" }}
             >
               Tu carrito
-            </h4>
+            </h6>
             {count > 0 && (
               <span className="bg-[#1e293b] text-white text-[10px] font-bold px-2 py-0.5 rounded-full tracking-wide">
                 {count}

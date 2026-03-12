@@ -3,9 +3,11 @@ import { ProductCard } from "./ProductCard";
 
 interface ProductGridProps {
   products: ProductWithCategory[];
+  view?: string;
+  mview?: string;
 }
 
-export function ProductGrid({ products }: ProductGridProps) {
+export function ProductGrid({ products, view = "dense", mview = "2" }: ProductGridProps) {
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -26,10 +28,17 @@ export function ProductGrid({ products }: ProductGridProps) {
     );
   }
 
+  const mobileClass = mview === "1" ? "grid-cols-1" : "grid-cols-2";
+  const desktopClass =
+    view === "list" ? "sm:grid-cols-6" : view === "normal" ? "sm:grid-cols-4" : "sm:grid-cols-3";
+  const gridClass = `grid ${mobileClass} ${desktopClass} gap-x-5 gap-y-8`;
+
+  const cardView = "dense";
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+    <div className={gridClass}>
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <ProductCard key={product.id} product={product} view={cardView as "dense" | "normal" | "list"} />
       ))}
     </div>
   );
