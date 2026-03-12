@@ -90,7 +90,7 @@ export default async function LentesPage({
 
       <ProductGrid products={products} view={view} mview={mview} />
 
-      <CatalogPagination page={page} pages={pages} params={params} />
+      <CatalogPagination page={page} pages={pages} params={params as Record<string, string | undefined>} />
     </div>
   );
 }
