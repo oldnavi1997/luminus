@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { ShoppingBag, User, LogOut, Settings, Menu, X, ChevronDown } from "lucide-react";
+import { SearchBar } from "@/components/search/SearchBar";
 import { useState, useEffect, useRef } from "react";
 import { useCartStore } from "@/stores/cart";
 
@@ -107,7 +108,8 @@ export function Navbar({ categories }: NavbarProps) {
                   <span className="w-1 h-1 rounded-full bg-[#d4af37] opacity-80 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
                 </Link>
               </div>
-              <div className="flex-1 flex justify-end">
+              <div className="flex-1 flex justify-end items-center gap-3">
+                <SearchBar className="text-[#334155]/70 hover:text-[#1e293b] transition-colors" />
                 <button
                   onClick={openDrawer}
                   className="relative text-[#334155]/70"
@@ -251,6 +253,8 @@ export function Navbar({ categories }: NavbarProps) {
                   <User className="h-4 w-4" />
                 </Link>
               )}
+
+              <SearchBar />
 
               <button
                 onClick={openDrawer}
