@@ -72,6 +72,11 @@ model Product {
   frameColor     String?
   lensType       String?
   gender         String?
+  dimTotalWidth   String?
+  dimLensWidth    String?
+  dimFrameHeight  String?
+  dimBridgeWidth  String?
+  dimTempleLength String?
   featured       Boolean               @default(false)
   active         Boolean               @default(true)
   categoryId     String

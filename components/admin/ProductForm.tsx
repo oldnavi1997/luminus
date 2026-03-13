@@ -27,6 +27,11 @@ const productSchema = z.object({
   frameColor: z.string().optional(),
   lensType: z.string().optional(),
   gender: z.string().optional(),
+  dimTotalWidth: z.string().optional(),
+  dimLensWidth: z.string().optional(),
+  dimFrameHeight: z.string().optional(),
+  dimBridgeWidth: z.string().optional(),
+  dimTempleLength: z.string().optional(),
   categoryId: z.string().min(1, "Categoría requerida"),
   featured: z.boolean(),
   active: z.boolean(),
@@ -78,6 +83,11 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           frameColor: product.frameColor || "",
           lensType: product.lensType || "",
           gender: product.gender || "",
+          dimTotalWidth: product.dimTotalWidth || "",
+          dimLensWidth: product.dimLensWidth || "",
+          dimFrameHeight: product.dimFrameHeight || "",
+          dimBridgeWidth: product.dimBridgeWidth || "",
+          dimTempleLength: product.dimTempleLength || "",
           categoryId: product.categoryId,
           featured: product.featured,
           active: product.active,
@@ -258,6 +268,18 @@ export function ProductForm({ categories, product }: ProductFormProps) {
             <option value="Mujer">Mujer</option>
             <option value="Unisex">Unisex</option>
           </Select>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
+        <h2 className="font-semibold text-[#111111]">Dimensiones</h2>
+        <p className="text-sm text-gray-500">Medidas en mm (ej: "52" o "52 mm")</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <Input label="A — Ancho total"     {...register("dimTotalWidth")} />
+          <Input label="B — Ancho de lente"  {...register("dimLensWidth")} />
+          <Input label="C — Alto de armazón" {...register("dimFrameHeight")} />
+          <Input label="D — Puente"          {...register("dimBridgeWidth")} />
+          <Input label="E — Varillas"        {...register("dimTempleLength")} />
         </div>
       </div>
 

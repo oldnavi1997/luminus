@@ -7,6 +7,7 @@ import { ImageGallery } from "@/components/product/ImageGallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { formatPEN } from "@/lib/utils";
 import { ColorVariantProduct } from "@/types";
+import AccordionItem from "@/components/product/AccordionItem";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -200,12 +201,8 @@ export default async function ProductPage({ params }: Props) {
 
           {/* Accordions */}
           {specs.length > 0 && (
-            <details className="group border-t border-[#dadadd]">
-              <summary className="flex items-center justify-between py-4 cursor-pointer text-sm font-medium text-[#111111] list-none select-none">
-                Especificaciones
-                <span className="text-lg transition-transform duration-200 group-open:rotate-45">+</span>
-              </summary>
-              <div className="pb-4 grid grid-cols-2 gap-x-6 gap-y-3">
+            <AccordionItem title="Especificaciones">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 {specs.map(({ label, value }) => (
                   <div key={label}>
                     <p className="text-[10px] text-[#111111]/35 uppercase tracking-[0.15em] mb-0.5">
@@ -215,15 +212,60 @@ export default async function ProductPage({ params }: Props) {
                   </div>
                 ))}
               </div>
-            </details>
+            </AccordionItem>
           )}
 
-          <details className="group border-t border-[#dadadd]">
-            <summary className="flex items-center justify-between py-4 cursor-pointer text-sm font-medium text-[#111111] list-none select-none">
-              Envío
-              <span className="text-lg transition-transform duration-200 group-open:rotate-45">+</span>
-            </summary>
-            <div className="pb-4 text-sm text-[#111111]/60 leading-relaxed space-y-3">
+          {(product.dimTotalWidth || product.dimLensWidth || product.dimFrameHeight ||
+            product.dimBridgeWidth || product.dimTempleLength) && (
+            <AccordionItem title="Dimensiones">
+              <div className="flex flex-row items-center gap-x-6">
+                <div className="relative w-[250px] aspect-[4/3]">
+                  <Image
+                    src="https://res.cloudinary.com/dzqns7kss/image/upload/v1773427813/Dimnks_eewx3p.webp"
+                    alt="Guía de dimensiones"
+                    fill
+                    className="object-contain"
+                    sizes="320px"
+                  />
+                </div>
+                <div className="flex flex-col gap-y-2 shrink-0">
+                  {[
+                    { label: "A — Ancho total",     value: product.dimTotalWidth },
+                    { label: "B — Ancho de lente",  value: product.dimLensWidth },
+                    { label: "C — Alto de armazón", value: product.dimFrameHeight },
+                    { label: "D — Puente",          value: product.dimBridgeWidth },
+                    { label: "E — Varillas",        value: product.dimTempleLength },
+                  ].filter((d) => d.value).map(({ label, value }) => (
+                    <div key={label}>
+                      <p className="text-[10px] text-[#111111]/35 uppercase tracking-[0.15em] mb-0.5">{label}</p>
+                      <p className="text-sm text-[#111111]">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </AccordionItem>
+          )}
+
+          <AccordionItem title="Incluido en el paquete">
+            <div className="space-y-4 text-sm text-[#111111]/80 leading-relaxed">
+              <ul className="space-y-1">
+                <li>— 1 Paño microfibra</li>
+                <li>— 1 Estuche plegable de gafas (Blanco, Gris o Negro – Selección aleatoria)</li>
+              </ul>
+              <div className="relative w-full aspect-[16/9]">
+                <Image
+                  src="https://res.cloudinary.com/dzqns7kss/image/upload/v1773430821/MG_44024-Mejorado-NR_resultado-scaled_dernru.webp"
+                  alt="Contenido del paquete"
+                  fill
+                  className="object-cover rounded"
+                  sizes="(max-width: 768px) 100vw, 500px"
+                />
+              </div>
+            </div>
+          </AccordionItem>
+
+          <AccordionItem title="Envío">
+            <div className="text-sm text-[#111111]/60 leading-relaxed space-y-3">
               <p><span className="font-medium text-[#111111]/80">Método de envío:</span> Olva Courier y Shalom. El envío a ciertas zonas puede verse restringido o cancelado debido a circunstancias locales, como condiciones climáticas adversas, emergencias, huelgas y situaciones similares.</p>
               <p><span className="font-medium text-[#111111]/80">Área de envío:</span> Nacional.</p>
               <div>
@@ -237,7 +279,7 @@ export default async function ProductPage({ params }: Props) {
               <p><span className="font-medium text-[#111111]/80">Plazo de procesamiento del pedido:</span> 1–2 días laborables, excepto fines de semana y festivos nacionales.</p>
               <p><span className="font-medium text-[#111111]/80">Plazo de envío:</span> 2–3 días después del procesamiento.</p>
             </div>
-          </details>
+          </AccordionItem>
 
           <div className="border-t border-[#dadadd]" />
         </div>

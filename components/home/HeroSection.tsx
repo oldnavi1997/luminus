@@ -12,7 +12,7 @@ export function HeroSection() {
         className="absolute inset-0 w-full h-full object-cover"
         src="https://res.cloudinary.com/dzqns7kss/video/upload/v1773378566/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.webm"
       />
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0 bg-black/10" />
 
       <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-24 md:py-0 w-full">
         <div className="max-w-xl">
