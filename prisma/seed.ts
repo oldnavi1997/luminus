@@ -77,7 +77,8 @@ async function main() {
       gender: "Unisex",
       featured: true,
       active: true,
-      categoryId: catSol!.id,
+      primaryCategoryId: catSol!.id,
+      categoryIds: [catSol!.id],
       images: [
         "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&q=80",
         "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&q=80",
@@ -98,7 +99,8 @@ async function main() {
       gender: "Hombre",
       featured: true,
       active: true,
-      categoryId: catSol!.id,
+      primaryCategoryId: catSol!.id,
+      categoryIds: [catSol!.id],
       images: [
         "https://images.unsplash.com/photo-1508296695146-257a814070b4?w=800&q=80",
       ],
@@ -118,7 +120,8 @@ async function main() {
       gender: "Mujer",
       featured: false,
       active: true,
-      categoryId: catSol!.id,
+      primaryCategoryId: catSol!.id,
+      categoryIds: [catSol!.id],
       images: [
         "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=800&q=80",
       ],
@@ -138,7 +141,8 @@ async function main() {
       gender: "Hombre",
       featured: true,
       active: true,
-      categoryId: catReceta!.id,
+      primaryCategoryId: catReceta!.id,
+      categoryIds: [catReceta!.id],
       images: [
         "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?w=800&q=80",
       ],
@@ -158,7 +162,8 @@ async function main() {
       gender: "Mujer",
       featured: true,
       active: true,
-      categoryId: catReceta!.id,
+      primaryCategoryId: catReceta!.id,
+      categoryIds: [catReceta!.id],
       images: [
         "https://images.unsplash.com/photo-1603400521630-9f2de124b33b?w=800&q=80",
       ],
@@ -166,16 +171,20 @@ async function main() {
   ];
 
   for (const product of products) {
+    const { categoryIds, primaryCategoryId, ...productData } = product;
     await prisma.product.upsert({
-      where: { slug: product.slug },
+      where: { slug: productData.slug },
       update: {
-        price: product.price,
-        comparePrice: product.comparePrice,
+        price: productData.price,
+        comparePrice: productData.comparePrice,
+        primaryCategoryId,
       },
       create: {
-        ...product,
-        price: product.price,
-        comparePrice: product.comparePrice,
+        ...productData,
+        price: productData.price,
+        comparePrice: productData.comparePrice,
+        primaryCategoryId,
+        categories: { connect: categoryIds.map((id) => ({ id })) },
       },
     });
   }

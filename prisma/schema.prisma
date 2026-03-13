@@ -52,40 +52,40 @@ model Category {
   parentId    String?
   parent      Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryChildren")
-  products    Product[]
+  products    Product[]  @relation("ProductCategories")
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 }
 
 model Product {
-  id             String                @id @default(cuid())
-  name           String
-  slug           String                @unique
-  description    String?
-  price          Decimal               @db.Decimal(10, 2)
-  comparePrice   Decimal?              @db.Decimal(10, 2)
-  stock          Int                   @default(0)
-  images         String[]
-  brand          String?
-  frameType      String?
-  frameMaterial  String?
-  frameColor     String?
-  lensType       String?
-  gender         String?
-  dimTotalWidth   String?
-  dimLensWidth    String?
-  dimFrameHeight  String?
-  dimBridgeWidth  String?
-  dimTempleLength String?
-  featured       Boolean               @default(false)
-  active         Boolean               @default(true)
-  categoryId     String
-  category       Category              @relation(fields: [categoryId], references: [id])
-  orderItems     OrderItem[]
-  colorVariants  ProductColorVariant[] @relation("ProductVariants")
-  isVariantOf    ProductColorVariant[] @relation("ProductIsVariantOf")
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
+  id                String                @id @default(cuid())
+  name              String
+  slug              String                @unique
+  description       String?
+  price             Decimal               @db.Decimal(10, 2)
+  comparePrice      Decimal?              @db.Decimal(10, 2)
+  stock             Int                   @default(0)
+  images            String[]
+  brand             String?
+  frameType         String?
+  frameMaterial     String?
+  frameColor        String?
+  lensType          String?
+  gender            String?
+  dimTotalWidth     String?
+  dimLensWidth      String?
+  dimFrameHeight    String?
+  dimBridgeWidth    String?
+  dimTempleLength   String?
+  featured          Boolean               @default(false)
+  active            Boolean               @default(true)
+  primaryCategoryId String?
+  categories        Category[]            @relation("ProductCategories")
+  orderItems        OrderItem[]
+  colorVariants     ProductColorVariant[] @relation("ProductVariants")
+  isVariantOf       ProductColorVariant[] @relation("ProductIsVariantOf")
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 }
 
 model ProductColorVariant {

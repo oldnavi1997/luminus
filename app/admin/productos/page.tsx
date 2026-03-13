@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/Button";
 export const metadata = { title: "Productos | Admin" };
 
 export default async function AdminProductsPage() {
-  const raw = await prisma.product.findMany({
-    include: { category: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [raw, categories] = await Promise.all([
+    prisma.product.findMany({
+      include: { categories: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
+  ]);
   const products = JSON.parse(JSON.stringify(raw));
 
   return (
@@ -35,7 +38,7 @@ export default async function AdminProductsPage() {
         </Link>
       </div>
       <div className="bg-white border border-[#111111]/6">
-        <ProductTable products={products} />
+        <ProductTable products={products} categories={categories} />
       </div>
     </div>
   );

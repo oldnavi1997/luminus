@@ -1,7 +1,7 @@
 import { Product, Category, Order, OrderItem, User } from "@/app/generated/prisma/client";
 
 export type ProductWithCategory = Product & {
-  category: Category;
+  categories: Category[];
 };
 
 export type OrderWithItems = Order & {

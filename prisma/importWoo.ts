@@ -294,7 +294,8 @@ async function main() {
             gender,
             featured,
             active,
-            categoryId,
+            primaryCategoryId: categoryId,
+            categories: { set: [{ id: categoryId }] },
           },
           create: {
             name,
@@ -312,7 +313,8 @@ async function main() {
             gender,
             featured,
             active,
-            categoryId,
+            primaryCategoryId: categoryId,
+            categories: { connect: [{ id: categoryId }] },
           },
         });
         if (existing) {

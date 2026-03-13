@@ -5,7 +5,7 @@ import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { ImageGallery } from "@/components/product/ImageGallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
-import { formatPEN } from "@/lib/utils";
+import { formatPEN, getPrimaryCategory } from "@/lib/utils";
 import { ColorVariantProduct } from "@/types";
 import AccordionItem from "@/components/product/AccordionItem";
 
@@ -17,13 +17,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const product = await prisma.product.findUnique({
     where: { slug },
-    include: { category: true },
+    include: { categories: true },
   });
   if (!product) return { title: "Producto no encontrado" };
 
+  const primaryCat = getPrimaryCategory(product);
   return {
     title: product.name,
-    description: product.description || `${product.name} – ${product.category.name}`,
+    description: product.description || `${product.name} – ${primaryCat?.name ?? ""}`,
   };
 }
 
@@ -41,7 +42,7 @@ export default async function ProductPage({ params }: Props) {
   const product = await prisma.product.findUnique({
     where: { slug, active: true },
     include: {
-      category: true,
+      categories: true,
       colorVariants: { select: { variant: { select: variantSelect } } },
       isVariantOf: { select: { product: { select: variantSelect } } },
     },
@@ -49,6 +50,7 @@ export default async function ProductPage({ params }: Props) {
 
   if (!product) notFound();
 
+  const primaryCategory = getPrimaryCategory(product);
   const seen = new Set<string>();
   const variants: ColorVariantProduct[] = [
     ...product.colorVariants.map((cv) => cv.variant),
@@ -80,7 +82,7 @@ export default async function ProductPage({ params }: Props) {
           Catálogo
         </Link>
         <span>/</span>
-        <span className="text-[#111111]/55">{product.category.name}</span>
+        <span className="text-[#111111]/55">{primaryCategory?.name}</span>
       </nav>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-16">
@@ -94,7 +96,7 @@ export default async function ProductPage({ params }: Props) {
           {/* Category & name */}
           <div>
             <p className="text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.3em] mb-3">
-              {product.category.name}
+              {primaryCategory?.name}
             </p>
             <h4 className="text-2xl md:text-3xl font-semibold text-[#111111] leading-tight">
               {product.name}

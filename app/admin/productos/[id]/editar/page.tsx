@@ -24,7 +24,7 @@ export default async function EditProductPage({
     prisma.product.findUnique({
       where: { id },
       include: {
-        category: true,
+        categories: true,
         colorVariants: { select: { variant: { select: variantSelect } } },
         isVariantOf: { select: { product: { select: variantSelect } } },
       },

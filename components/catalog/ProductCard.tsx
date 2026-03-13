@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ProductWithCategory } from "@/types";
-import { formatPEN } from "@/lib/utils";
+import { formatPEN, getPrimaryCategory } from "@/lib/utils";
 
 interface ProductCardProps {
   product: ProductWithCategory;
@@ -9,6 +9,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, view = "dense" }: ProductCardProps) {
+  const primaryCategory = getPrimaryCategory(product);
   const imageUrl = product.images[0] || null;
   const hasDiscount = product.comparePrice && Number(product.comparePrice) > Number(product.price);
   const discount = hasDiscount
@@ -109,7 +110,7 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
       {/* Info */}
       <div className="px-4 py-3.5">
         <p className="text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em] mb-1.5">
-          {product.category.name}
+          {primaryCategory?.name}
         </p>
         <h3
           className="text-sm font-medium text-[#111111] line-clamp-2 leading-snug group-hover:text-[#1c1c1c] transition-colors duration-300"

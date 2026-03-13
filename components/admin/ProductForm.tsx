@@ -32,7 +32,6 @@ const productSchema = z.object({
   dimFrameHeight: z.string().optional(),
   dimBridgeWidth: z.string().optional(),
   dimTempleLength: z.string().optional(),
-  categoryId: z.string().min(1, "Categoría requerida"),
   featured: z.boolean(),
   active: z.boolean(),
 });
@@ -51,6 +50,15 @@ export function ProductForm({ categories, product }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<string[]>(product?.images || []);
 
+  // M2M category state
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
+    product?.categories.map((c) => c.id) ?? []
+  );
+  const [primaryCategoryId, setPrimaryCategoryId] = useState<string>(
+    product?.primaryCategoryId ?? ""
+  );
+  const [categoryError, setCategoryError] = useState<string>("");
+
   // Color variants state
   const [selectedVariants, setSelectedVariants] = useState<ColorVariantProduct[]>(
     product?.variants ?? []
@@ -65,7 +73,6 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -88,14 +95,11 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           dimFrameHeight: product.dimFrameHeight || "",
           dimBridgeWidth: product.dimBridgeWidth || "",
           dimTempleLength: product.dimTempleLength || "",
-          categoryId: product.categoryId,
           featured: product.featured,
           active: product.active,
         }
       : { active: true, featured: false, stock: "0" },
   });
-
-  const nameValue = watch("name");
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
@@ -103,6 +107,27 @@ export function ProductForm({ categories, product }: ProductFormProps) {
     if (!product) {
       setValue("slug", slugify(name));
     }
+  };
+
+  const toggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+      // If removing the primary, reset primary to first remaining
+      if (!next.includes(primaryCategoryId)) {
+        setPrimaryCategoryId(next[0] ?? "");
+      }
+      return next;
+    });
+    setCategoryError("");
+  };
+
+  const setPrimary = (id: string) => {
+    // Ensure the category is selected when marking as primary
+    if (!selectedCategoryIds.includes(id)) {
+      setSelectedCategoryIds((prev) => [...prev, id]);
+    }
+    setPrimaryCategoryId(id);
+    setCategoryError("");
   };
 
   // Variant search debounce
@@ -156,6 +181,11 @@ export function ProductForm({ categories, product }: ProductFormProps) {
   };
 
   const onSubmit = async (data: ProductFormData) => {
+    if (selectedCategoryIds.length === 0) {
+      setCategoryError("Selecciona al menos una categoría");
+      return;
+    }
+
     setLoading(true);
     try {
       const body = {
@@ -164,6 +194,8 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         comparePrice: data.comparePrice ? parseFloat(data.comparePrice) : null,
         stock: parseInt(data.stock),
         images,
+        categoryIds: selectedCategoryIds,
+        primaryCategoryId: primaryCategoryId || selectedCategoryIds[0],
         variantIds: selectedVariants.map((v) => v.id),
       };
 
@@ -216,16 +248,55 @@ export function ProductForm({ categories, product }: ProductFormProps) {
             {...register("description")}
           />
         </div>
-        <Select
-          label="Categoría *"
-          error={errors.categoryId?.message}
-          {...register("categoryId")}
-        >
-          <option value="">Selecciona...</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>{cat.name}</option>
-          ))}
-        </Select>
+
+        {/* M2M Category checklist */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Categorías * <span className="text-[10px] text-gray-400 font-normal">(⭐ = principal)</span>
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {categories.map((cat) => {
+              const isSelected = selectedCategoryIds.includes(cat.id);
+              const isPrimary = primaryCategoryId === cat.id;
+              return (
+                <label
+                  key={cat.id}
+                  className={`flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer text-sm transition-colors ${
+                    isSelected
+                      ? "border-[#111111] bg-[#111111]/5 text-[#111111]"
+                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleCategory(cat.id)}
+                    className="accent-[#111111]"
+                  />
+                  <span className="flex-1 truncate">{cat.name}</span>
+                  {isSelected && (
+                    <button
+                      type="button"
+                      title="Marcar como principal"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setPrimary(cat.id);
+                      }}
+                      className={`text-base leading-none transition-opacity ${
+                        isPrimary ? "opacity-100" : "opacity-25 hover:opacity-60"
+                      }`}
+                    >
+                      ★
+                    </button>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+          {categoryError && (
+            <p className="text-xs text-red-500 mt-1">{categoryError}</p>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">

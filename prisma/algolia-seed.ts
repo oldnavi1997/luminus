@@ -8,10 +8,11 @@ async function main() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
   const prisma = new PrismaClient({ adapter });
 
-  const products = await prisma.product.findMany({ include: { category: true } });
+  const products = await prisma.product.findMany({ include: { categories: true } });
 
   for (const p of products) {
-    await indexProduct(p);
+    const primaryCat = p.categories.find((c) => c.id === p.primaryCategoryId) ?? p.categories[0];
+    await indexProduct({ ...p, category: primaryCat ?? null });
   }
 
   console.log(`Indexados ${products.length} productos en Algolia`);

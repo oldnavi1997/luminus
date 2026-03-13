@@ -27,7 +27,8 @@ const productCreateSchema = z.object({
   dimTempleLength: z.string().optional(),
   featured: z.boolean().default(false),
   active: z.boolean().default(true),
-  categoryId: z.string(),
+  categoryIds: z.array(z.string()).min(1),
+  primaryCategoryId: z.string(),
 });
 
 export async function GET(request: NextRequest) {
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
   const limit = Math.min(48, parseInt(searchParams.get("limit") || "24"));
 
   if (!searchParams.has("admin")) where.active = true;
-  if (category) where.category = { slug: category };
+  if (category) where.categories = { some: { slug: category } };
   if (gender) where.gender = gender;
   if (frameType) where.frameType = frameType;
   if (featured === "true") where.featured = true;
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
   const [products, total] = await Promise.all([
     prisma.product.findMany({
       where,
-      include: { category: true },
+      include: { categories: true },
       orderBy: sortMap[sort] || { createdAt: "desc" },
       skip: (page - 1) * limit,
       take: limit,
@@ -91,18 +92,21 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const data = productCreateSchema.parse(body);
+    const { categoryIds, primaryCategoryId, ...rest } = productCreateSchema.parse(body);
 
     const product = await prisma.product.create({
       data: {
-        ...data,
-        price: new Prisma.Decimal(data.price),
-        comparePrice: data.comparePrice ? new Prisma.Decimal(data.comparePrice) : null,
+        ...rest,
+        price: new Prisma.Decimal(rest.price),
+        comparePrice: rest.comparePrice ? new Prisma.Decimal(rest.comparePrice) : null,
+        primaryCategoryId,
+        categories: { connect: categoryIds.map((id) => ({ id })) },
       },
-      include: { category: true },
+      include: { categories: true },
     });
 
-    await indexProduct(product).catch(console.error);
+    const primaryCat = product.categories.find((c) => c.id === product.primaryCategoryId) ?? product.categories[0];
+    await indexProduct({ ...product, category: primaryCat ?? null }).catch(console.error);
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {

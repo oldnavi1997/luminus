@@ -24,7 +24,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const count = await prisma.product.count({ where: { categoryId: id } });
+    const count = await prisma.product.count({ where: { categories: { some: { id } } } });
     if (count > 0) {
       return NextResponse.json(
         { error: `No se puede eliminar: tiene ${count} producto(s) asociado(s)` },

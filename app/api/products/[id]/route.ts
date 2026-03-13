@@ -23,7 +23,7 @@ export async function GET(
   const product = await prisma.product.findUnique({
     where: { id },
     include: {
-      category: true,
+      categories: true,
       colorVariants: { select: { variant: { select: variantSelect } } },
       isVariantOf: { select: { product: { select: variantSelect } } },
     },
@@ -65,7 +65,8 @@ const updateSchema = z.object({
   dimTempleLength: z.string().optional(),
   featured: z.boolean().optional(),
   active: z.boolean().optional(),
-  categoryId: z.string().optional(),
+  categoryIds: z.array(z.string()).optional(),
+  primaryCategoryId: z.string().optional(),
   variantIds: z.array(z.string()).optional(),
 });
 
@@ -81,7 +82,7 @@ export async function PUT(
   const { id } = await params;
   try {
     const body = await request.json();
-    const { variantIds, ...rest } = updateSchema.parse(body);
+    const { variantIds, categoryIds, ...rest } = updateSchema.parse(body);
 
     const product = await prisma.product.update({
       where: { id },
@@ -91,8 +92,11 @@ export async function PUT(
         ...(rest.comparePrice !== undefined && {
           comparePrice: rest.comparePrice ? new Prisma.Decimal(rest.comparePrice) : null,
         }),
+        ...(categoryIds !== undefined && {
+          categories: { set: categoryIds.map((cid) => ({ id: cid })) },
+        }),
       },
-      include: { category: true },
+      include: { categories: true },
     });
 
     if (variantIds !== undefined) {
@@ -110,7 +114,8 @@ export async function PUT(
       ]);
     }
 
-    await indexProduct(product).catch(console.error);
+    const primaryCat = product.categories.find((c) => c.id === product.primaryCategoryId) ?? product.categories[0];
+    await indexProduct({ ...product, category: primaryCat ?? null }).catch(console.error);
     return NextResponse.json(product);
   } catch (error) {
     if (error instanceof z.ZodError) {

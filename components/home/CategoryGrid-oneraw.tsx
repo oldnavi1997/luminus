@@ -16,8 +16,8 @@ export async function CategoryGridOneRow({
   const [category, products] = await Promise.all([
     prisma.category.findFirst({ where: { slug: categorySlug } }),
     prisma.product.findMany({
-      where: { category: { slug: categorySlug }, active: true },
-      include: { category: true },
+      where: { categories: { some: { slug: categorySlug } }, active: true },
+      include: { categories: true },
       take: 12,
       orderBy: { createdAt: "desc" },
     }),

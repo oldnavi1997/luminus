@@ -30,6 +30,8 @@ export function Navbar({ categories }: NavbarProps) {
   const [openMobileCatId, setOpenMobileCatId] = useState<string | null>(null);
   const itemCount = useCartStore((s) => s.itemCount());
   const openDrawer = useCartStore((s) => s.openDrawer);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const navRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -116,7 +118,7 @@ export function Navbar({ categories }: NavbarProps) {
                   aria-label="Abrir carrito"
                 >
                   <ShoppingBag className="h-5 w-5" />
-                  {itemCount > 0 && (
+                  {mounted && itemCount > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 bg-[#1e293b] text-white text-[9px] font-bold rounded-full h-3.5 w-3.5 flex items-center justify-center">
                       {itemCount}
                     </span>
@@ -263,7 +265,7 @@ export function Navbar({ categories }: NavbarProps) {
                 aria-label="Abrir carrito"
               >
                 <ShoppingBag className="h-4.5 w-4.5" />
-                {itemCount > 0 && (
+                {mounted && itemCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-[#1e293b] text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center leading-none">
                     {itemCount > 9 ? "9+" : itemCount}
                   </span>
