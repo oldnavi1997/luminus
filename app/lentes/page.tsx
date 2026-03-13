@@ -81,7 +81,7 @@ async function getProducts(params: SearchParams) {
     return { products, total, pages: Math.ceil(total / limit), page };
   }
 
-  const orderBy = sortMap[params.sort] || { createdAt: "desc" };
+  const orderBy = sortMap[params.sort!] || { createdAt: "desc" };
 
   const [products, total] = await Promise.all([
     prisma.product.findMany({
