@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { ProductWithCategory } from "@/types";
 import { formatPEN } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
@@ -15,6 +16,7 @@ interface ProductTableProps {
 
 export function ProductTable({ products }: ProductTableProps) {
   const router = useRouter();
+  const [query, setQuery] = useState("");
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`¿Eliminar "${name}"?`)) return;
@@ -26,6 +28,16 @@ export function ProductTable({ products }: ProductTableProps) {
       toast.error("Error al eliminar");
     }
   };
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.brand ?? "").toLowerCase().includes(q) ||
+          p.category.name.toLowerCase().includes(q)
+      )
+    : products;
 
   if (products.length === 0) {
     return (
@@ -39,10 +51,31 @@ export function ProductTable({ products }: ProductTableProps) {
 
   return (
     <div>
-      <div className="px-5 py-4 border-b border-[#111111]/6">
-        <p className="text-[10px] text-[#111111]/40 uppercase tracking-[0.2em]">
-          {products.length} {products.length === 1 ? "producto" : "productos"}
+      <div className="px-5 py-4 border-b border-[#111111]/6 flex items-center gap-4">
+        <p className="text-[10px] text-[#111111]/40 uppercase tracking-[0.2em] shrink-0">
+          {filtered.length} {filtered.length === 1 ? "producto" : "productos"}
+          {q && products.length !== filtered.length && (
+            <span className="ml-1 text-[#111111]/25">de {products.length}</span>
+          )}
         </p>
+        <div className="relative ml-auto w-56">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar por nombre, marca..."
+            className="w-full pl-8 pr-7 py-1.5 text-[11px] bg-[#f8f7f4] border border-[#111111]/8 text-[#111111] placeholder-[#111111]/30 focus:outline-none focus:border-[#111111]/25 transition-colors"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#111111]/30 hover:text-[#111111]/60"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
       </div>
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -67,7 +100,14 @@ export function ProductTable({ products }: ProductTableProps) {
           </tr>
         </thead>
         <tbody>
-          {products.map((product) => (
+          {filtered.length === 0 && (
+            <tr>
+              <td colSpan={6} className="py-12 text-center text-[11px] text-[#111111]/30">
+                Sin resultados para &ldquo;{query}&rdquo;
+              </td>
+            </tr>
+          )}
+          {filtered.map((product) => (
             <tr
               key={product.id}
               className="border-b border-[#111111]/4 hover:bg-[#f8f7f4]/60 transition-colors"
