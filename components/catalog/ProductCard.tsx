@@ -61,7 +61,7 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
       className="group block bg-white border border-[#dadadd] overflow-hidden hover:border-[#1c1c1c]/20 hover:shadow-sm transition-all duration-400"
     >
       {/* Image container */}
-      <div className="relative aspect-square bg-[#f9f8f4] overflow-hidden cursor-zoom-in">
+      <div className="relative aspect-square bg-[#f9f8f4] overflow-hidden cursor-pointer">
         {imageUrl ? (
           <Image
             src={imageUrl}

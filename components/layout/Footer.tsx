@@ -38,18 +38,28 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Cuenta */}
+          {/* Información */}
           <div>
-            <p className="text-[10px] font-medium text-[#d4af37]/70 uppercase tracking-[0.2em] mb-4">Cuenta</p>
+            <p className="text-[10px] font-medium text-[#d4af37]/70 uppercase tracking-[0.2em] mb-4">Información</p>
             <ul className="space-y-3 text-sm text-white/40">
               <li>
-                <Link href="/auth/login" className="hover:text-white/80 transition-colors">
-                  Iniciar sesión
+                <Link href="/politica-de-envios-y-cancelacion-de-pedidos" className="hover:text-white/80 transition-colors">
+                  Política de envíos
                 </Link>
               </li>
               <li>
-                <Link href="/auth/register" className="hover:text-white/80 transition-colors">
-                  Registrarse
+                <Link href="/politica-de-devoluciones-y-reembolsos" className="hover:text-white/80 transition-colors">
+                  Devoluciones y reembolsos
+                </Link>
+              </li>
+              <li>
+                <Link href="/condiciones-de-servicio" className="hover:text-white/80 transition-colors">
+                  Condiciones de servicio
+                </Link>
+              </li>
+              <li>
+                <Link href="/preguntas-frecuentes" className="hover:text-white/80 transition-colors">
+                  Preguntas frecuentes
                 </Link>
               </li>
             </ul>
