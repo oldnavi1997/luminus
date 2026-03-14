@@ -215,22 +215,14 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                         key={cat.id}
                         type="button"
                         onClick={() => toggleBulkCategory(cat.id)}
-                        className={`w-full text-left px-2 py-1.5 text-sm transition-colors group relative ${
+                        className={`w-full text-left px-2 py-1.5 text-sm transition-colors rounded ${
                           selected
-                            ? "text-[#111111] font-medium"
-                            : "text-gray-500 hover:text-[#111111]"
+                            ? "bg-[#d4af37]/15 text-[#111111] font-medium"
+                            : "text-gray-500 hover:bg-[#d4af37]/10 hover:text-[#111111]"
                         }`}
                         style={{ paddingLeft: `${8 + depth * 16}px` }}
                       >
-                        <span
-                          className={`border-b-2 transition-colors pb-px ${
-                            selected
-                              ? "border-[#d4af37]"
-                              : "border-transparent group-hover:border-[#d4af37]/50"
-                          }`}
-                        >
-                          {cat.name}
-                        </span>
+                        {cat.name}
                         <span className="ml-1.5 text-[11px] text-gray-400">— {cat.slug}</span>
                       </button>
                     );
