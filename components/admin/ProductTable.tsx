@@ -16,8 +16,23 @@ interface ProductTableProps {
   categories?: Category[];
 }
 
+function sortedCategories(cats: Category[]): Category[] {
+  const roots = cats.filter((c) => !c.parentId).sort((a, b) => a.name.localeCompare(b.name));
+  const result: Category[] = [];
+  for (const root of roots) {
+    result.push(root);
+    const children = cats.filter((c) => c.parentId === root.id).sort((a, b) => a.name.localeCompare(b.name));
+    result.push(...children);
+  }
+  // orphans (parentId set but parent not in list)
+  const inResult = new Set(result.map((c) => c.id));
+  result.push(...cats.filter((c) => !inResult.has(c.id)).sort((a, b) => a.name.localeCompare(b.name)));
+  return result;
+}
+
 export function ProductTable({ products, categories = [] }: ProductTableProps) {
   const router = useRouter();
+  const orderedCategories = sortedCategories(categories);
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
@@ -186,7 +201,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                   Categorías
                 </p>
                 <div className="space-y-1.5 max-h-44 overflow-y-auto">
-                  {categories.map((cat) => (
+                  {orderedCategories.map((cat) => (
                     <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer">
                       <input
                         type="checkbox"
@@ -194,7 +209,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                         onChange={() => toggleBulkCategory(cat.id)}
                         className="accent-[#111111]"
                       />
-                      {cat.name} — {cat.slug}
+                      {cat.parentId ? "\u00a0\u00a0↳ " : ""}{cat.name} — {cat.slug}
                     </label>
                   ))}
                 </div>
@@ -221,7 +236,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                   </div>
                 </div>
 
-                {categories.length > 0 && (
+                {orderedCategories.length > 0 && (
                   <div>
                     <p className="text-xs font-semibold text-[#111111] uppercase tracking-[0.15em] mb-1.5">
                       Marcar como primaria (opcional)
@@ -232,8 +247,8 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                       className="w-full text-xs border border-gray-200 px-2 py-1.5 focus:outline-none focus:border-[#111111]"
                     >
                       <option value="">— Sin cambio —</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.name} — {cat.slug}</option>
+                      {orderedCategories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>{cat.parentId ? "↳ " : ""}{cat.name} — {cat.slug}</option>
                       ))}
                     </select>
                   </div>

@@ -73,7 +73,13 @@ export function CategoryTable({ categories }: CategoryTableProps) {
     }
   };
 
-  const parentOptions = categories;
+  const roots = categories.filter((c) => !c.parentId).sort((a, b) => a.name.localeCompare(b.name));
+  const parentOptions: Category[] = [];
+  for (const root of roots) {
+    parentOptions.push(root);
+    parentOptions.push(...categories.filter((c) => c.parentId === root.id).sort((a, b) => a.name.localeCompare(b.name)));
+  }
+  categories.filter((c) => c.parentId && !categories.find((r) => r.id === c.parentId)).forEach((c) => parentOptions.push(c));
 
   const openCreate = () => {
     setEditing(null);
@@ -375,7 +381,7 @@ export function CategoryTable({ categories }: CategoryTableProps) {
                 .filter((c) => !editing || c.id !== editing.id)
                 .map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} — {c.slug}
+                    {c.parentId ? "↳ " : ""}{c.name} — {c.slug}
                   </option>
                 ))}
             </select>
