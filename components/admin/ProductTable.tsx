@@ -194,7 +194,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                         onChange={() => toggleBulkCategory(cat.id)}
                         className="accent-[#111111]"
                       />
-                      {cat.name}
+                      {cat.name} — {cat.slug}
                     </label>
                   ))}
                 </div>
@@ -233,7 +233,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                     >
                       <option value="">— Sin cambio —</option>
                       {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        <option key={cat.id} value={cat.id}>{cat.name} — {cat.slug}</option>
                       ))}
                     </select>
                   </div>
