@@ -217,8 +217,8 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                         onClick={() => toggleBulkCategory(cat.id)}
                         className={`w-full text-left px-2 py-1.5 text-sm transition-colors rounded ${
                           selected
-                            ? "bg-[#d4af37]/15 text-[#111111] font-medium"
-                            : "text-gray-500 hover:bg-[#d4af37]/10 hover:text-[#111111]"
+                            ? "bg-[#d4af37]/40 text-[#111111] font-medium"
+                            : "text-gray-500 hover:bg-[#d4af37]/25 hover:text-[#111111]"
                         }`}
                         style={{ paddingLeft: `${8 + depth * 16}px` }}
                       >
