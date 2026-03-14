@@ -16,23 +16,30 @@ interface ProductTableProps {
   categories?: Category[];
 }
 
-function sortedCategories(cats: Category[]): Category[] {
-  const roots = cats.filter((c) => !c.parentId).sort((a, b) => a.name.localeCompare(b.name));
-  const result: Category[] = [];
-  for (const root of roots) {
-    result.push(root);
-    const children = cats.filter((c) => c.parentId === root.id).sort((a, b) => a.name.localeCompare(b.name));
-    result.push(...children);
+function sortedCategories(cats: Category[]): { cat: Category; depth: number }[] {
+  const childrenOf = new Map<string | null, Category[]>();
+  for (const cat of cats) {
+    const key = cat.parentId ?? null;
+    if (!childrenOf.has(key)) childrenOf.set(key, []);
+    childrenOf.get(key)!.push(cat);
   }
-  // orphans (parentId set but parent not in list)
-  const inResult = new Set(result.map((c) => c.id));
-  result.push(...cats.filter((c) => !inResult.has(c.id)).sort((a, b) => a.name.localeCompare(b.name)));
+  for (const list of childrenOf.values()) list.sort((a, b) => a.name.localeCompare(b.name));
+
+  const result: { cat: Category; depth: number }[] = [];
+  function walk(parentId: string | null, depth: number) {
+    for (const cat of childrenOf.get(parentId) ?? []) {
+      result.push({ cat, depth });
+      walk(cat.id, depth + 1);
+    }
+  }
+  walk(null, 0);
   return result;
 }
 
 export function ProductTable({ products, categories = [] }: ProductTableProps) {
   const router = useRouter();
   const orderedCategories = sortedCategories(categories);
+  const indent = (depth: number) => (depth > 0 ? "\u00a0".repeat(depth * 2) + "↳ " : "");
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
@@ -201,7 +208,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                   Categorías
                 </p>
                 <div className="space-y-1.5 max-h-44 overflow-y-auto">
-                  {orderedCategories.map((cat) => (
+                  {orderedCategories.map(({ cat, depth }) => (
                     <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer">
                       <input
                         type="checkbox"
@@ -209,7 +216,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                         onChange={() => toggleBulkCategory(cat.id)}
                         className="accent-[#111111]"
                       />
-                      {cat.parentId ? "\u00a0\u00a0↳ " : ""}{cat.name} — {cat.slug}
+                      {indent(depth)}{cat.name} — {cat.slug}
                     </label>
                   ))}
                 </div>
@@ -247,8 +254,8 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                       className="w-full text-xs border border-gray-200 px-2 py-1.5 focus:outline-none focus:border-[#111111]"
                     >
                       <option value="">— Sin cambio —</option>
-                      {orderedCategories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>{cat.parentId ? "↳ " : ""}{cat.name} — {cat.slug}</option>
+                      {orderedCategories.map(({ cat, depth }) => (
+                        <option key={cat.id} value={cat.id}>{indent(depth)}{cat.name} — {cat.slug}</option>
                       ))}
                     </select>
                   </div>

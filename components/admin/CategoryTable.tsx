@@ -73,13 +73,22 @@ export function CategoryTable({ categories }: CategoryTableProps) {
     }
   };
 
-  const roots = categories.filter((c) => !c.parentId).sort((a, b) => a.name.localeCompare(b.name));
-  const parentOptions: Category[] = [];
-  for (const root of roots) {
-    parentOptions.push(root);
-    parentOptions.push(...categories.filter((c) => c.parentId === root.id).sort((a, b) => a.name.localeCompare(b.name)));
+  const childrenOf = new Map<string | null, Category[]>();
+  for (const cat of categories) {
+    const key = cat.parentId ?? null;
+    if (!childrenOf.has(key)) childrenOf.set(key, []);
+    childrenOf.get(key)!.push(cat);
   }
-  categories.filter((c) => c.parentId && !categories.find((r) => r.id === c.parentId)).forEach((c) => parentOptions.push(c));
+  for (const list of childrenOf.values()) list.sort((a, b) => a.name.localeCompare(b.name));
+  const parentOptions: { cat: Category; depth: number }[] = [];
+  function walkCats(parentId: string | null, depth: number) {
+    for (const cat of childrenOf.get(parentId) ?? []) {
+      parentOptions.push({ cat, depth });
+      walkCats(cat.id, depth + 1);
+    }
+  }
+  walkCats(null, 0);
+  const indent = (depth: number) => (depth > 0 ? "\u00a0".repeat(depth * 2) + "↳ " : "");
 
   const openCreate = () => {
     setEditing(null);
@@ -378,10 +387,10 @@ export function CategoryTable({ categories }: CategoryTableProps) {
             >
               <option value="">Sin padre (categoría raíz)</option>
               {parentOptions
-                .filter((c) => !editing || c.id !== editing.id)
-                .map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.parentId ? "↳ " : ""}{c.name} — {c.slug}
+                .filter(({ cat }) => !editing || cat.id !== editing.id)
+                .map(({ cat, depth }) => (
+                  <option key={cat.id} value={cat.id}>
+                    {indent(depth)}{cat.name} — {cat.slug}
                   </option>
                 ))}
             </select>
