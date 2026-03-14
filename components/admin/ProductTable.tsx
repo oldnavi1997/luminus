@@ -203,22 +203,38 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
             </button>
 
             {bulkPanelOpen && (
-              <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-gray-200 shadow-xl z-20 p-4 space-y-3">
+              <div className="absolute top-full left-0 mt-1 w-96 bg-white border border-gray-200 shadow-xl z-20 p-5 space-y-4">
                 <p className="text-xs font-semibold text-[#111111] uppercase tracking-[0.15em]">
                   Categorías
                 </p>
-                <div className="space-y-1.5 max-h-44 overflow-y-auto">
-                  {orderedCategories.map(({ cat, depth }) => (
-                    <label key={cat.id} className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={bulkCategoryIds.includes(cat.id)}
-                        onChange={() => toggleBulkCategory(cat.id)}
-                        className="accent-[#111111]"
-                      />
-                      {indent(depth)}{cat.name} — {cat.slug}
-                    </label>
-                  ))}
+                <div className="space-y-0.5 max-h-64 overflow-y-auto">
+                  {orderedCategories.map(({ cat, depth }) => {
+                    const selected = bulkCategoryIds.includes(cat.id);
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => toggleBulkCategory(cat.id)}
+                        className={`w-full text-left px-2 py-1.5 text-sm transition-colors group relative ${
+                          selected
+                            ? "text-[#111111] font-medium"
+                            : "text-gray-500 hover:text-[#111111]"
+                        }`}
+                        style={{ paddingLeft: `${8 + depth * 16}px` }}
+                      >
+                        <span
+                          className={`border-b-2 transition-colors pb-px ${
+                            selected
+                              ? "border-[#d4af37]"
+                              : "border-transparent group-hover:border-[#d4af37]/50"
+                          }`}
+                        >
+                          {cat.name}
+                        </span>
+                        <span className="ml-1.5 text-[11px] text-gray-400">— {cat.slug}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div>
