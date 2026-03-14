@@ -240,7 +240,7 @@ export default async function ProductPage({ params }: Props) {
                   ].filter((d) => d.value).map(({ label, value }) => (
                     <div key={label}>
                       <p className="text-[10px] text-[#111111]/35 uppercase tracking-[0.15em] mb-0.5">{label}</p>
-                      <p className="text-sm text-[#111111]">{value}</p>
+                      <p className="text-sm text-[#111111]">{value} mm</p>
                     </div>
                   ))}
                 </div>
