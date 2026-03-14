@@ -375,7 +375,7 @@ export function CategoryTable({ categories }: CategoryTableProps) {
                 .filter((c) => !editing || c.id !== editing.id)
                 .map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name}
+                    {c.name} — {c.slug}
                   </option>
                 ))}
             </select>
