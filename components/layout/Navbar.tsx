@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { ShoppingBag, User, LogOut, Menu, X, ChevronDown } from "lucide-react";
+import { ShoppingBag, LogOut, Menu, X, ChevronDown } from "lucide-react";
 import { SearchBar } from "@/components/search/SearchBar";
 import { useState, useEffect, useRef } from "react";
 import { useCartStore } from "@/stores/cart";
@@ -248,14 +248,6 @@ export function Navbar({ categories }: NavbarProps) {
                     <LogOut className="h-4 w-4" />
                   </button>
                 </div>
-              ) : (
-                <Link
-                  href="/auth/login"
-                  className="text-[#334155]/50 hover:text-[#1e293b] transition-colors"
-                  title="Iniciar sesión"
-                >
-                  <User className="h-4 w-4" />
-                </Link>
               )}
 
               <SearchBar
@@ -413,16 +405,6 @@ export function Navbar({ categories }: NavbarProps) {
 
           <div className="mt-4 h-px bg-[#d5d5d5]/60" />
 
-          {session ? null : (
-            <Link
-              href="/auth/login"
-              className="group flex items-center gap-3 py-3 text-[11px] text-[#334155]/60 hover:text-[#1e293b] uppercase tracking-[0.3em] transition-colors duration-200"
-              onClick={closeMenu}
-            >
-              <User className="h-3.5 w-3.5 shrink-0" />
-              Iniciar sesión
-            </Link>
-          )}
         </nav>
 
         {/* Drawer footer */}
