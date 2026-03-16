@@ -2,20 +2,17 @@ export const dynamic = "force-dynamic";
 
 import { prisma } from "@/lib/prisma";
 import { HeroSection } from "@/components/home/HeroSection";
-import { CategoryGrid } from "@/components/home/CategoryGrid";
+import { TrustBar } from "@/components/home/CategoryGrid";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { CategoryGridOneRow } from "@/components/home/CategoryGrid-oneraw";
 
 export default async function HomePage() {
-  const [categories, featuredProducts] = await Promise.all([
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
-    prisma.product.findMany({
-      where: { featured: true, active: true },
-      include: { categories: true },
-      take: 8,
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
+  const featuredProducts = await prisma.product.findMany({
+    where: { featured: true, active: true },
+    include: { categories: true },
+    take: 8,
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <>
@@ -34,7 +31,7 @@ export default async function HomePage() {
           Realizamos a medida tus lentes, consultanos.
         </p>
       </section>
-      <CategoryGrid categories={categories} />
+      <TrustBar />
       <FeaturedProducts products={featuredProducts} />
     </>
   );

@@ -1,58 +1,48 @@
-import Link from "next/link";
-import { Category } from "@/app/generated/prisma/client";
-
-interface CategoryGridProps {
-  categories: Category[];
-}
-
-export function CategoryGrid({ categories }: CategoryGridProps) {
+export function TrustBar() {
   return (
-    <section className="py-20 bg-[#f8f7f4]">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8">
-        {/* Section header */}
-        <div className="flex items-center gap-5 mb-12">
-          <div className="h-px flex-1 bg-[#111111]/10" />
-          <h2
-            className="text-[11px] font-medium text-[#111111]/50 uppercase tracking-[0.3em] whitespace-nowrap"
-          >
-            Categorías
-          </h2>
-          <div className="h-px flex-1 bg-[#111111]/10" />
-        </div>
+    <section className="py-16 bg-[#f8f7f4] border-y border-[#111111]/6">
+      <div className="max-w-4xl mx-auto px-5 sm:px-8">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-6">
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          {categories.map((cat, i) => (
-            <Link
-              key={cat.id}
-              href={`/lentes?category=${cat.slug}`}
-              className="group relative bg-white border border-[#111111]/6 p-7 hover:border-[#d4af37]/40 hover:shadow-[0_8px_40px_rgba(201,168,76,0.1)] transition-all duration-400"
-              style={{ animationDelay: `${i * 0.07}s` }}
-            >
-              {/* Gold accent corner */}
-              <div className="absolute top-0 left-0 w-0 h-0.5 bg-[#d4af37] group-hover:w-full transition-all duration-500" />
+          {/* Envíos a nivel nacional */}
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="w-12 h-12 text-[#d4af37]">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.25} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#111111] uppercase tracking-[0.15em]">Envíos a nivel nacional</p>
+              <p className="text-xs text-[#111111]/50 mt-1 leading-relaxed">Despachamos a todo el Perú con seguimiento en tiempo real</p>
+            </div>
+          </div>
 
-              <div className="mb-4">
-                <div className="w-8 h-px bg-[#d4af37]/40 mb-5 group-hover:w-14 transition-all duration-400" />
-                <h3
-                  className="text-base font-light text-[#111111] group-hover:text-[#d4af37] transition-colors duration-300"
-                  style={{ fontFamily: "var(--font-playfair, serif)" }}
-                >
-                  {cat.name}
-                </h3>
-              </div>
+          {/* Pagos seguros */}
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="w-12 h-12 text-[#d4af37]">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.25} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#111111] uppercase tracking-[0.15em]">Pagos seguros</p>
+              <p className="text-xs text-[#111111]/50 mt-1 leading-relaxed">Transacciones protegidas con cifrado SSL y Mercado Pago</p>
+            </div>
+          </div>
 
-              {cat.description && (
-                <p className="text-xs text-[#111111]/40 leading-relaxed line-clamp-2">
-                  {cat.description}
-                </p>
-              )}
+          {/* Atención personalizada */}
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="w-12 h-12 text-[#d4af37]">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.25} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#111111] uppercase tracking-[0.15em]">Atención personalizada</p>
+              <p className="text-xs text-[#111111]/50 mt-1 leading-relaxed">Asesoramiento experto para encontrar tus lentes ideales</p>
+            </div>
+          </div>
 
-              <div className="mt-5 flex items-center gap-2 text-[#d4af37] opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <span className="text-[10px] uppercase tracking-[0.2em]">Ver</span>
-                <div className="h-px w-4 bg-[#d4af37]" />
-              </div>
-            </Link>
-          ))}
         </div>
       </div>
     </section>
