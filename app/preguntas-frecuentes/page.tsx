@@ -19,24 +19,34 @@ const faqData: FaqCategory[] = [
     title: "Pedidos y envíos",
     items: [
       {
-        question: "¿Cuánto tarda en llegar mi pedido?",
+        question: "¿Cuáles son sus destinos de envío y los costos asociados?",
         answer:
-          "Los pedidos en Lima Metropolitana se entregan en 2 a 4 días hábiles. Para el resto del país, el plazo es de 5 a 8 días hábiles contados desde la confirmación del pago.",
+          "Área de envío: Nacional. Gastos de envío:\n• Shalom: S/ 8.\n• Olva Courier: S/ 10–18 (puede variar según la región destino).\n• Olva Courier vía aérea: S/ 25.\n\nTenga en cuenta que nuestros accesorios para gafas no están disponibles para su compra individual; solo se pueden adquirir con la compra de un producto para gafas. En algunos casos, es posible que no se pueda realizar la entrega en ciertas regiones. Si su ubicación se ve afectada, le notificaremos de inmediato y emitiremos un reembolso.",
       },
       {
-        question: "¿Tienen envío gratuito?",
+        question: "¿Puede proporcionarme un tiempo de entrega estimado para mi pedido?",
         answer:
-          "Sí. Los pedidos con un subtotal igual o mayor a S/ 199 califican para envío gratuito a cualquier punto del Perú.",
+          "Periodo de procesamiento del pedido: espere que su pedido se procese dentro de 1 a 2 días hábiles.\n\nPeriodo de envío: después del procesamiento, anticipamos la entrega dentro de 2 a 3 días.",
       },
       {
-        question: "¿Puedo rastrear mi pedido?",
+        question: "Si decido cambiar o cancelar mi pedido, ¿cuál es el proceso y los cargos asociados?",
         answer:
-          "Sí. Una vez despachado tu pedido, recibirás un correo con el código de seguimiento y el enlace al sitio del courier para que puedas monitorear el estado de tu entrega en tiempo real.",
+          "Puede cancelar su pedido antes de su envío contactando a nuestro WhatsApp. Sin embargo, le recomendamos revisar su pedido cuidadosamente antes de realizar el pago para evitar inconvenientes.\n\nUna vez enviado, no es posible cancelar, pero puedes solicitar una devolución al recibirlo, asumiendo el coste del envío de devolución.",
       },
       {
-        question: "¿Hacen envíos fuera de Perú?",
+        question: "¿Es posible actualizar mi dirección de envío después de realizar un pedido?",
         answer:
-          "Por el momento solo realizamos envíos dentro del territorio peruano. Si te encuentras en el extranjero y deseas adquirir nuestros productos, contáctanos a contacto@luminuseyewear.com para evaluar opciones.",
+          "Sí, si necesita cambiar su dirección de envío, notifíquenoslo lo antes posible. Sin embargo, los cambios se complican una vez completado el envío.",
+      },
+      {
+        question: "¿Dónde puedo encontrar información de seguimiento de mi paquete?",
+        answer:
+          "Una vez enviado tu pedido, recibirás un mensaje con el número de seguimiento. Podrás rastrear tu paquete directamente desde la página web de la empresa de envío (Olva Courier, Shalom).",
+      },
+      {
+        question: "¿Cuál es el procedimiento si mi pedido no logra ser entregado por el transportista?",
+        answer:
+          "Nos haremos responsables si el pedido no es entregado. Se le envía un nuevo pedido en tal caso.",
       },
     ],
   },
@@ -44,54 +54,73 @@ const faqData: FaqCategory[] = [
     title: "Productos",
     items: [
       {
-        question: "¿Los lentes incluyen estuche y paño?",
+        question: "¿Ofrecen servicios de graduación para sus lentes?",
         answer:
-          "Sí. Todos nuestros lentes vienen acompañados de un estuche rígido y un paño de microfibra para su cuidado y almacenamiento.",
+          "Sí. Para tal caso necesita adjuntar una foto de su ficha de ojos. Con ello los realizamos a su medida.",
       },
       {
-        question: "¿Cómo sé qué talla de lentes es la correcta para mí?",
+        question: "¿Dónde puedo consultar las medidas del producto?",
         answer:
-          "Cada producto en nuestro catálogo incluye las medidas del armazón (ancho del lente, puente y varilla). Si tienes dudas, escríbenos y te ayudamos a elegir el modelo más adecuado para el ancho de tu rostro.",
+          "Las medidas y detalles del producto están disponibles en la página de cada producto en el menú "descripción".",
       },
       {
-        question: "¿Venden lentes con prescripción?",
+        question: "¿Qué hacer si un artículo que quiero comprar está agotado?",
         answer:
-          "Actualmente nuestro catálogo incluye lentes de sol y armazones ópticos, pero el servicio de graduación con prescripción no está disponible de forma directa en el sitio. Puedes llevar el armazón a un óptico de tu confianza para que te instalen los cristales con tu medida.",
+          "Puede solicitar una notificación de disponibilidad contactándonos al WhatsApp indicando "Notificarme cuando esté disponible". Le notificaremos en cuanto el artículo vuelva a estar disponible.",
+      },
+      {
+        question: "¿Qué tipos de lentes están disponibles para la selección de gafas?",
+        answer:
+          "Al elegir nuestras gafas, los clientes pueden elegir entre lentes de demostración (Montura) y lentes con Filtro de luz azul. En caso de desear lentes a medida, debe contactarnos por WhatsApp o Instagram. Tenga en cuenta que los lentes con Filtro de luz azul tienen un cargo adicional.\n\nNuestras lentes opcionales con Filtro de luz azul cuentan con protección UV 400 y antirreflejo, con una tasa de bloqueo estimada del 30 %. Tenga en cuenta que las gafas con estas lentes opcionales no se pueden devolver.",
+      },
+      {
+        question: "¿Ofrecen gafas de sol polarizadas en su colección?",
+        answer:
+          "Sí, ofrecemos gafas de sol polarizadas que bloquean eficazmente los rayos UV y la luz reflejada, reduciendo el deslumbramiento para una visión clara durante las actividades al aire libre.",
+      },
+      {
+        question: "¿A qué categoría de filtro solar pertenecen sus gafas de sol?",
+        answer:
+          "Todas nuestras lentes de gafas de sol ofrecen protección UV 400 / 100 % contra los rayos UVA, UVB y UVC.",
+      },
+      {
+        question: "¿Cuáles son los procedimientos de mantenimiento y cuidado recomendados para las monturas?",
+        answer:
+          "Para garantizar la longevidad de sus gafas y mantener una visión clara y cómoda, siga estos consejos:\n\n• Limpieza: utilice un limpiador de lentes suave y un paño de microfibra. Evite productos químicos agresivos o materiales abrasivos.\n• Almacenamiento: guarde sus gafas en un estuche protector cuando no las use. Evite colocarlas con los lentes hacia abajo.\n• Evitar el calor: manténgalas lejos de fuentes de calor directas (agua caliente, secadores, tableros de automóviles).\n• Ajuste y mantenimiento: revise periódicamente tornillos, plaquetas nasales y terminales de patillas. Acuda a un óptico si necesita ajuste.\n• Evitar la humedad: mantenga sus gafas lejos de áreas con mucha humedad.",
+      },
+      {
+        question: "¿Reparan monturas o lunas?",
+        answer: "LUMINUS no realiza servicios de reparación de monturas.",
       },
     ],
   },
   {
-    title: "Pagos",
+    title: "Devoluciones y garantía",
     items: [
       {
-        question: "¿Qué medios de pago aceptan?",
+        question: "¿Cuál es su política con respecto a las devoluciones?",
         answer:
-          "Aceptamos tarjetas de débito y crédito Visa, Mastercard y American Express a través de nuestra pasarela de pago segura con Mercado Pago.",
+          "En LUMINUS, nuestra principal prioridad es garantizar su completa satisfacción con cada compra. Si por cualquier motivo no está satisfecho, ofrecemos un proceso formal de devolución y reembolso para atender sus inquietudes. Visita nuestra página de Política de devoluciones y reembolsos para obtener más detalles.",
       },
       {
-        question: "¿Es seguro pagar en el sitio?",
+        question: "¿Cómo debo proceder para devolver o cambiar artículos dañados o incorrectos?",
         answer:
-          "Sí. Nuestro sitio utiliza conexión HTTPS con cifrado SSL y procesamos los pagos a través de Mercado Pago, que cumple con los estándares PCI DSS de seguridad de datos de tarjetas. Luminus no almacena datos de tu tarjeta en ningún momento.",
+          "Puede iniciar fácilmente una devolución contactando a nuestro WhatsApp. Nuestro horario de atención es de lunes a viernes, de 9:00 a. m. a 8:00 p. m.\n\nSi encuentra algún problema con el producto al recibirlo, proporcione una descripción detallada del problema junto con una foto que muestre el daño.",
       },
       {
-        question: "¿Puedo pagar en cuotas?",
+        question: "¿Es posible cambiar un artículo si cambio de opinión sobre mi compra?",
         answer:
-          "La disponibilidad de cuotas depende del banco emisor de tu tarjeta y de las promociones vigentes de Mercado Pago. En el paso de pago podrás ver las opciones de financiamiento disponibles para tu tarjeta.",
-      },
-    ],
-  },
-  {
-    title: "Devoluciones",
-    items: [
-      {
-        question: "¿Puedo devolver un producto?",
-        answer:
-          "Sí, aceptamos devoluciones dentro de los 30 días calendario desde la recepción, siempre que el producto esté sin uso, en su empaque original y con la boleta de compra. Consulta nuestra Política de devoluciones para más detalles.",
+          "Sí. Para devoluciones por cambio de opinión, organice el envío por la misma agencia de envío inicial y cubra los gastos de envío. Una vez recibido el artículo devuelto, le reembolsaremos el importe íntegro lo antes posible. Si desea cambiar el producto por otro, le rogamos que realice un nuevo pedido.",
       },
       {
-        question: "¿Cuánto demora el reembolso?",
+        question: "¿Cuánto tiempo suele tardar en procesarse una devolución?",
         answer:
-          "Una vez aprobada la devolución e inspeccionado el producto, procesamos el reembolso en 5 a 10 días hábiles por el mismo medio de pago que utilizaste en la compra.",
+          "Una vez que recibamos e inspeccionemos los productos devueltos, procesaremos su reembolso en un plazo de 3 días hábiles. Tenga en cuenta que el tiempo de envío puede variar según la empresa de transporte.",
+      },
+      {
+        question: "¿Qué cubre su póliza de garantía y cuánto dura?",
+        answer:
+          "Todos nuestros lentes cuentan con una garantía de 180 días para fallas de fábrica.\n\nSi sientes que ha habido un error en la medida de tus lunas, cuentas con 15 días desde la fecha de recepción para hacernos llegar tus lentes. Si comprobamos que hubo un error, las reemplazaremos de manera gratuita cubriendo los gastos de envío.\n\nMonturas Titanio y Acetato: garantía de 180 días desde la recepción. Monturas TR90 y Metal: garantía de 90 días. De darse el caso, recibirás un reembolso del 100 % del monto pagado como crédito en la tienda o el cambio por una montura nueva del mismo modelo, incluyendo el traspaso de tus lunas.",
       },
     ],
   },

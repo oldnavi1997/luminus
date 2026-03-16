@@ -9,9 +9,19 @@ export function HeroSection() {
         muted
         loop
         playsInline
+        preload="auto"
+        poster="https://res.cloudinary.com/dzqns7kss/video/upload/so_0,f_jpg,q_80,w_1280/v1773378566/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.jpg"
         className="absolute inset-0 w-full h-full object-cover"
-        src="https://res.cloudinary.com/dzqns7kss/video/upload/v1773378566/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.webm"
-      />
+      >
+        <source
+          src="https://res.cloudinary.com/dzqns7kss/video/upload/f_mp4,q_auto,vc_h264/v1773378566/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.mp4"
+          type="video/mp4"
+        />
+        <source
+          src="https://res.cloudinary.com/dzqns7kss/video/upload/f_webm,q_auto/v1773378566/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.webm"
+          type="video/webm"
+        />
+      </video>
       <div className="absolute inset-0 bg-black/10" />
 
       <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-24 md:py-0 w-full">

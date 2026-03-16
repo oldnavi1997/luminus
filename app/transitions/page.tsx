@@ -477,8 +477,16 @@ export default function TransitionsGenS() {
         {/* LEFT: Hero */}
         <div className="tg-hero-section">
           <div className="tg-hero-bg">
-            <video autoPlay muted loop playsInline>
-              <source src="https://res.cloudinary.com/dzqns7kss/video/upload/v1773435949/gen-s-genstyle_bvpgyx.webm" type="video/webm" />
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              poster="https://res.cloudinary.com/dzqns7kss/video/upload/so_0,f_jpg,q_80,w_1280/v1773435949/gen-s-genstyle_bvpgyx.jpg"
+            >
+              <source src="https://res.cloudinary.com/dzqns7kss/video/upload/f_mp4,q_auto,vc_h264/v1773435949/gen-s-genstyle_bvpgyx.mp4" type="video/mp4" />
+              <source src="https://res.cloudinary.com/dzqns7kss/video/upload/f_webm,q_auto/v1773435949/gen-s-genstyle_bvpgyx.webm" type="video/webm" />
             </video>
           </div>
           <div className="tg-nuevo-watermark">NUEVO</div>
@@ -576,8 +584,18 @@ export default function TransitionsGenS() {
 
       {/* Colors — full bleed */}
       <div className={`tg-colors-fullwidth fade-in delay-4 ${visible ? "visible" : ""}`}>
-        <video ref={colorsVideoRef} autoPlay muted loop playsInline className="tg-colors-fullwidth-video">
-          <source src="https://res.cloudinary.com/dzqns7kss/video/upload/v1773437207/8-colors-720_on4mcc.webm" type="video/webm" />
+        <video
+          ref={colorsVideoRef}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          poster="https://res.cloudinary.com/dzqns7kss/video/upload/so_0,f_jpg,q_80,w_720/v1773437207/8-colors-720_on4mcc.jpg"
+          className="tg-colors-fullwidth-video"
+        >
+          <source src="https://res.cloudinary.com/dzqns7kss/video/upload/f_mp4,q_auto,vc_h264/v1773437207/8-colors-720_on4mcc.mp4" type="video/mp4" />
+          <source src="https://res.cloudinary.com/dzqns7kss/video/upload/f_webm,q_auto/v1773437207/8-colors-720_on4mcc.webm" type="video/webm" />
         </video>
         <div className="tg-colors-overlay" />
 
