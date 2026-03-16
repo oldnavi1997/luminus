@@ -238,7 +238,7 @@ export function Navbar({ categories }: NavbarProps) {
 
               <div className="w-px h-3 bg-[#d5d5d5]" />
 
-              {session ? (
+              {session && (
                 <div className="flex items-center gap-5">
                   <button
                     onClick={() => signOut({ callbackUrl: "/" })}
