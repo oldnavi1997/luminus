@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { ShoppingBag, User, LogOut, Settings, Menu, X, ChevronDown } from "lucide-react";
+import { ShoppingBag, User, LogOut, Menu, X, ChevronDown } from "lucide-react";
 import { SearchBar } from "@/components/search/SearchBar";
 import { useState, useEffect, useRef } from "react";
 import { useCartStore } from "@/stores/cart";
@@ -240,15 +240,6 @@ export function Navbar({ categories }: NavbarProps) {
 
               {session ? (
                 <div className="flex items-center gap-5">
-                  {session.user.role === "ADMIN" && (
-                    <Link
-                      href="/admin"
-                      className="flex items-center gap-1.5 text-[11px] font-medium text-[#d4af37]/80 hover:text-[#d4af37] transition-colors tracking-[0.15em] uppercase"
-                    >
-                      <Settings className="h-3.5 w-3.5" />
-                      Admin
-                    </Link>
-                  )}
                   <button
                     onClick={() => signOut({ callbackUrl: "/" })}
                     className="text-[#334155]/40 hover:text-[#1e293b] transition-colors"
@@ -422,20 +413,7 @@ export function Navbar({ categories }: NavbarProps) {
 
           <div className="mt-4 h-px bg-[#d5d5d5]/60" />
 
-          {session ? (
-            <>
-              {session.user.role === "ADMIN" && (
-                <Link
-                  href="/admin"
-                  className="group flex items-center gap-3 py-3 text-[11px] text-[#d4af37]/70 hover:text-[#d4af37] uppercase tracking-[0.25em] transition-colors duration-200"
-                  onClick={closeMenu}
-                >
-                  <Settings className="h-3.5 w-3.5 shrink-0" />
-                  Panel admin
-                </Link>
-              )}
-            </>
-          ) : (
+          {session ? null : (
             <Link
               href="/auth/login"
               className="group flex items-center gap-3 py-3 text-[11px] text-[#334155]/60 hover:text-[#1e293b] uppercase tracking-[0.3em] transition-colors duration-200"
