@@ -61,12 +61,12 @@ const faqData: FaqCategory[] = [
       {
         question: "¿Dónde puedo consultar las medidas del producto?",
         answer:
-          "Las medidas y detalles del producto están disponibles en la página de cada producto en el menú "descripción".",
+          "Las medidas y detalles del producto están disponibles en la página de cada producto en el menú \"descripción\".",
       },
       {
         question: "¿Qué hacer si un artículo que quiero comprar está agotado?",
         answer:
-          "Puede solicitar una notificación de disponibilidad contactándonos al WhatsApp indicando "Notificarme cuando esté disponible". Le notificaremos en cuanto el artículo vuelva a estar disponible.",
+          "Puede solicitar una notificación de disponibilidad contactándonos al WhatsApp indicando \"Notificarme cuando esté disponible\". Le notificaremos en cuanto el artículo vuelva a estar disponible.",
       },
       {
         question: "¿Qué tipos de lentes están disponibles para la selección de gafas?",
