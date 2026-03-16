@@ -25,6 +25,7 @@ interface NavbarProps {
 export function Navbar({ categories }: NavbarProps) {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [openCatId, setOpenCatId] = useState<string | null>(null);
   const [openMobileCatId, setOpenMobileCatId] = useState<string | null>(null);
@@ -75,6 +76,11 @@ export function Navbar({ categories }: NavbarProps) {
     setOpenMobileCatId(null);
   };
 
+  const openMenu = () => {
+    setMenuOpen(true);
+    setSearchOpen(false);
+  };
+
   return (
     <>
       <nav
@@ -93,7 +99,7 @@ export function Navbar({ categories }: NavbarProps) {
               <div className="flex-1 flex justify-start">
                 <button
                   className="text-[#334155]/70 hover:text-[#1e293b] transition-colors"
-                  onClick={() => setMenuOpen(true)}
+                  onClick={openMenu}
                   aria-label="Abrir menú"
                 >
                   <Menu className="h-5 w-5" />
@@ -111,9 +117,14 @@ export function Navbar({ categories }: NavbarProps) {
                 </Link>
               </div>
               <div className="flex-1 flex justify-end items-center gap-3">
-                <SearchBar className="text-[#334155]/70 hover:text-[#1e293b] transition-colors" />
+                <SearchBar
+                  className="text-[#334155]/70 hover:text-[#1e293b] transition-colors"
+                  open={searchOpen}
+                  onOpen={() => setSearchOpen(true)}
+                  onClose={() => setSearchOpen(false)}
+                />
                 <button
-                  onClick={openDrawer}
+                  onClick={() => { openDrawer(); setSearchOpen(false); }}
                   className="relative text-[#334155]/70"
                   aria-label="Abrir carrito"
                 >
@@ -256,10 +267,14 @@ export function Navbar({ categories }: NavbarProps) {
                 </Link>
               )}
 
-              <SearchBar />
+              <SearchBar
+                open={searchOpen}
+                onOpen={() => setSearchOpen(true)}
+                onClose={() => setSearchOpen(false)}
+              />
 
               <button
-                onClick={openDrawer}
+                onClick={() => { openDrawer(); setSearchOpen(false); }}
                 className="relative text-[#334155]/60 hover:text-[#1e293b] transition-colors"
                 title="Carrito"
                 aria-label="Abrir carrito"

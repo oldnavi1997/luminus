@@ -231,23 +231,31 @@ function SearchDrawer({ open, onClose }: { open: boolean; onClose: () => void })
 interface SearchBarProps {
   /** Additional classes for the icon button */
   className?: string;
+  /** Controlled open state (optional — uncontrolled if omitted) */
+  open?: boolean;
+  onOpen?: () => void;
+  onClose?: () => void;
 }
 
-export function SearchBar({ className }: SearchBarProps) {
-  const [open, setOpen] = useState(false);
+export function SearchBar({ className, open: controlledOpen, onOpen, onClose }: SearchBarProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const handleOpen = () => (onOpen ? onOpen() : setInternalOpen(true));
+  const handleClose = () => (onClose ? onClose() : setInternalOpen(false));
 
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         className={className ?? "text-[#334155]/60 hover:text-[#1e293b] transition-colors"}
         aria-label="Buscar"
-        aria-expanded={open}
+        aria-expanded={isOpen}
       >
         <Search className="h-4.5 w-4.5" />
       </button>
 
-      <SearchDrawer open={open} onClose={() => setOpen(false)} />
+      <SearchDrawer open={isOpen} onClose={handleClose} />
     </>
   );
 }
