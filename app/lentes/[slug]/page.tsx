@@ -22,9 +22,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!product) return { title: "Producto no encontrado" };
 
   const primaryCat = getPrimaryCategory(product);
+  const description =
+    product.description ||
+    `${product.name} – ${primaryCat?.name ?? "Lentes premium"} | Luminus`;
+  const image = product.images?.[0] ?? null;
+  const url = `${process.env.NEXT_PUBLIC_APP_URL}/lentes/${slug}`;
+
   return {
     title: product.name,
-    description: product.description || `${product.name} – ${primaryCat?.name ?? ""}`,
+    description,
+    openGraph: {
+      title: product.name,
+      description,
+      url,
+      siteName: "Luminus",
+      type: "website",
+      ...(image && {
+        images: [{ url: image, width: 1200, height: 630, alt: product.name }],
+      }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.name,
+      description,
+      ...(image && { images: [image] }),
+    },
   };
 }
 

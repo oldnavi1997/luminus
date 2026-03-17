@@ -20,7 +20,7 @@ const dmSans = DM_Sans({
 
 export const metadata: Metadata = {
   title: {
-    default: "Luminus – Lentes premium",
+    default: "Luminus – Lentes con estilo",
     template: "%s | Luminus",
   },
   description: "Tu destino de confianza para lentes de calidad en Perú.",
