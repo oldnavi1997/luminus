@@ -29,6 +29,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CldUploadWidget } from "next-cloudinary";
+import { MediaLibraryModal } from "@/components/admin/MediaLibraryModal";
 
 function SortableImage({
   url,
@@ -107,6 +108,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<string[]>(product?.images || []);
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
 
   // M2M category state
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
@@ -466,6 +468,21 @@ export function ProductForm({ categories, product }: ProductFormProps) {
             </button>
           )}
         </CldUploadWidget>
+
+        <button
+          type="button"
+          onClick={() => setShowMediaLibrary(true)}
+          className="flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-[#111111] hover:text-[#111111] transition-colors"
+        >
+          + Seleccionar de galería
+        </button>
+
+        <MediaLibraryModal
+          open={showMediaLibrary}
+          onClose={() => setShowMediaLibrary(false)}
+          currentImages={images}
+          onConfirm={(newUrls) => setImages((prev) => [...prev, ...newUrls])}
+        />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
