@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const query = cloudinary.search
-      .expression("folder:luminus-products")
+      .expression("folder:luminus")
       .sort_by("created_at", "desc")
       .max_results(max_results);
 
