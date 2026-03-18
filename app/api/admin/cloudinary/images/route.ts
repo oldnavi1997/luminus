@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
       resource_type: "image",
       max_results,
       next_cursor,
+      direction: "desc",
     });
 
     const images = (result.resources as { secure_url: string; public_id: string }[]).map(
