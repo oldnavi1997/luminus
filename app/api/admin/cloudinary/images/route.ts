@@ -20,12 +20,11 @@ export async function GET(request: NextRequest) {
       resource_type: "image",
       max_results,
       next_cursor,
-      direction: "desc",
     });
 
-    const images = (result.resources as { secure_url: string; public_id: string }[]).map(
-      (r) => ({ url: r.secure_url, publicId: r.public_id })
-    );
+    const images = (result.resources as { secure_url: string; public_id: string; created_at: string }[])
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .map((r) => ({ url: r.secure_url, publicId: r.public_id }));
 
     return NextResponse.json({
       images,
