@@ -346,7 +346,10 @@ export function ProductForm({ categories, product }: ProductFormProps) {
                     onChange={() => toggleCategory(cat.id)}
                     className="accent-[#111111]"
                   />
-                  <span className="flex-1 truncate">{cat.name}</span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block truncate">{cat.name}</span>
+                    <span className="block truncate text-[10px] text-gray-400 font-mono">{cat.slug}</span>
+                  </span>
                   {isSelected && (
                     <button
                       type="button"
