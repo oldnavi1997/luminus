@@ -13,6 +13,64 @@ import { Button } from "@/components/ui/Button";
 import { Category } from "@/app/generated/prisma/client";
 import { ProductWithCategory, ColorVariantProduct } from "@/types";
 import { slugify } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  horizontalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { CldUploadWidget } from "next-cloudinary";
+
+function SortableImage({
+  url,
+  index,
+  onRemove,
+}: {
+  url: string;
+  index: number;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: url });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`relative group w-24 h-24 rounded-lg overflow-hidden border-2 flex-shrink-0 ${
+        isDragging ? "opacity-50 border-[#111111]" : "border-gray-200"
+      }`}
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute inset-0 cursor-grab active:cursor-grabbing z-10"
+      />
+      <Image src={url} alt={`Imagen ${index + 1}`} fill className="object-cover" sizes="96px" />
+      {index === 0 && (
+        <span className="absolute top-1 left-1 bg-[#111111] text-white text-[9px] px-1.5 py-0.5 rounded z-20 pointer-events-none">
+          Principal
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20 text-xs"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
 
 const productSchema = z.object({
   name: z.string().min(2, "Nombre requerido"),
@@ -100,6 +158,19 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         }
       : { active: true, featured: false, stock: "0" },
   });
+
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setImages((imgs) => {
+        const oldIndex = imgs.indexOf(active.id as string);
+        const newIndex = imgs.indexOf(over.id as string);
+        return arrayMove(imgs, oldIndex, newIndex);
+      });
+    }
+  }
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
@@ -356,13 +427,45 @@ export function ProductForm({ categories, product }: ProductFormProps) {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
         <h2 className="font-semibold text-[#111111]">Imágenes</h2>
-        <p className="text-sm text-gray-500">Pegá las URLs de Cloudinary separadas por líneas</p>
-        <textarea
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#111111] min-h-[80px] font-mono"
-          value={images.join("\n")}
-          onChange={(e) => setImages(e.target.value.split("\n").map((s) => s.trim()).filter(Boolean))}
-          placeholder="https://res.cloudinary.com/..."
-        />
+        <p className="text-sm text-gray-500">
+          La primera imagen es la principal. Arrastrá para reordenar.
+        </p>
+
+        {images.length > 0 && (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={images} strategy={horizontalListSortingStrategy}>
+              <div className="flex flex-wrap gap-3">
+                {images.map((url, i) => (
+                  <SortableImage
+                    key={url}
+                    url={url}
+                    index={i}
+                    onRemove={() => setImages(images.filter((_, idx) => idx !== i))}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
+        )}
+
+        <CldUploadWidget
+          uploadPreset="luminus-products"
+          options={{ multiple: true }}
+          onSuccess={(result) => {
+            const info = result.info as { secure_url: string };
+            if (info?.secure_url) setImages((prev) => [...prev, info.secure_url]);
+          }}
+        >
+          {({ open }) => (
+            <button
+              type="button"
+              onClick={() => open()}
+              className="flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-[#111111] hover:text-[#111111] transition-colors"
+            >
+              + Subir imagen
+            </button>
+          )}
+        </CldUploadWidget>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
