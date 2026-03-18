@@ -13,6 +13,12 @@ interface MediaLibraryModalProps {
 interface CloudinaryImage {
   url: string;
   publicId: string;
+  resourceType: string;
+}
+
+function getThumbnailUrl(url: string, resourceType: string): string {
+  if (resourceType !== "video") return url;
+  return url.replace("/video/upload/", "/video/upload/f_jpg,so_0/");
 }
 
 export function MediaLibraryModal({ open, onClose, currentImages, onConfirm }: MediaLibraryModalProps) {
@@ -115,7 +121,10 @@ export function MediaLibraryModal({ open, onClose, currentImages, onConfirm }: M
                       : "ring-1 ring-gray-200 hover:ring-[#111111] cursor-pointer",
                   ].join(" ")}
                 >
-                  <Image src={img.url} alt={img.publicId} fill className="object-cover" sizes="160px" />
+                  <Image src={getThumbnailUrl(img.url, img.resourceType)} alt={img.publicId} fill className="object-cover" sizes="160px" />
+                  {img.resourceType === "video" && (
+                    <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1 py-0.5 rounded pointer-events-none">▶ Video</span>
+                  )}
 
                   {/* Already in product — gold checkmark */}
                   {isCurrentImage && (

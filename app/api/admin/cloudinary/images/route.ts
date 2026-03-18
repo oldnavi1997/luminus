@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
 
     const result = await query.execute();
 
-    const images = (result.resources as { secure_url: string; public_id: string }[]).map(
-      (r) => ({ url: r.secure_url, publicId: r.public_id })
+    const images = (result.resources as { secure_url: string; public_id: string; resource_type: string }[]).map(
+      (r) => ({ url: r.secure_url, publicId: r.public_id, resourceType: r.resource_type })
     );
 
     return NextResponse.json({
