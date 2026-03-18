@@ -117,9 +117,6 @@ export default async function ProductPage({ params }: Props) {
         <div className="space-y-4">
           {/* Category & name */}
           <div>
-            <p className="text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.3em] mb-3">
-              {primaryCategory?.name}
-            </p>
             <h4 className="text-2xl md:text-3xl font-semibold text-[#111111] leading-tight">
               {product.name}
             </h4>
