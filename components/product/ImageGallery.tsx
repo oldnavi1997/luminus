@@ -105,12 +105,12 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
             ))}
           </div>
         )}
-        <div className="flex-1 relative aspect-square bg-[#f5f5f5] overflow-hidden">
+        <div className="flex-1 relative aspect-square bg-white overflow-hidden">
           <Image
             src={images[selectedIdx]}
             alt={name}
             fill
-            className="object-cover transition-opacity duration-300"
+            className="object-contain transition-opacity duration-300"
             sizes="(max-width: 1024px) 45vw, 500px"
             priority
           />
