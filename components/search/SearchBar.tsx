@@ -235,9 +235,11 @@ interface SearchBarProps {
   open?: boolean;
   onOpen?: () => void;
   onClose?: () => void;
+  /** When true, only renders the trigger button — no SearchDrawer (avoids duplicate drawers) */
+  triggerOnly?: boolean;
 }
 
-export function SearchBar({ className, open: controlledOpen, onOpen, onClose }: SearchBarProps) {
+export function SearchBar({ className, open: controlledOpen, onOpen, onClose, triggerOnly }: SearchBarProps) {
   const [internalOpen, setInternalOpen] = useState(false);
 
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -255,7 +257,7 @@ export function SearchBar({ className, open: controlledOpen, onOpen, onClose }: 
         <Search className="h-4.5 w-4.5" />
       </button>
 
-      <SearchDrawer open={isOpen} onClose={handleClose} />
+      {!triggerOnly && <SearchDrawer open={isOpen} onClose={handleClose} />}
     </>
   );
 }

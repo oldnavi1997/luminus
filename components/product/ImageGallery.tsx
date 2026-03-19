@@ -110,7 +110,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
             src={images[selectedIdx]}
             alt={name}
             fill
-            className="object-contain transition-opacity duration-300"
+            className="object-cover transition-opacity duration-300"
             sizes="(max-width: 1024px) 45vw, 500px"
             priority
           />

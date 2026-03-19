@@ -122,6 +122,7 @@ export function Navbar({ categories }: NavbarProps) {
                   open={searchOpen}
                   onOpen={() => setSearchOpen(true)}
                   onClose={() => setSearchOpen(false)}
+                  triggerOnly
                 />
                 <button
                   onClick={() => { openDrawer(); setSearchOpen(false); }}
