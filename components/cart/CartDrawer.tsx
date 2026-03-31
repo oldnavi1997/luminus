@@ -5,7 +5,45 @@ import Image from "next/image";
 import Link from "next/link";
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { useCartStore } from "@/stores/cart";
+import { CartItem } from "@/types";
 import { formatPEN } from "@/lib/utils";
+
+function lensLabel(item: CartItem): string {
+  const parts: string[] = [];
+  const typeMap: Record<string, string> = {
+    descanso: "Descanso",
+    con_medida: "Con medida",
+    solo_montura: "Solo montura",
+  };
+  if (item.lensType) parts.push(typeMap[item.lensType] ?? item.lensType);
+  if (item.lensSubType) {
+    const subMap: Record<string, string> = {
+      nk: "NK",
+      policarbonato: "Policarbonato",
+      fotocromatico: "Fotocromático",
+      transition: "Transition Gen S",
+      alto_indice: "Alto índice",
+    };
+    parts.push(subMap[item.lensSubType] ?? item.lensSubType);
+  }
+  if (item.lensVariant) {
+    const varMap: Record<string, string> = {
+      convencional: "Convencional",
+      crizal_sapphire: "Crizal Sapphire",
+      sin_medida: "Sin medida",
+      con_ficha: "Con ficha",
+      ar16: "Base Kodak",
+      sapphire: "Sapphire",
+    };
+    parts.push(varMap[item.lensVariant] ?? item.lensVariant);
+  }
+  const priceStr = item.lensPriceRange
+    ? item.lensPriceRange
+    : item.lensPrice
+    ? formatPEN(item.lensPrice)
+    : null;
+  return parts.join(" · ") + (priceStr ? ` — ${priceStr}` : "");
+}
 
 export function CartDrawer() {
   const {
@@ -153,14 +191,21 @@ export function CartDrawer() {
                     {/* Info */}
                     <div className="flex-1 min-w-0 flex flex-col justify-between">
                       <div className="flex items-start justify-between gap-2">
-                        <h6
-                          className="text-[#1e293b] text-[13px] font-light leading-snug line-clamp-2"
-                          style={{ fontFamily: "var(--font-playfair, serif)" }}
-                        >
-                          {item.name}
-                        </h6>
+                        <div className="space-y-1 min-w-0">
+                          <h6
+                            className="text-[#1e293b] text-[13px] font-light leading-snug line-clamp-2"
+                            style={{ fontFamily: "var(--font-playfair, serif)" }}
+                          >
+                            {item.name}
+                          </h6>
+                          {item.lensType && (
+                            <p className="text-[10px] text-[#334155]/50 truncate">
+                              {lensLabel(item)}
+                            </p>
+                          )}
+                        </div>
                         <button
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeItem(item.cartKey ?? item.id)}
                           className="flex-shrink-0 p-1 text-[#334155]/30 hover:text-red-500 transition-colors mt-0.5"
                           aria-label="Eliminar producto"
                         >
@@ -172,7 +217,7 @@ export function CartDrawer() {
                         {/* Controles de cantidad */}
                         <div className="flex items-center border border-[#d5d5d5] bg-white">
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.cartKey ?? item.id, item.quantity - 1)}
                             className="w-7 h-7 flex items-center justify-center text-[#334155]/50 hover:text-[#1e293b] hover:bg-[#f4f4f4] transition-all"
                             aria-label="Reducir cantidad"
                           >
@@ -182,7 +227,7 @@ export function CartDrawer() {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.cartKey ?? item.id, item.quantity + 1)}
                             disabled={item.quantity >= item.stock}
                             className="w-7 h-7 flex items-center justify-center text-[#334155]/50 hover:text-[#1e293b] hover:bg-[#f4f4f4] transition-all disabled:opacity-25 disabled:cursor-not-allowed"
                             aria-label="Aumentar cantidad"
@@ -192,9 +237,16 @@ export function CartDrawer() {
                         </div>
 
                         {/* Precio */}
-                        <span className="text-[#d4af37] text-[13px] font-semibold tabular-nums">
-                          {formatPEN(item.price * item.quantity)}
-                        </span>
+                        <div className="text-right">
+                          <span className="text-[#d4af37] text-[13px] font-semibold tabular-nums block">
+                            {formatPEN((item.price + (item.lensPrice ?? 0)) * item.quantity)}
+                          </span>
+                          {item.lensPriceRange && (
+                            <span className="text-[9px] text-[#334155]/40 block">
+                              + luna a confirmar
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

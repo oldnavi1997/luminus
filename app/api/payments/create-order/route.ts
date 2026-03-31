@@ -10,6 +10,13 @@ const createOrderSchema = z.object({
   items: z.array(z.object({
     id: z.string(),
     quantity: z.number().int().positive(),
+    lensType: z.string().optional(),
+    lensSubType: z.string().optional(),
+    lensVariant: z.string().optional(),
+    lensPrice: z.number().nonnegative().optional(),
+    lensPriceRange: z.string().optional(),
+    prescriptionUrl: z.string().url().optional().or(z.literal("")),
+    prescription: z.any().optional(),
   })),
   shipping: z.object({
     name: z.string().min(2),
@@ -30,7 +37,7 @@ export async function POST(request: NextRequest) {
     const { items, shipping } = createOrderSchema.parse(body);
 
     // Fetch real prices from DB
-    const productIds = items.map((i) => i.id);
+    const productIds = [...new Set(items.map((i) => i.id))];
     const products = await prisma.product.findMany({
       where: { id: { in: productIds }, active: true },
     });
@@ -39,26 +46,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Algunos productos no están disponibles" }, { status: 400 });
     }
 
-    // Verify stock
-    for (const item of items) {
-      const product = products.find((p) => p.id === item.id);
-      if (!product || product.stock < item.quantity) {
+    // Verify stock (sum quantities per product across all lens options)
+    const qtyByProduct = items.reduce<Record<string, number>>((acc, item) => {
+      acc[item.id] = (acc[item.id] ?? 0) + item.quantity;
+      return acc;
+    }, {});
+
+    for (const [productId, qty] of Object.entries(qtyByProduct)) {
+      const product = products.find((p) => p.id === productId);
+      if (!product || product.stock < qty) {
         return NextResponse.json(
-          { error: `Stock insuficiente para ${product?.name || item.id}` },
+          { error: `Stock insuficiente para ${product?.name || productId}` },
           { status: 400 }
         );
       }
     }
 
-    // Calculate totals
+    // Calculate totals (each cart item kept separate — different lens options)
     const orderItems = items.map((item) => {
       const product = products.find((p) => p.id === item.id)!;
       const unitPrice = Number(product.price);
+      const lensPrice = item.lensPrice ?? 0;
+      const total = (unitPrice + lensPrice) * item.quantity;
       return {
         productId: item.id,
         quantity: item.quantity,
         unitPrice: new Prisma.Decimal(unitPrice),
-        total: new Prisma.Decimal(unitPrice * item.quantity),
+        lensPrice: lensPrice > 0 ? new Prisma.Decimal(lensPrice) : null,
+        total: new Prisma.Decimal(total),
+        lensType: item.lensType ?? null,
+        lensSubType: item.lensSubType ?? null,
+        lensVariant: item.lensVariant ?? null,
+        lensPriceRange: item.lensPriceRange ?? null,
+        prescriptionUrl: item.prescriptionUrl || null,
+        prescription: item.prescription ?? null,
       };
     });
 

@@ -11,6 +11,29 @@ function formatPEN(amount: number): string {
   return new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(amount);
 }
 
+const LENS_LABELS: Record<string, string> = {
+  descanso: "Descanso",
+  con_medida: "Con medida",
+  solo_montura: "Solo montura",
+  nk: "Lunas NK",
+  policarbonato: "Policarbonato",
+  fotocromatico: "Fotocromático clásico",
+  transition: "Transition Gen S",
+  alto_indice: "Alto índice",
+  convencional: "Convencional",
+  crizal_sapphire: "Crizal Sapphire",
+  sin_medida: "Sin medida",
+  con_ficha: "Con ficha",
+  ar16: "Base Kodak",
+  sapphire: "Sapphire",
+};
+
+function buildLensLabel(type?: string | null, sub?: string | null, variant?: string | null): string | null {
+  const parts = [type, sub, variant].filter(Boolean);
+  if (parts.length === 0) return null;
+  return parts.map((k) => LENS_LABELS[k!] ?? k).join(" · ");
+}
+
 export async function sendOrderConfirmation(orderId: string): Promise<void> {
   try {
     const order = await prisma.order.findUnique({
@@ -24,15 +47,34 @@ export async function sendOrderConfirmation(orderId: string): Promise<void> {
     }
 
     const itemRows = order.items
-      .map(
-        (item) => `
+      .map((item) => {
+        const lensLabel = buildLensLabel(
+          (item as any).lensType,
+          (item as any).lensSubType,
+          (item as any).lensVariant
+        );
+        const lensPriceRange = (item as any).lensPriceRange as string | null;
+        const prescriptionUrl = (item as any).prescriptionUrl as string | null;
+
+        const lensRow = lensLabel
+          ? `<tr>
+              <td colspan="4" style="padding:2px 12px 8px;font-size:11px;color:#888;">
+                Luna: ${lensLabel}${lensPriceRange ? ` &nbsp;·&nbsp; ${lensPriceRange}` : ""}
+                ${prescriptionUrl ? ` &nbsp;·&nbsp; <a href="${prescriptionUrl}" style="color:#c9a84c;">Ver ficha</a>` : ""}
+              </td>
+            </tr>`
+          : "";
+
+        return `
         <tr>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0ede8;">${item.product.name}</td>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0ede8;text-align:center;">${item.quantity}</td>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0ede8;text-align:right;">${formatPEN(Number(item.unitPrice))}</td>
-          <td style="padding:8px 12px;border-bottom:1px solid #f0ede8;text-align:right;">${formatPEN(Number(item.total))}</td>
-        </tr>`
-      )
+          <td style="padding:8px 12px 2px;border-bottom:${lensLabel ? "none" : "1px solid #f0ede8"};">${item.product.name}</td>
+          <td style="padding:8px 12px 2px;border-bottom:${lensLabel ? "none" : "1px solid #f0ede8"};text-align:center;">${item.quantity}</td>
+          <td style="padding:8px 12px 2px;border-bottom:${lensLabel ? "none" : "1px solid #f0ede8"};text-align:right;">${formatPEN(Number(item.unitPrice))}</td>
+          <td style="padding:8px 12px 2px;border-bottom:${lensLabel ? "none" : "1px solid #f0ede8"};text-align:right;">${formatPEN(Number(item.total))}</td>
+        </tr>
+        ${lensRow}
+        ${lensLabel ? '<tr><td colspan="4" style="border-bottom:1px solid #f0ede8;"></td></tr>' : ""}`;
+      })
       .join("");
 
     const html = `

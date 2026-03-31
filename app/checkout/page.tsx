@@ -44,7 +44,17 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: itemList.map((i) => ({ id: i.id, quantity: i.quantity })),
+          items: itemList.map((i) => ({
+            id: i.id,
+            quantity: i.quantity,
+            lensType: i.lensType,
+            lensSubType: i.lensSubType,
+            lensVariant: i.lensVariant,
+            lensPrice: i.lensPrice,
+            lensPriceRange: i.lensPriceRange,
+            prescriptionUrl: i.prescriptionUrl,
+            prescription: i.prescription,
+          })),
           shipping: shippingData,
         }),
       });

@@ -16,6 +16,7 @@ interface Category {
   slug: string;
   description: string | null;
   parentId: string | null;
+  requiresLensSelection: boolean;
   parent: { id: string; name: string } | null;
   _count: { products: number };
 }
@@ -51,7 +52,7 @@ export function CategoryTable({ categories }: CategoryTableProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", slug: "", description: "", parentId: "" });
+  const [form, setForm] = useState({ name: "", slug: "", description: "", parentId: "", requiresLensSelection: false });
 
   const [productsModal, setProductsModal] = useState<{
     category: Category;
@@ -92,7 +93,7 @@ export function CategoryTable({ categories }: CategoryTableProps) {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: "", slug: "", description: "", parentId: "" });
+    setForm({ name: "", slug: "", description: "", parentId: "", requiresLensSelection: false });
     setModalOpen(true);
   };
 
@@ -103,6 +104,7 @@ export function CategoryTable({ categories }: CategoryTableProps) {
       slug: cat.slug,
       description: cat.description ?? "",
       parentId: cat.parentId ?? "",
+      requiresLensSelection: cat.requiresLensSelection,
     });
     setModalOpen(true);
   };
@@ -125,6 +127,7 @@ export function CategoryTable({ categories }: CategoryTableProps) {
           slug: form.slug,
           description: form.description,
           parentId: form.parentId || null,
+          requiresLensSelection: form.requiresLensSelection,
         }),
       });
       if (!res.ok) {
@@ -406,6 +409,27 @@ export function CategoryTable({ categories }: CategoryTableProps) {
               rows={3}
               className="w-full px-3.5 py-2.5 bg-white border border-[#111111]/15 text-sm text-[#111111] placeholder:text-[#111111]/25 focus:outline-none focus:border-[#d4af37] transition-colors duration-200 resize-none"
             />
+          </div>
+          <div className="flex items-center gap-3 py-1">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.requiresLensSelection}
+              onClick={() => setForm((f) => ({ ...f, requiresLensSelection: !f.requiresLensSelection }))}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                form.requiresLensSelection ? "bg-[#d4af37]" : "bg-[#111111]/15"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200 ${
+                  form.requiresLensSelection ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+            <label className="text-sm text-[#111111]/70 select-none cursor-pointer"
+              onClick={() => setForm((f) => ({ ...f, requiresLensSelection: !f.requiresLensSelection }))}>
+              Requiere selección de lunas
+            </label>
           </div>
           <div className="flex items-center justify-end gap-3 pt-2">
             <Button type="button" variant="ghost" size="sm" onClick={() => setModalOpen(false)}>

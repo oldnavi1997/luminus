@@ -4,13 +4,13 @@ import { prisma } from "@/lib/prisma";
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const { name, slug, description, parentId } = await req.json();
+    const { name, slug, description, parentId, requiresLensSelection } = await req.json();
     if (!name || !slug) {
       return NextResponse.json({ error: "Nombre y slug son requeridos" }, { status: 400 });
     }
     const category = await prisma.category.update({
       where: { id },
-      data: { name, slug, description: description || null, parentId: parentId || null },
+      data: { name, slug, description: description || null, parentId: parentId || null, requiresLensSelection: requiresLensSelection ?? false },
     });
     return NextResponse.json(category);
   } catch (err: any) {

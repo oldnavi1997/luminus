@@ -25,12 +25,13 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (item) => {
         set((state) => {
-          const existing = state.items.find((i) => i.id === item.id);
+          const key = item.cartKey ?? item.id;
+          const existing = state.items.find((i) => (i.cartKey ?? i.id) === key);
           if (existing) {
             const newQty = Math.min(existing.quantity + item.quantity, item.stock);
             return {
               items: state.items.map((i) =>
-                i.id === item.id ? { ...i, quantity: newQty } : i
+                (i.cartKey ?? i.id) === key ? { ...i, quantity: newQty } : i
               ),
             };
           }
@@ -38,18 +39,18 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
-      removeItem: (id) => {
-        set((state) => ({ items: state.items.filter((i) => i.id !== id) }));
+      removeItem: (key) => {
+        set((state) => ({ items: state.items.filter((i) => (i.cartKey ?? i.id) !== key) }));
       },
 
-      updateQuantity: (id, quantity) => {
+      updateQuantity: (key, quantity) => {
         if (quantity <= 0) {
-          get().removeItem(id);
+          get().removeItem(key);
           return;
         }
         set((state) => ({
           items: state.items.map((i) => {
-            if (i.id !== id) return i;
+            if ((i.cartKey ?? i.id) !== key) return i;
             return { ...i, quantity: Math.min(quantity, i.stock) };
           }),
         }));
@@ -60,7 +61,7 @@ export const useCartStore = create<CartStore>()(
       itemCount: () => get().items.reduce((acc, i) => acc + i.quantity, 0),
 
       subtotal: () =>
-        get().items.reduce((acc, i) => acc + i.price * i.quantity, 0),
+        get().items.reduce((acc, i) => acc + (i.price + (i.lensPrice ?? 0)) * i.quantity, 0),
     }),
     { name: "luminus-cart" }
   )

@@ -15,12 +15,12 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { name, slug, description, parentId } = await req.json();
+    const { name, slug, description, parentId, requiresLensSelection } = await req.json();
     if (!name || !slug) {
       return NextResponse.json({ error: "Nombre y slug son requeridos" }, { status: 400 });
     }
     const category = await prisma.category.create({
-      data: { name, slug, description: description || null, parentId: parentId || null },
+      data: { name, slug, description: description || null, parentId: parentId || null, requiresLensSelection: requiresLensSelection ?? false },
     });
     return NextResponse.json(category, { status: 201 });
   } catch (err: any) {

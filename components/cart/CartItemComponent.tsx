@@ -37,13 +37,13 @@ export function CartItemComponent({ item }: CartItemProps) {
         >
           {item.name}
         </h3>
-        <p className="text-[#d4af37] text-sm font-semibold mt-1">{formatPEN(item.price)}</p>
+        <p className="text-[#d4af37] text-sm font-semibold mt-1">{formatPEN(item.price + (item.lensPrice ?? 0))}</p>
 
         {/* Quantity controls */}
         <div className="flex items-center gap-3 mt-3">
           <div className="flex items-center border border-[#111111]/12">
             <button
-              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+              onClick={() => updateQuantity(item.cartKey ?? item.id, item.quantity - 1)}
               className="w-7 h-7 flex items-center justify-center text-[#111111]/50 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors"
             >
               <Minus className="h-3 w-3" />
@@ -52,7 +52,7 @@ export function CartItemComponent({ item }: CartItemProps) {
               {item.quantity}
             </span>
             <button
-              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+              onClick={() => updateQuantity(item.cartKey ?? item.id, item.quantity + 1)}
               className="w-7 h-7 flex items-center justify-center text-[#111111]/50 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               disabled={item.quantity >= item.stock}
             >
@@ -60,7 +60,7 @@ export function CartItemComponent({ item }: CartItemProps) {
             </button>
           </div>
           <button
-            onClick={() => removeItem(item.id)}
+            onClick={() => removeItem(item.cartKey ?? item.id)}
             className="p-1.5 text-[#111111]/25 hover:text-red-500 transition-colors"
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -71,7 +71,7 @@ export function CartItemComponent({ item }: CartItemProps) {
       {/* Total */}
       <div className="text-right flex-shrink-0">
         <span className="font-semibold text-sm text-[#111111]">
-          {formatPEN(item.price * item.quantity)}
+          {formatPEN((item.price + (item.lensPrice ?? 0)) * item.quantity)}
         </span>
       </div>
     </div>

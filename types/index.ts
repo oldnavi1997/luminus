@@ -11,8 +11,16 @@ export type OrderWithItems = Order & {
   user?: User | null;
 };
 
+export type PrescriptionData = {
+  od: { sphere: string; cylinder: string; axis: string };
+  oi: { sphere: string; cylinder: string; axis: string };
+  add?: string;
+  pd?: string;
+};
+
 export type CartItem = {
   id: string;
+  cartKey?: string;
   name: string;
   price: number;
   image?: string;
@@ -20,6 +28,13 @@ export type CartItem = {
   quantity: number;
   slug: string;
   stock: number;
+  lensType?: "descanso" | "con_medida" | "solo_montura";
+  lensSubType?: string;
+  lensVariant?: string;
+  lensPrice?: number;
+  lensPriceRange?: string;
+  prescriptionUrl?: string;
+  prescription?: PrescriptionData;
 };
 
 export type ColorVariantProduct = {
