@@ -3,10 +3,16 @@ dotenv.config({ path: ".env.local" });
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/app/generated/prisma/client";
 import { indexProduct } from "../lib/algolia-sync";
+import { getAdminClient, INDEX_NAME } from "../lib/algolia";
 
 async function main() {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
   const prisma = new PrismaClient({ adapter });
+
+  // Limpiar índice completo antes de re-indexar
+  const client = getAdminClient();
+  await client.clearObjects({ indexName: INDEX_NAME });
+  console.log("Índice limpiado");
 
   const products = await prisma.product.findMany({ include: { categories: true } });
 

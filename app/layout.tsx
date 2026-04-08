@@ -5,6 +5,7 @@ import { Providers } from "@/components/layout/Providers";
 import { Navbar, type NavCategory } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { prisma } from "@/lib/prisma";
+import { Analytics } from "@vercel/analytics/next";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -57,6 +58,7 @@ export default async function RootLayout({
           <main className="flex-1">{children}</main>
           <Footer />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
