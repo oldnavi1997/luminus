@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
-import { ShoppingBag, LogOut, Menu, X, ChevronDown } from "lucide-react";
+import { ShoppingBag, Menu, X, ChevronDown } from "lucide-react";
 import { SearchBar } from "@/components/search/SearchBar";
 import { useState, useEffect, useRef } from "react";
 import { useCartStore } from "@/stores/cart";
@@ -23,7 +22,6 @@ interface NavbarProps {
 }
 
 export function Navbar({ categories }: NavbarProps) {
-  const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -140,18 +138,21 @@ export function Navbar({ categories }: NavbarProps) {
             </div>
 
             {/* Desktop layout: logo | nav */}
-            <div className="hidden md:flex items-center justify-between w-full">
-              <Link href="/" className="flex items-center gap-2.5 group">
-                <span
-                  className="text-[15px] tracking-[0.25em] text-[#1e293b] font-light uppercase"
-                  style={{ fontFamily: "var(--font-playfair, serif)" }}
-                >
-                  Luminus
-                </span>
-                <span className="w-1 h-1 rounded-full bg-[#d4af37] opacity-80 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
-              </Link>
+            <div className="hidden md:flex items-center w-full">
+              {/* Logo — izquierda */}
+              <div className="flex-1 flex justify-start">
+                <Link href="/" className="flex items-center gap-2.5 group">
+                  <span
+                    className="text-[15px] tracking-[0.25em] text-[#1e293b] font-light uppercase"
+                    style={{ fontFamily: "var(--font-playfair, serif)" }}
+                  >
+                    Luminus
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-[#d4af37] opacity-80 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300" />
+                </Link>
+              </div>
 
-            {/* Desktop nav */}
+            {/* Desktop nav — centro */}
             <div ref={navRef} className="flex items-center gap-8">
               {/* Per-category items */}
               {categories.map((cat) =>
@@ -236,41 +237,30 @@ export function Navbar({ categories }: NavbarProps) {
               >
                 Ver todo
               </Link>
-
-              <div className="w-px h-3 bg-[#d5d5d5]" />
-
-              {session && (
-                <div className="flex items-center gap-5">
-                  <button
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                    className="text-[#334155]/40 hover:text-[#1e293b] transition-colors"
-                    title="Cerrar sesión"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-
-              <SearchBar
-                open={searchOpen}
-                onOpen={() => setSearchOpen(true)}
-                onClose={() => setSearchOpen(false)}
-              />
-
-              <button
-                onClick={() => { openDrawer(); setSearchOpen(false); }}
-                className="relative text-[#334155]/60 hover:text-[#1e293b] transition-colors"
-                title="Carrito"
-                aria-label="Abrir carrito"
-              >
-                <ShoppingBag className="h-4.5 w-4.5" />
-                {mounted && itemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-[#1e293b] text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center leading-none">
-                    {itemCount > 9 ? "9+" : itemCount}
-                  </span>
-                )}
-              </button>
             </div>
+
+              {/* Iconos — derecha */}
+              <div className="flex-1 flex justify-end items-center gap-5">
+                <div className="w-px h-3 bg-[#d5d5d5]" />
+                <SearchBar
+                  open={searchOpen}
+                  onOpen={() => setSearchOpen(true)}
+                  onClose={() => setSearchOpen(false)}
+                />
+                <button
+                  onClick={() => { openDrawer(); setSearchOpen(false); }}
+                  className="relative text-[#334155]/60 hover:text-[#1e293b] transition-colors"
+                  title="Carrito"
+                  aria-label="Abrir carrito"
+                >
+                  <ShoppingBag className="h-4.5 w-4.5" />
+                  {mounted && itemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-[#1e293b] text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center leading-none">
+                      {itemCount > 9 ? "9+" : itemCount}
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>{/* end desktop layout */}
 
           </div>
@@ -408,18 +398,6 @@ export function Navbar({ categories }: NavbarProps) {
 
         </nav>
 
-        {/* Drawer footer */}
-        {session && (
-          <div className="px-6 py-6" style={{ borderTop: "1px solid #d5d5d5" }}>
-            <button
-              onClick={() => { closeMenu(); signOut({ callbackUrl: "/" }); }}
-              className="flex items-center gap-2.5 text-[10px] text-[#334155]/40 hover:text-[#1e293b] uppercase tracking-[0.25em] transition-colors duration-200"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              Cerrar sesión
-            </button>
-          </div>
-        )}
 
         {/* Decorative accent */}
         <div
