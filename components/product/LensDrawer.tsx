@@ -358,7 +358,20 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
       const st = overrideSubType !== undefined ? overrideSubType : subType;
       const va = overrideVariant !== undefined ? overrideVariant : variant;
 
-      const { lensPrice, lensPriceRange } = resolvePricing(lt, st, va);
+      let { lensPrice, lensPriceRange } = resolvePricing(lt, st, va);
+
+      // Si solo hay rango (no precio fijo) y la receta está completa, calcular precio exacto
+      if (lensPrice === 0 && lensPriceRange && isPrescriptionFilled(prescription)) {
+        const d = calcularDesglose(
+          prescription.od.sphere, prescription.od.cylinder,
+          prescription.oi.sphere, prescription.oi.cylinder
+        );
+        if (d.hasValues && d.total > 0) {
+          lensPrice = d.total;
+          lensPriceRange = undefined;
+        }
+      }
+
       const cartKey = `${product.id}_${lt}_${st ?? ""}_${va ?? ""}`;
 
       addItem({

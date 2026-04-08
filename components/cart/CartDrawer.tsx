@@ -238,12 +238,29 @@ export function CartDrawer() {
 
                         {/* Precio */}
                         <div className="text-right">
-                          <span className="text-[#d4af37] text-[13px] font-semibold tabular-nums block">
-                            {formatPEN((item.price + (item.lensPrice ?? 0)) * item.quantity)}
-                          </span>
-                          {item.lensPriceRange && (
-                            <span className="text-[9px] text-[#334155]/40 block">
-                              + luna a confirmar
+                          {item.lensType ? (
+                            <div className="space-y-0.5">
+                              <div className="flex items-center justify-end gap-3">
+                                <span className="text-[9px] text-[#334155]/40 uppercase tracking-[0.1em]">Armazón</span>
+                                <span className="text-[11px] text-[#334155]/60 tabular-nums">{formatPEN(item.price * item.quantity)}</span>
+                              </div>
+                              <div className="flex items-center justify-end gap-3">
+                                <span className="text-[9px] text-[#334155]/40 uppercase tracking-[0.1em]">Lunas</span>
+                                {item.lensPrice && item.lensPrice > 0 ? (
+                                  <span className="text-[11px] text-[#334155]/60 tabular-nums">+{formatPEN(item.lensPrice * item.quantity)}</span>
+                                ) : item.lensPriceRange ? (
+                                  <span className="text-[9px] text-[#334155]/40 italic">a confirmar</span>
+                                ) : (
+                                  <span className="text-[9px] text-emerald-600/80">Gratis</span>
+                                )}
+                              </div>
+                              <span className="text-[#d4af37] text-[13px] font-semibold tabular-nums block pt-0.5 border-t border-[#d5d5d5]/50">
+                                {formatPEN((item.price + (item.lensPrice ?? 0)) * item.quantity)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-[#d4af37] text-[13px] font-semibold tabular-nums block">
+                              {formatPEN(item.price * item.quantity)}
                             </span>
                           )}
                         </div>

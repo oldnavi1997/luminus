@@ -38,21 +38,37 @@ export function OrderSummary({ items, subtotal }: OrderSummaryProps) {
           const lensLabel = buildLensLabel(item.lensType, item.lensSubType, item.lensVariant);
           const itemTotal = (item.price + (item.lensPrice ?? 0)) * item.quantity;
           return (
-            <div key={item.cartKey ?? item.id}>
+            <div key={item.cartKey ?? item.id} className="space-y-1.5">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-700">
-                  {item.name} <span className="text-gray-400">x{item.quantity}</span>
+                <span className="text-gray-700 font-medium">
+                  {item.name} <span className="text-gray-400 font-normal">×{item.quantity}</span>
                 </span>
-                <span className="font-medium">{formatPEN(itemTotal)}</span>
+                {!item.lensType && (
+                  <span className="font-medium">{formatPEN(itemTotal)}</span>
+                )}
               </div>
-              {lensLabel && (
-                <div className="flex justify-between text-xs mt-1">
-                  <span className="text-gray-400">Luna: {lensLabel}</span>
-                  {item.lensPriceRange ? (
-                    <span className="text-gray-400">{item.lensPriceRange}</span>
-                  ) : item.lensPrice ? (
-                    <span className="text-gray-400">+{formatPEN(item.lensPrice)}</span>
-                  ) : null}
+              {item.lensType && (
+                <div className="pl-3 space-y-1 border-l-2 border-gray-100">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-400">Armazón</span>
+                    <span className="text-gray-600">{formatPEN(item.price * item.quantity)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-400">
+                      Lunas{lensLabel ? `: ${lensLabel}` : ""}
+                    </span>
+                    {item.lensPrice && item.lensPrice > 0 ? (
+                      <span className="text-gray-600">+{formatPEN(item.lensPrice * item.quantity)}</span>
+                    ) : item.lensPriceRange ? (
+                      <span className="text-gray-400 italic text-[11px]">a confirmar</span>
+                    ) : (
+                      <span className="text-emerald-600 text-xs">Gratis</span>
+                    )}
+                  </div>
+                  <div className="flex justify-between text-xs font-semibold pt-1 border-t border-gray-100">
+                    <span className="text-gray-500">Subtotal</span>
+                    <span className="text-gray-800">{formatPEN(itemTotal)}</span>
+                  </div>
                 </div>
               )}
             </div>
