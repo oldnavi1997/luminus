@@ -81,7 +81,7 @@ export default function AdminOrderDetailPage({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#111111]">{order.orderNumber}</h1>
+          <h1 className="text-2xl font-bold text-[#111111] tabular-nums">{order.orderNumber}</h1>
           <p className="text-sm text-gray-500 mt-1">
             {new Date(order.createdAt).toLocaleDateString("es-PE", { dateStyle: "full" })}
           </p>
@@ -94,7 +94,7 @@ export default function AdminOrderDetailPage({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="font-semibold text-[#111111] mb-4">Datos de envío</h2>
+          <h2 className="font-semibold text-[#111111] mb-4 text-pretty">Datos de envío</h2>
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">
               <dt className="text-gray-500">Nombre</dt>
@@ -120,7 +120,7 @@ export default function AdminOrderDetailPage({
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="font-semibold text-[#111111] mb-4">Actualizar estado</h2>
+          <h2 className="font-semibold text-[#111111] mb-4 text-pretty">Actualizar estado</h2>
           <div className="space-y-3">
             <Select
               value={newStatus}
@@ -134,7 +134,7 @@ export default function AdminOrderDetailPage({
               <option value="CANCELLED">Cancelado</option>
               <option value="REFUNDED">Reembolsado</option>
             </Select>
-            <Button onClick={handleUpdateStatus} loading={updating} className="w-full">
+            <Button onClick={handleUpdateStatus} loading={updating} className="w-full touch-manipulation">
               Actualizar estado
             </Button>
           </div>
@@ -147,7 +147,7 @@ export default function AdminOrderDetailPage({
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="font-semibold text-[#111111] mb-4">Productos</h2>
+        <h2 className="font-semibold text-[#111111] mb-4 text-pretty">Productos</h2>
         <div className="space-y-4">
           {order.items.map((item) => {
             const lensLabel = buildLensLabel(
@@ -234,15 +234,15 @@ export default function AdminOrderDetailPage({
         <div className="mt-4 pt-4 border-t border-gray-100 space-y-1 text-sm">
           <div className="flex justify-between text-gray-600">
             <span>Subtotal</span>
-            <span>{formatPEN(Number(order.subtotal))}</span>
+            <span className="tabular-nums">{formatPEN(Number(order.subtotal))}</span>
           </div>
           <div className="flex justify-between text-gray-600">
             <span>Envío</span>
-            <span>{formatPEN(Number(order.shippingCost))}</span>
+            <span className="tabular-nums">{formatPEN(Number(order.shippingCost))}</span>
           </div>
           <div className="flex justify-between font-bold text-[#111111] text-base mt-2">
             <span>Total</span>
-            <span>{formatPEN(Number(order.total))}</span>
+            <span className="tabular-nums">{formatPEN(Number(order.total))}</span>
           </div>
         </div>
       </div>

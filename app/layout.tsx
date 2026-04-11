@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
 import { Navbar, type NavCategory } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { StoreChrome } from "@/components/layout/StoreChrome";
 import { prisma } from "@/lib/prisma";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -54,9 +55,9 @@ export default async function RootLayout({
     <html lang="es" className={`${playfair.variable} ${dmSans.variable}`}>
       <body className="flex flex-col min-h-screen" suppressHydrationWarning>
         <Providers>
-          <Navbar categories={navCategories} />
+          <StoreChrome><Navbar categories={navCategories} /></StoreChrome>
           <main className="flex-1">{children}</main>
-          <Footer />
+          <StoreChrome><Footer /></StoreChrome>
         </Providers>
         <Analytics />
       </body>

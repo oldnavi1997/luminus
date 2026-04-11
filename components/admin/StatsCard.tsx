@@ -27,7 +27,7 @@ export function StatsCard({ title, value, icon, description, className, accent }
         <div className="min-w-0">
           <p
             className={cn(
-              "text-[9px] font-medium uppercase tracking-[0.2em] mb-2",
+              "text-[11px] font-medium uppercase tracking-[0.2em] mb-2",
               accent ? "text-white/50" : "text-[#111111]/40"
             )}
           >
@@ -35,7 +35,7 @@ export function StatsCard({ title, value, icon, description, className, accent }
           </p>
           <p
             className={cn(
-              "text-2xl font-light truncate",
+              "text-2xl font-light truncate tabular-nums",
               accent ? "text-white" : "text-[#111111]"
             )}
             style={{ fontFamily: "var(--font-playfair, serif)" }}
@@ -43,13 +43,14 @@ export function StatsCard({ title, value, icon, description, className, accent }
             {value}
           </p>
           {description && (
-            <p className={cn("text-[10px] mt-1.5", accent ? "text-white/35" : "text-[#111111]/30")}>
+            <p className={cn("text-xs mt-1.5", accent ? "text-white/35" : "text-[#111111]/30")}>
               {description}
             </p>
           )}
         </div>
         {icon && (
           <div
+            aria-hidden="true"
             className={cn(
               "flex-shrink-0 w-9 h-9 flex items-center justify-center",
               accent ? "text-[#d4af37]" : "text-[#111111]/30"

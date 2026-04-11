@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Edit, Trash2, Search, X, Tag, ChevronDown } from "lucide-react";
+import { Edit, Trash2, Search, X, Tag, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
@@ -10,6 +10,7 @@ import { ProductWithCategory } from "@/types";
 import { formatPEN, getPrimaryCategory } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { Category } from "@/app/generated/prisma/client";
+import { getSearchClient, INDEX_NAME } from "@/lib/algolia";
 
 interface ProductTableProps {
   products: ProductWithCategory[];
@@ -47,7 +48,35 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
   const [bulkMode, setBulkMode] = useState<"add" | "set" | "remove">("add");
   const [bulkPrimaryId, setBulkPrimaryId] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [algoliaIds, setAlgoliaIds] = useState<Set<string> | null>(null);
+  const [algoliaLoading, setAlgoliaLoading] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Algolia search with debounce
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setAlgoliaIds(null);
+      setAlgoliaLoading(false);
+      return;
+    }
+    setAlgoliaLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const client = getSearchClient();
+        const result = await client.searchSingleIndex({
+          indexName: INDEX_NAME,
+          searchParams: { query: trimmed, hitsPerPage: 200 },
+        });
+        setAlgoliaIds(new Set(result.hits.map((h) => h.objectID)));
+      } catch {
+        setAlgoliaIds(null);
+      } finally {
+        setAlgoliaLoading(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`¿Eliminar "${name}"?`)) return;
@@ -132,13 +161,14 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const q = query.trim().toLowerCase();
-  const filtered = q
+  const filtered = algoliaIds !== null
+    ? products.filter((p) => algoliaIds.has(p.id))
+    : query.trim()
     ? products.filter(
         (p) =>
-          p.name.toLowerCase().includes(q) ||
-          (p.brand ?? "").toLowerCase().includes(q) ||
-          p.categories.some((c) => c.name.toLowerCase().includes(q))
+          p.name.toLowerCase().includes(query.trim().toLowerCase()) ||
+          (p.brand ?? "").toLowerCase().includes(query.trim().toLowerCase()) ||
+          p.categories.some((c) => c.name.toLowerCase().includes(query.trim().toLowerCase()))
       )
     : products;
 
@@ -158,27 +188,33 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
   return (
     <div>
       <div className="px-5 py-4 border-b border-[#111111]/6 flex items-center gap-4">
-        <p className="text-[10px] text-[#111111]/40 uppercase tracking-[0.2em] shrink-0">
+        <p className="text-[11px] text-[#111111]/40 uppercase tracking-[0.2em] shrink-0">
           {filtered.length} {filtered.length === 1 ? "producto" : "productos"}
-          {q && products.length !== filtered.length && (
+          {query.trim() && products.length !== filtered.length && (
             <span className="ml-1 text-[#111111]/25">de {products.length}</span>
           )}
         </p>
         <div className="relative ml-auto w-56">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 pointer-events-none" />
+          {algoliaLoading ? (
+            <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 animate-spin pointer-events-none" aria-hidden="true" />
+          ) : (
+            <Search aria-hidden="true" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 pointer-events-none" />
+          )}
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por nombre, marca..."
+            placeholder="Buscar con Algolia…"
+            aria-label="Buscar productos"
             className="w-full pl-8 pr-7 py-1.5 text-[11px] bg-[#f8f7f4] border border-[#111111]/8 text-[#111111] placeholder-[#111111]/30 focus:outline-none focus:border-[#111111]/25 transition-colors"
           />
           {query && (
             <button
               onClick={() => setQuery("")}
+              aria-label="Limpiar búsqueda"
               className="absolute right-2 top-1/2 -translate-y-1/2 text-[#111111]/30 hover:text-[#111111]/60"
             >
-              <X className="h-3 w-3" />
+              <X aria-hidden="true" className="h-3 w-3" />
             </button>
           )}
         </div>
@@ -197,9 +233,9 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
               onClick={() => setBulkPanelOpen((v) => !v)}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[11px] uppercase tracking-[0.1em] transition-colors"
             >
-              <Tag className="h-3 w-3" />
+              <Tag aria-hidden="true" className="h-3 w-3" />
               Editar categorías
-              <ChevronDown className="h-3 w-3" />
+              <ChevronDown aria-hidden="true" className="h-3 w-3" />
             </button>
 
             {bulkPanelOpen && (
@@ -287,7 +323,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
             className="ml-auto text-white/40 hover:text-white transition-colors"
             aria-label="Limpiar selección"
           >
-            <X className="h-4 w-4" />
+            <X aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
       )}
@@ -305,19 +341,19 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                   className="accent-[#111111]"
                 />
               </th>
-              <th className="text-left py-3 px-4 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+              <th scope="col" className="text-left py-3 px-4 text-[11px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
                 Producto
               </th>
-              <th className="text-left py-3 px-4 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+              <th scope="col" className="text-left py-3 px-4 text-[11px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
                 Categoría
               </th>
-              <th className="text-right py-3 px-4 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+              <th scope="col" className="text-right py-3 px-4 text-[11px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
                 Precio
               </th>
-              <th className="text-right py-3 px-4 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+              <th scope="col" className="text-right py-3 px-4 text-[11px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
                 Stock
               </th>
-              <th className="text-center py-3 px-4 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+              <th scope="col" className="text-center py-3 px-4 text-[11px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
                 Estado
               </th>
               <th className="py-3 px-4" />
@@ -352,14 +388,14 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                   </td>
                   <td className="py-3.5 px-4">
                     <div className="flex items-center gap-3">
-                      <div className="relative w-9 h-9 bg-[#f8f7f4] overflow-hidden flex-shrink-0">
+                      <div className="relative w-20 h-20 bg-[#f8f7f4] overflow-hidden flex-shrink-0">
                         {product.images[0] ? (
                           <Image
                             src={product.images[0]}
                             alt={product.name}
                             fill
                             className="object-cover"
-                            sizes="36px"
+                            sizes="80px"
                           />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center text-[#111111]/20 text-xs">
@@ -383,10 +419,10 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                       </span>
                     )}
                   </td>
-                  <td className="py-3.5 px-4 text-right font-medium text-sm">
+                  <td className="py-3.5 px-4 text-right font-medium text-sm tabular-nums">
                     {formatPEN(Number(product.price))}
                   </td>
-                  <td className="py-3.5 px-4 text-right">
+                  <td className="py-3.5 px-4 text-right tabular-nums">
                     <span
                       className={cn(
                         "text-sm font-medium",
@@ -409,15 +445,17 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                     <div className="flex items-center justify-end gap-1">
                       <Link
                         href={`/admin/productos/${product.id}/editar`}
-                        className="p-1.5 text-[#111111]/30 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors"
+                        aria-label={`Editar ${product.name}`}
+                        className="p-1.5 text-[#111111]/30 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#111111]/20 rounded"
                       >
-                        <Edit className="h-3.5 w-3.5" />
+                        <Edit aria-hidden="true" className="h-3.5 w-3.5" />
                       </Link>
                       <button
                         onClick={() => handleDelete(product.id, product.name)}
-                        className="p-1.5 text-[#111111]/30 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        aria-label={`Eliminar ${product.name}`}
+                        className="p-1.5 text-[#111111]/30 hover:text-red-500 hover:bg-red-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-200 rounded"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 aria-hidden="true" className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </td>

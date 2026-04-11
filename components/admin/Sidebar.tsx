@@ -40,7 +40,7 @@ export function AdminSidebar() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 px-3.5 py-2.5 text-[11px] font-medium uppercase tracking-[0.15em] transition-all duration-200 relative",
+                "flex items-center gap-3 px-3.5 py-2.5 text-[11px] font-medium uppercase tracking-[0.15em] transition-[color,background-color] duration-200 relative",
                 isActive
                   ? "text-white bg-white/5"
                   : "text-white/35 hover:text-white/70 hover:bg-white/3"
@@ -50,7 +50,7 @@ export function AdminSidebar() {
               {isActive && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-[#d4af37]" />
               )}
-              <Icon className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-[#d4af37]" : "")} />
+              <Icon aria-hidden="true" className={cn("h-4 w-4 flex-shrink-0", isActive ? "text-[#d4af37]" : "")} />
               {label}
             </Link>
           );
@@ -62,16 +62,18 @@ export function AdminSidebar() {
         <Link
           href="/"
           target="_blank"
+          style={{ touchAction: "manipulation" }}
           className="flex items-center gap-3 px-3.5 py-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-white/25 hover:text-white/50 transition-colors"
         >
-          <ExternalLink className="h-3.5 w-3.5" />
+          <ExternalLink aria-hidden="true" className="h-3.5 w-3.5" />
           Ver tienda
         </Link>
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
+          style={{ touchAction: "manipulation" }}
           className="flex items-center gap-3 px-3.5 py-2.5 text-[11px] font-medium uppercase tracking-[0.12em] text-white/25 hover:text-red-400/70 transition-colors w-full text-left"
         >
-          <LogOut className="h-3.5 w-3.5" />
+          <LogOut aria-hidden="true" className="h-3.5 w-3.5" />
           Cerrar sesión
         </button>
       </div>
