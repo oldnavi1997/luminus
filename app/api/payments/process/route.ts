@@ -6,11 +6,12 @@ import { sendOrderConfirmation } from "@/lib/email";
 
 const processSchema = z.object({
   orderId: z.string(),
-  token: z.string(),
   paymentMethodId: z.string(),
-  issuerId: z.union([z.string(), z.number()]).optional(),
-  installments: z.number().int().positive(),
   email: z.string().email(),
+  // Solo requeridos para pago con tarjeta (no aplica a Yape):
+  token: z.string().optional(),
+  issuerId: z.union([z.string(), z.number()]).optional(),
+  installments: z.number().int().positive().optional(),
 });
 
 function mapMpStatusToPaymentStatus(mpStatus: string) {
@@ -28,6 +29,25 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Dev bypass: skip Mercado Pago and mark order as approved directly
+    if (process.env.NODE_ENV === "development" && body.devBypass === true) {
+      const order = await prisma.order.findUnique({ where: { id: body.orderId } });
+      if (!order) return NextResponse.json({ error: "Orden no encontrada" }, { status: 404 });
+      if (order.paymentStatus !== "PENDING") {
+        return NextResponse.json({ error: "La orden ya fue procesada" }, { status: 400 });
+      }
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          mpPaymentId: `dev-bypass-${Date.now()}`,
+          mpStatus: "approved",
+          paymentStatus: "APPROVED",
+          orderStatus: "PAID",
+        },
+      });
+      return NextResponse.json({ status: "approved", paymentId: `dev-${order.id}` });
+    }
+
     const data = processSchema.parse(body);
 
     // Verify order exists and is PENDING
@@ -43,17 +63,20 @@ export async function POST(request: NextRequest) {
     const total = Number(order.total);
 
     // Call Mercado Pago Payment API
+    const isCardPayment = !!data.token;
+
     const payment = await paymentClient.create({
       body: {
         transaction_amount: total,
-        token: data.token,
-        installments: data.installments,
         payment_method_id: data.paymentMethodId,
-        issuer_id: data.issuerId ? Number(data.issuerId) : undefined,
-        payer: {
-          email: data.email,
-        },
+        payer: { email: data.email },
         external_reference: order.id,
+        // Solo para tarjeta:
+        ...(isCardPayment && {
+          token: data.token,
+          installments: data.installments,
+          issuer_id: data.issuerId ? Number(data.issuerId) : undefined,
+        }),
       },
     });
 

@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/Input";
-import { Button } from "@/components/ui/Button";
-import { formatPEN } from "@/lib/utils";
 import { ShippingFormData } from "@/types";
 import ubigeoData from "@/lib/peru-ubigeo.json";
 
@@ -41,29 +39,46 @@ const shippingSchema = z.object({
 
 type FormData = z.infer<typeof shippingSchema>;
 
-interface CheckoutFormProps {
-  onSubmit: (data: ShippingFormData) => void;
-  loading?: boolean;
-  subtotal: number;
+export interface CheckoutFormHandle {
+  trigger: () => Promise<boolean>;
+  getValues: () => ShippingFormData;
 }
 
 const selectClass = "w-full px-3.5 py-2.5 bg-white border border-[#111111]/15 text-sm text-[#111111] focus:outline-none focus:border-[#d4af37] transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
 const labelClass = "block text-[10px] font-medium text-[#111111]/60 uppercase tracking-[0.15em] mb-1.5";
 const errorClass = "text-[11px] text-red-600 tracking-wide mt-1";
 
-export function CheckoutForm({ onSubmit, loading, subtotal }: CheckoutFormProps) {
+export const CheckoutForm = forwardRef<CheckoutFormHandle>(function CheckoutForm(_props, ref) {
   const [districtValue, setDistrictValue] = useState("");
 
   const {
     register,
-    handleSubmit,
+    trigger,
     watch,
     setValue,
+    getValues: getValuesRHF,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(shippingSchema),
     defaultValues: { documentType: "DNI" },
   });
+
+  useImperativeHandle(ref, () => ({
+    trigger: () => trigger(),
+    getValues: () => {
+      const data = getValuesRHF();
+      return {
+        name: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        phone: data.phone,
+        address: data.street,
+        city: data.district,
+        province: data.department,
+        postal: data.postalCode,
+        country: "Perú",
+      };
+    },
+  }));
 
   const department = watch("department");
   const province = watch("province");
@@ -96,21 +111,8 @@ export function CheckoutForm({ onSubmit, loading, subtotal }: CheckoutFormProps)
     setValue("postalCode", postalCode ?? "");
   }
 
-  function handleFormSubmit(data: FormData) {
-    onSubmit({
-      name: `${data.firstName} ${data.lastName}`,
-      email: data.email,
-      phone: data.phone,
-      address: data.street,
-      city: data.district,
-      province: data.department,
-      postal: data.postalCode,
-      country: "Perú",
-    });
-  }
-
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-5">
+    <form className="space-y-5">
 
       {/* Datos de contacto */}
       <div className="bg-white border border-[#d5d5d5]/60 p-6 space-y-4">
@@ -231,25 +233,8 @@ export function CheckoutForm({ onSubmit, loading, subtotal }: CheckoutFormProps)
         </div>
       </div>
 
-      {/* Resumen de costos */}
-      <div className="bg-[#F8F7F4] border border-[#d5d5d5]/60 p-5 space-y-2.5">
-        <div className="flex justify-between text-[12px] text-[#1e293b]/50">
-          <span>Subtotal</span>
-          <span>{formatPEN(subtotal)}</span>
-        </div>
-        <div className="flex justify-between text-[12px] text-[#1e293b]/50">
-          <span>Envío</span>
-          <span className="text-emerald-600">Gratis</span>
-        </div>
-        <div className="flex justify-between text-[13px] font-semibold text-[#1e293b] pt-2 border-t border-[#d5d5d5]/60">
-          <span>Total</span>
-          <span className="text-[#d4af37]">{formatPEN(subtotal)}</span>
-        </div>
-      </div>
-
-      <Button type="submit" size="lg" className="w-full" loading={loading}>
-        Continuar al pago
-      </Button>
     </form>
   );
-}
+});
+
+CheckoutForm.displayName = "CheckoutForm";

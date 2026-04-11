@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CardPayment, initMercadoPago } from "@mercadopago/sdk-react";
+import { Payment, initMercadoPago } from "@mercadopago/sdk-react";
 
 interface CardPaymentBrickProps {
-  total: number;
-  orderId: string;
+  amount: number;
+  onCreateOrder: () => Promise<string | null>;
   onPaymentResult: (result: { status: string; paymentId?: string; statusDetail?: string; error?: string }) => void;
 }
 
-const IS_DEV = process.env.NODE_ENV === "development";
+const IS_DEV = false; // process.env.NODE_ENV === "development";
 
 let initialized = false;
 
-export function CardPaymentBrick({ total, orderId, onPaymentResult }: CardPaymentBrickProps) {
+export function CardPaymentBrick({ amount, onCreateOrder, onPaymentResult }: CardPaymentBrickProps) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,6 +26,11 @@ export function CardPaymentBrick({ total, orderId, onPaymentResult }: CardPaymen
   if (IS_DEV) {
     const handleDevBypass = async () => {
       setLoading(true);
+      const orderId = await onCreateOrder();
+      if (!orderId) {
+        setLoading(false);
+        return;
+      }
       try {
         const res = await fetch("/api/payments/process", {
           method: "POST",
@@ -37,7 +42,7 @@ export function CardPaymentBrick({ total, orderId, onPaymentResult }: CardPaymen
           onPaymentResult({ status: "error", error: data.error || "Error en bypass de dev" });
           return;
         }
-        onPaymentResult({ status: data.status, paymentId: data.paymentId, statusDetail: data.statusDetail });
+        onPaymentResult({ status: data.status, paymentId: data.paymentId });
       } catch {
         onPaymentResult({ status: "error", error: "Error de conexión" });
       } finally {
@@ -46,15 +51,14 @@ export function CardPaymentBrick({ total, orderId, onPaymentResult }: CardPaymen
     };
 
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-[#111111] mb-4">Datos de pago</h2>
+      <div>
         <div className="rounded-lg border border-yellow-300 bg-yellow-50 p-4 mb-4 text-sm text-yellow-800">
           <strong>Modo desarrollo</strong> — Mercado Pago desactivado
         </div>
         <button
           onClick={handleDevBypass}
           disabled={loading}
-          className="w-full bg-[#1a1a2e] text-white py-3 rounded-lg font-medium hover:bg-[#2a2a4e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full bg-[#1a1a2e] text-white py-3 font-medium hover:bg-[#2a2a4e] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? "Procesando..." : "Simular pago aprobado"}
         </button>
@@ -63,7 +67,7 @@ export function CardPaymentBrick({ total, orderId, onPaymentResult }: CardPaymen
   }
 
   const initialization = {
-    amount: total,
+    amount,
   };
 
   const customization = {
@@ -73,23 +77,35 @@ export function CardPaymentBrick({ total, orderId, onPaymentResult }: CardPaymen
       },
     },
     paymentMethods: {
+      creditCard: "all" as const,
+      debitCard: "all" as const,
+      prepaidCard: "all" as const,
       maxInstallments: 12,
     },
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = async (formData: any) => {
+  const onSubmit = async ({ selectedPaymentMethod, formData }: any) => {
+    const orderId = await onCreateOrder();
+    if (!orderId) return;
+
+    const isCard = selectedPaymentMethod === "creditCard"
+      || selectedPaymentMethod === "debitCard"
+      || selectedPaymentMethod === "prepaidCard";
+
     try {
       const res = await fetch("/api/payments/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token: formData.token,
-          paymentMethodId: formData.payment_method_id,
-          issuerId: formData.issuer_id,
-          installments: formData.installments,
-          email: formData.payer?.email,
           orderId,
+          paymentMethodId: isCard ? formData.payment_method_id : "yape",
+          email: formData.payer?.email,
+          ...(isCard && {
+            token: formData.token,
+            issuerId: formData.issuer_id,
+            installments: formData.installments,
+          }),
         }),
       });
       const data = await res.json();
@@ -109,14 +125,11 @@ export function CardPaymentBrick({ total, orderId, onPaymentResult }: CardPaymen
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <h2 className="text-lg font-semibold text-[#111111] mb-4">Datos de pago</h2>
-      <CardPayment
-        initialization={initialization}
-        customization={customization}
-        onSubmit={onSubmit}
-        onError={onError}
-      />
-    </div>
+    <Payment
+      initialization={initialization}
+      customization={customization}
+      onSubmit={onSubmit}
+      onError={onError}
+    />
   );
 }
