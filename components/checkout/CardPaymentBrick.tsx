@@ -23,6 +23,15 @@ const BRAND_KEY: Record<string, string> = {
 
 const ALL_BRAND_KEYS = ["visa", "mastercard", "amex", "diners"];
 
+function detectBrandFromPrefix(bin: string): string | null {
+  if (!bin) return null;
+  if (/^4/.test(bin)) return "visa";
+  if (/^3[47]/.test(bin)) return "amex";
+  if (/^3[0689]/.test(bin)) return "diners";
+  if (/^5[1-5]/.test(bin) || /^2[2-7]/.test(bin)) return "mastercard";
+  return null;
+}
+
 interface CustomCardFormProps {
   amount: number;
   onCreateOrder: () => Promise<{ orderId: string; email: string } | null>;
@@ -131,12 +140,17 @@ export function CustomCardForm({
             setCardBrand(null);
             return;
           }
+          // Detección instantánea por prefijo (sin latencia de red)
+          const immediate = detectBrandFromPrefix(data.bin);
+          if (immediate) setCardBrand(immediate);
+
+          // Confirmación via API de MP (para marcas no cubiertas o casos edge)
           try {
             const { results } = await mp.getPaymentMethods({ bin: data.bin });
             const id: string | undefined = results?.[0]?.id;
-            setCardBrand(id ? (BRAND_KEY[id] ?? id) : null);
+            if (id) setCardBrand(BRAND_KEY[id] ?? id);
           } catch {
-            // ignore — not critical
+            // la detección local ya cubrió el caso principal
           }
         },
         onSubmit: async (event: Event) => {
