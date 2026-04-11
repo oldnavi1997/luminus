@@ -111,14 +111,17 @@ export function CustomCardForm({
         cardNumber: {
           id: "mp-cardNumber",
           placeholder: "0000 0000 0000 0000",
+          style: { fontSize: "14px", color: "#111111" },
         },
         expirationDate: {
           id: "mp-expirationDate",
           placeholder: "MM/YY",
+          style: { fontSize: "14px", color: "#111111" },
         },
         securityCode: {
           id: "mp-securityCode",
           placeholder: "CVV",
+          style: { fontSize: "14px", color: "#111111" },
         },
         cardholderName: {
           id: "mp-cardholderName",
@@ -268,9 +271,9 @@ export function CustomCardForm({
 
   // ── Shared styles ─────────────────────────────────────────────────
   const field =
-    "w-full border border-[#d5d5d5] bg-white text-sm text-[#111111] px-3 focus:outline-none focus:border-[#1a1a2e] transition-colors";
+    "w-full border border-[#111111]/15 bg-white text-sm text-[#111111] px-3.5 focus:outline-none focus:border-[#d4af37] transition-colors duration-200";
   const label =
-    "block text-[11px] font-medium text-[#6b7280] uppercase tracking-wider mb-1.5";
+    "block text-[10px] font-medium text-[#111111]/60 uppercase tracking-[0.15em] mb-1.5";
 
   return (
     <>
@@ -313,7 +316,7 @@ export function CustomCardForm({
           <label className={label}>Número de tarjeta</label>
           <div className="relative">
             {/* iframe de MercadoPago */}
-            <div id="mp-cardNumber" className={`${field} h-[42px]`} />
+            <div id="mp-cardNumber" className={`${field} h-[36px]`} />
             {/* Iconos de marcas — encima del iframe, pointer-events-none */}
             <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center gap-1">
               {cardBrand
@@ -321,8 +324,8 @@ export function CustomCardForm({
                   ? <img
                       src={BRAND_ICONS[cardBrand]}
                       alt={cardBrand}
-                      width={36}
-                      height={24}
+                      width={28}
+                      height={18}
                       style={{ borderRadius: 3, display: "block" }}
                       className="shadow-sm"
                     />
@@ -334,8 +337,8 @@ export function CustomCardForm({
                       key={key}
                       src={BRAND_ICONS[key]}
                       alt={key}
-                      width={32}
-                      height={20}
+                      width={24}
+                      height={15}
                       style={{ borderRadius: 3, display: "block" }}
                     />
                   ))}
@@ -347,14 +350,14 @@ export function CustomCardForm({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className={label}>Vencimiento</label>
-            <div id="mp-expirationDate" className={`${field} h-[42px]`} />
+            <div id="mp-expirationDate" className={`${field} h-[36px]`} />
           </div>
           <div>
             <label className={label}>CVV</label>
             <div className="relative">
-              <div id="mp-securityCode" className={`${field} h-[42px]`} />
+              <div id="mp-securityCode" className={`${field} h-[36px]`} />
               <div className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center">
-                <svg width="28" height="20" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.35 }}>
+                <svg width="22" height="16" viewBox="0 0 28 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.35 }}>
                   <rect x="0.5" y="0.5" width="27" height="19" rx="2.5" stroke="#6b7280" fill="white"/>
                   <rect y="4" width="28" height="5" fill="#6b7280" opacity="0.4"/>
                   <rect x="4" y="12" width="12" height="4" rx="1" fill="#6b7280" opacity="0.5"/>
@@ -373,7 +376,7 @@ export function CustomCardForm({
           <input
             id="mp-cardholderName"
             type="text"
-            className={`${field} py-2.5`}
+            className={`${field} py-[7px]`}
             autoComplete="cc-name"
           />
         </div>
@@ -384,7 +387,7 @@ export function CustomCardForm({
           <div className="relative">
             <select
               id="mp-issuer"
-              className={`${field} py-2.5 appearance-none pr-7 cursor-pointer`}
+              className={`${field} py-[7px] appearance-none pr-7 cursor-pointer`}
             />
             <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9ca3af] text-[10px]">
               ▼
@@ -398,7 +401,7 @@ export function CustomCardForm({
           <div className="relative">
             <select
               id="mp-installments"
-              className={`${field} py-2.5 appearance-none pr-7 cursor-pointer`}
+              className={`${field} py-[7px] appearance-none pr-7 cursor-pointer`}
             />
             <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9ca3af] text-[10px]">
               ▼

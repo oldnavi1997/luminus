@@ -44,7 +44,7 @@ export interface CheckoutFormHandle {
   getValues: () => ShippingFormData;
 }
 
-const selectClass = "w-full px-3.5 py-2.5 bg-white border border-[#111111]/15 text-sm text-[#111111] focus:outline-none focus:border-[#d4af37] transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
+const selectClass = "w-full px-3.5 py-[7px] bg-white border border-[#111111]/15 text-sm text-[#111111] focus:outline-none focus:border-[#d4af37] transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed";
 const labelClass = "block text-[10px] font-medium text-[#111111]/60 uppercase tracking-[0.15em] mb-1.5";
 const errorClass = "text-[11px] text-red-600 tracking-wide mt-1";
 
