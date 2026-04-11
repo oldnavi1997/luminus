@@ -133,8 +133,8 @@ export function CustomCardForm({
           }
           try {
             const { results } = await mp.getPaymentMethods({ bin: data.bin });
-            const name: string | undefined = results?.[0]?.name;
-            setCardBrand(name ? (BRAND_KEY[name] ?? name) : null);
+            const id: string | undefined = results?.[0]?.id;
+            setCardBrand(id ? (BRAND_KEY[id] ?? id) : null);
           } catch {
             // ignore — not critical
           }
