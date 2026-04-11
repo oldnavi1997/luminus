@@ -102,9 +102,9 @@ export default async function OrderConfirmationPage({ params }: Props) {
         {/* Next steps — solo si está aprobado */}
         {isApproved && (
           <div className="bg-white border border-[#d5d5d5]/60 px-6 py-5">
-            <h2 className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em] mb-4">
+            <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em] mb-4">
               ¿Qué sigue?
-            </h2>
+            </p>
             <div className="space-y-3">
               {[
                 { step: "1", text: "Recibirás un email de confirmación con los detalles de tu pedido." },
@@ -126,9 +126,9 @@ export default async function OrderConfirmationPage({ params }: Props) {
         <div className="bg-white border border-[#d5d5d5]/60 overflow-hidden">
           <div className="px-6 py-4 border-b border-[#d5d5d5]/60 flex items-center gap-2">
             <Package className="h-4 w-4 text-[#1a1a2e]/40 stroke-[1.5]" />
-            <h2 className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em]">
+            <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em]">
               Productos ({order.items.length})
-            </h2>
+            </p>
           </div>
 
           <div className="divide-y divide-[#d5d5d5]/40">
@@ -217,9 +217,9 @@ export default async function OrderConfirmationPage({ params }: Props) {
           <div className="bg-white border border-[#d5d5d5]/60 px-6 py-5">
             <div className="flex items-center gap-2 mb-3">
               <MapPin className="h-4 w-4 text-[#1a1a2e]/40 stroke-[1.5]" />
-              <h2 className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em]">
+              <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em]">
                 Dirección de envío
-              </h2>
+              </p>
             </div>
             <p className="text-sm font-medium text-[#1a1a2e]">{order.shippingName}</p>
             <p className="text-sm text-[#1a1a2e]/50 mt-0.5">{order.shippingAddress}</p>
@@ -232,9 +232,9 @@ export default async function OrderConfirmationPage({ params }: Props) {
           <div className="bg-white border border-[#d5d5d5]/60 px-6 py-5">
             <div className="flex items-center gap-2 mb-3">
               <Mail className="h-4 w-4 text-[#1a1a2e]/40 stroke-[1.5]" />
-              <h2 className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em]">
+              <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em]">
                 Confirmación enviada a
-              </h2>
+              </p>
             </div>
             <p className="text-sm font-medium text-[#1a1a2e]">{order.shippingEmail}</p>
             {order.shippingPhone && (

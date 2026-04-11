@@ -116,9 +116,9 @@ export const CheckoutForm = forwardRef<CheckoutFormHandle>(function CheckoutForm
 
       {/* Datos de contacto */}
       <div className="bg-white border border-[#d5d5d5]/60 p-6 space-y-4">
-        <h3 className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em]">
+        <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.1em]">
           Datos de contacto
-        </h3>
+        </p>
 
         <Input
           label="Email *"
@@ -170,9 +170,9 @@ export const CheckoutForm = forwardRef<CheckoutFormHandle>(function CheckoutForm
 
       {/* Dirección de envío */}
       <div className="bg-white border border-[#d5d5d5]/60 p-6 space-y-4">
-        <h3 className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em]">
+        <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.1em]">
           Dirección de envío
-        </h3>
+        </p>
 
         <Input
           label="Dirección (calle y número) *"

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, DM_Sans } from "next/font/google";
+import { Inter, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
 import { Navbar, type NavCategory } from "@/components/layout/Navbar";
@@ -8,9 +8,9 @@ import { StoreChrome } from "@/components/layout/StoreChrome";
 import { prisma } from "@/lib/prisma";
 import { Analytics } from "@vercel/analytics/next";
 
-const playfair = Playfair_Display({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-playfair",
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -52,7 +52,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="es" className={`${playfair.variable} ${dmSans.variable}`}>
+    <html lang="es" className={`${inter.variable} ${dmSans.variable}`}>
       <body className="flex flex-col min-h-screen" suppressHydrationWarning>
         <Providers>
           <StoreChrome><Navbar categories={navCategories} /></StoreChrome>

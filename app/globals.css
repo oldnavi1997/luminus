@@ -12,7 +12,7 @@
   --color-border: #d5d5d5;
   --color-muted: #9ca3af;
 
-  --font-display: var(--font-playfair), "Playfair Display", Georgia, serif;
+  --font-display: var(--font-inter), "Inter", sans-serif;
   --font-sans: var(--font-dm-sans), "DM Sans", system-ui, sans-serif;
 
   --animate-fade-in: fade-in 0.5s ease-out both;
@@ -65,7 +65,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display, "Playfair Display", Georgia, serif);
+  font-family: var(--font-display, "Inter", sans-serif);
   font-weight: 600;
 }
 

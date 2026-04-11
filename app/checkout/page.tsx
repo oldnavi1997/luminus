@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCartStore } from "@/stores/cart";
 import { CheckoutForm, CheckoutFormHandle } from "@/components/checkout/CheckoutForm";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
-import { CardPaymentBrick } from "@/components/checkout/CardPaymentBrick";
+import { CustomCardForm } from "@/components/checkout/CardPaymentBrick";
 import { PaymentResult } from "@/components/checkout/PaymentResult";
 import { formatPEN } from "@/lib/utils";
 
@@ -39,7 +39,7 @@ export default function CheckoutPage() {
 
   if (itemList.length === 0 && !showResult && !isRedirectingRef.current) return null;
 
-  const handleCreateOrder = async (): Promise<string | null> => {
+  const handleCreateOrder = async (): Promise<{ orderId: string; email: string } | null> => {
     if (!formRef.current) return null;
 
     const isValid = await formRef.current.trigger();
@@ -78,7 +78,7 @@ export default function CheckoutPage() {
 
       const data = await res.json();
       currentOrderIdRef.current = data.orderId;
-      return data.orderId;
+      return { orderId: data.orderId, email: shippingData.email };
     } catch {
       alert("Error de conexión");
       return null;
@@ -104,7 +104,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f7f4]">
+    <div className="min-h-screen bg-[#ffffff]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <h1 className="text-2xl font-bold text-[#111111] mb-8 tracking-tight">
           Finalizar compra
@@ -133,10 +133,10 @@ export default function CheckoutPage() {
                 <CheckoutForm ref={formRef} />
 
                 <div className="bg-white border border-[#d5d5d5]/60 p-6">
-                  <h3 className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em] mb-4">
+                  <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em] mb-4">
                     Método de pago
-                  </h3>
-                  <CardPaymentBrick
+                  </p>
+                  <CustomCardForm
                     amount={sub}
                     onCreateOrder={handleCreateOrder}
                     onPaymentResult={handlePaymentResult}
