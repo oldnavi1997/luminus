@@ -40,13 +40,13 @@ export default async function RootLayout({
       where: { parentId: null, slug: { notIn: ["sin-categorizar", "uncategorized"] } },
       include: {
         children: {
-          orderBy: { name: "asc" },
+          orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
           include: {
-            children: { orderBy: { name: "asc" }, select: { id: true, name: true, slug: true } },
+            children: { orderBy: [{ sortOrder: "asc" }, { name: "asc" }], select: { id: true, name: true, slug: true } },
           },
         },
       },
-      orderBy: { name: "asc" },
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
   } catch {
     // DB unavailable during build (e.g. Railway build phase)

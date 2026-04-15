@@ -2,9 +2,24 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Edit, Trash2, Plus, Tag } from "lucide-react";
+import { Edit, Trash2, Plus, Tag, GripVertical } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -17,6 +32,7 @@ interface Category {
   description: string | null;
   parentId: string | null;
   requiresLensSelection: boolean;
+  sortOrder: number;
   parent: { id: string; name: string } | null;
   _count: { products: number };
 }
@@ -47,8 +63,96 @@ function slugify(str: string) {
     .replace(/^-+|-+$/g, "");
 }
 
+interface SortableRowProps {
+  cat: Category;
+  onEdit: (cat: Category) => void;
+  onDelete: (cat: Category) => void;
+  onOpenProducts: (cat: Category) => void;
+  productsLoading: boolean;
+}
+
+function SortableRow({ cat, onEdit, onDelete, onOpenProducts, productsLoading }: SortableRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: cat.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    position: isDragging ? ("relative" as const) : undefined,
+    zIndex: isDragging ? 50 : undefined,
+  };
+
+  return (
+    <tr
+      ref={setNodeRef}
+      style={style}
+      className="border-b border-[#111111]/4 hover:bg-[#f8f7f4]/60 transition-colors"
+    >
+      <td className="py-3.5 pl-3 pr-1 w-8">
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing text-[#111111]/20 hover:text-[#111111]/50 transition-colors touch-none"
+          title="Arrastrar para reordenar"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+      </td>
+      <td className="py-3.5 px-5 font-medium text-[#111111]">{cat.name}</td>
+      <td className="py-3.5 px-5">
+        <span className="font-mono text-xs text-[#111111]/50 bg-[#f8f7f4] px-2 py-0.5">
+          {cat.slug}
+        </span>
+      </td>
+      <td className="py-3.5 px-5 text-[#111111]/50">
+        {cat.parent ? (
+          <span className="text-xs text-[#d4af37]">{cat.parent.name}</span>
+        ) : (
+          <span className="text-xs text-[#111111]/25">—</span>
+        )}
+      </td>
+      <td className="py-3.5 px-5 text-[#111111]/50 max-w-[220px]">
+        <span className="line-clamp-1">{cat.description ?? "—"}</span>
+      </td>
+      <td className="py-3.5 px-5 text-center">
+        {cat._count.products > 0 ? (
+          <button
+            onClick={() => onOpenProducts(cat)}
+            className="text-sm font-medium text-[#111111] hover:text-[#d4af37] underline-offset-2 hover:underline transition-colors"
+            title="Ver productos"
+          >
+            {productsLoading ? "..." : cat._count.products}
+          </button>
+        ) : (
+          <span className="text-sm text-[#111111]/30">0</span>
+        )}
+      </td>
+      <td className="py-3.5 px-5">
+        <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={() => onEdit(cat)}
+            className="p-1.5 text-[#111111]/30 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors"
+            title="Editar"
+          >
+            <Edit className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => onDelete(cat)}
+            className="p-1.5 text-[#111111]/30 hover:text-red-500 hover:bg-red-50 transition-colors"
+            title={cat._count.products > 0 ? "Tiene productos — no se puede eliminar" : "Eliminar"}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export function CategoryTable({ categories }: CategoryTableProps) {
   const router = useRouter();
+  const [items, setItems] = useState<Category[]>(categories);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [loading, setLoading] = useState(false);
@@ -59,6 +163,32 @@ export function CategoryTable({ categories }: CategoryTableProps) {
     items: ProductItem[];
   } | null>(null);
   const [productsLoading, setProductsLoading] = useState(false);
+
+  const sensors = useSensors(useSensor(PointerSensor));
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = items.findIndex((c) => c.id === active.id);
+    const newIndex = items.findIndex((c) => c.id === over.id);
+    const newItems = arrayMove(items, oldIndex, newIndex);
+    setItems(newItems);
+
+    try {
+      const res = await fetch("/api/categories/reorder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newItems.map((c, idx) => ({ id: c.id, sortOrder: idx }))),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Orden guardado");
+      router.refresh();
+    } catch {
+      toast.error("Error al guardar el orden");
+      setItems(categories);
+    }
+  };
 
   const openProducts = async (cat: Category) => {
     if (cat._count.products === 0) return;
@@ -75,12 +205,11 @@ export function CategoryTable({ categories }: CategoryTableProps) {
   };
 
   const childrenOf = new Map<string | null, Category[]>();
-  for (const cat of categories) {
+  for (const cat of items) {
     const key = cat.parentId ?? null;
     if (!childrenOf.has(key)) childrenOf.set(key, []);
     childrenOf.get(key)!.push(cat);
   }
-  for (const list of childrenOf.values()) list.sort((a, b) => a.name.localeCompare(b.name));
   const parentOptions: { cat: Category; depth: number }[] = [];
   function walkCats(parentId: string | null, depth: number) {
     for (const cat of childrenOf.get(parentId) ?? []) {
@@ -164,16 +293,19 @@ export function CategoryTable({ categories }: CategoryTableProps) {
     <>
       {/* Table header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-[#111111]/6">
-        <p className="text-[10px] text-[#111111]/40 uppercase tracking-[0.2em]">
-          {categories.length} {categories.length === 1 ? "categoría" : "categorías"}
-        </p>
+        <div>
+          <p className="text-[10px] text-[#111111]/40 uppercase tracking-[0.2em]">
+            {items.length} {items.length === 1 ? "categoría" : "categorías"}
+          </p>
+          <p className="text-[10px] text-[#111111]/30 mt-0.5">Arrastrá las filas para cambiar el orden del menú</p>
+        </div>
         <Button size="sm" onClick={openCreate} className="gap-1.5">
           <Plus className="h-3.5 w-3.5" />
           Nueva categoría
         </Button>
       </div>
 
-      {categories.length === 0 ? (
+      {items.length === 0 ? (
         <div className="text-center py-16 text-[#111111]/30">
           <Tag className="h-8 w-8 mx-auto mb-3 opacity-20" />
           <p className="text-sm font-light" style={{ fontFamily: "var(--font-playfair, serif)" }}>
@@ -182,88 +314,45 @@ export function CategoryTable({ categories }: CategoryTableProps) {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[#111111]/6">
-                <th className="text-left py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
-                  Nombre
-                </th>
-                <th className="text-left py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
-                  Slug
-                </th>
-                <th className="text-left py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
-                  Categoría padre
-                </th>
-                <th className="text-left py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
-                  Descripción
-                </th>
-                <th className="text-center py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
-                  Productos
-                </th>
-                <th className="py-3 px-5" />
-              </tr>
-            </thead>
-            <tbody>
-              {categories.map((cat) => (
-                <tr
-                  key={cat.id}
-                  className="border-b border-[#111111]/4 hover:bg-[#f8f7f4]/60 transition-colors"
-                >
-                  <td className="py-3.5 px-5 font-medium text-[#111111]">{cat.name}</td>
-                  <td className="py-3.5 px-5">
-                    <span className="font-mono text-xs text-[#111111]/50 bg-[#f8f7f4] px-2 py-0.5">
-                      {cat.slug}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-5 text-[#111111]/50">
-                    {cat.parent ? (
-                      <span className="text-xs text-[#d4af37]">{cat.parent.name}</span>
-                    ) : (
-                      <span className="text-xs text-[#111111]/25">—</span>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-5 text-[#111111]/50 max-w-[220px]">
-                    <span className="line-clamp-1">{cat.description ?? "—"}</span>
-                  </td>
-                  <td className="py-3.5 px-5 text-center">
-                    {cat._count.products > 0 ? (
-                      <button
-                        onClick={() => openProducts(cat)}
-                        className="text-sm font-medium text-[#111111] hover:text-[#d4af37] underline-offset-2 hover:underline transition-colors"
-                        title="Ver productos"
-                      >
-                        {productsLoading ? "..." : cat._count.products}
-                      </button>
-                    ) : (
-                      <span className="text-sm text-[#111111]/30">0</span>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-5">
-                    <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => openEdit(cat)}
-                        className="p-1.5 text-[#111111]/30 hover:text-[#111111] hover:bg-[#f8f7f4] transition-colors"
-                        title="Editar"
-                      >
-                        <Edit className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cat)}
-                        className="p-1.5 text-[#111111]/30 hover:text-red-500 hover:bg-red-50 transition-colors"
-                        title={
-                          cat._count.products > 0
-                            ? "Tiene productos — no se puede eliminar"
-                            : "Eliminar"
-                        }
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={items.map((c) => c.id)} strategy={verticalListSortingStrategy}>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#111111]/6">
+                    <th className="py-3 pl-3 pr-1 w-8" />
+                    <th className="text-left py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+                      Nombre
+                    </th>
+                    <th className="text-left py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+                      Slug
+                    </th>
+                    <th className="text-left py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+                      Categoría padre
+                    </th>
+                    <th className="text-left py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+                      Descripción
+                    </th>
+                    <th className="text-center py-3 px-5 text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
+                      Productos
+                    </th>
+                    <th className="py-3 px-5" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((cat) => (
+                    <SortableRow
+                      key={cat.id}
+                      cat={cat}
+                      onEdit={openEdit}
+                      onDelete={handleDelete}
+                      onOpenProducts={openProducts}
+                      productsLoading={productsLoading}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </SortableContext>
+          </DndContext>
         </div>
       )}
 
@@ -378,7 +467,6 @@ export function CategoryTable({ categories }: CategoryTableProps) {
             placeholder="lentes-de-sol"
             required
           />
-          {/* Parent category selector */}
           <div className="space-y-1.5">
             <label className="block text-[10px] font-medium text-[#111111]/60 uppercase tracking-[0.15em]">
               Categoría padre
@@ -426,8 +514,10 @@ export function CategoryTable({ categories }: CategoryTableProps) {
                 }`}
               />
             </button>
-            <label className="text-sm text-[#111111]/70 select-none cursor-pointer"
-              onClick={() => setForm((f) => ({ ...f, requiresLensSelection: !f.requiresLensSelection }))}>
+            <label
+              className="text-sm text-[#111111]/70 select-none cursor-pointer"
+              onClick={() => setForm((f) => ({ ...f, requiresLensSelection: !f.requiresLensSelection }))}
+            >
               Requiere selección de lunas
             </label>
           </div>
