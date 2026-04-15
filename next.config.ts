@@ -10,6 +10,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
+    loader: "custom",
+    loaderFile: "./lib/cloudinary-loader.ts",
     remotePatterns: [
       {
         protocol: "https",
@@ -20,9 +22,6 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
       },
     ],
-    formats: ["image/webp"],
-    qualities: [75],
-    minimumCacheTTL: 2678400, // 31 días — imágenes de productos cambian poco
   },
   serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg", "bcryptjs", "mercadopago"],
   async headers() {
