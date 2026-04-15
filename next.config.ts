@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
       },
     ],
     formats: ["image/webp"],
-    qualities: [75, 90],
+    qualities: [75],
     minimumCacheTTL: 2678400, // 31 días — imágenes de productos cambian poco
   },
   serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg", "bcryptjs", "mercadopago"],
