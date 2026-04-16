@@ -8,10 +8,10 @@ const processSchema = z.object({
   orderId: z.string(),
   paymentMethodId: z.string(),
   email: z.string().email(),
-  // Solo requeridos para pago con tarjeta (no aplica a Yape):
   token: z.string().optional(),
   issuerId: z.union([z.string(), z.number()]).optional(),
   installments: z.number().int().positive().optional(),
+  phone: z.string().optional(), // requerido para Yape
 });
 
 function mapMpStatusToPaymentStatus(mpStatus: string) {
@@ -63,17 +63,20 @@ export async function POST(request: NextRequest) {
     const total = Number(order.total);
 
     // Call Mercado Pago Payment API
-    const isCardPayment = !!data.token;
+    const isYape = data.paymentMethodId === "yape";
+    const isCardPayment = !!data.token && !isYape;
 
     const payment = await paymentClient.create({
       body: {
         transaction_amount: total,
         payment_method_id: data.paymentMethodId,
-        payer: { email: data.email },
+        payer: {
+          email: data.email,
+          ...(isYape && data.phone && { phone: { number: data.phone } }),
+        },
         external_reference: order.id,
-        // Solo para tarjeta:
+        ...(data.token && { token: data.token }),
         ...(isCardPayment && {
-          token: data.token,
           installments: data.installments,
           issuer_id: data.issuerId ? Number(data.issuerId) : undefined,
         }),

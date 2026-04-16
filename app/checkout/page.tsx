@@ -6,6 +6,7 @@ import { useCartStore } from "@/stores/cart";
 import { CheckoutForm, CheckoutFormHandle } from "@/components/checkout/CheckoutForm";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
 import { CustomCardForm } from "@/components/checkout/CardPaymentBrick";
+import { YapeForm } from "@/components/checkout/YapeForm";
 import { PaymentResult } from "@/components/checkout/PaymentResult";
 import { formatPEN } from "@/lib/utils";
 import { getShippingCost, getMpFee } from "@/lib/shipping";
@@ -28,6 +29,7 @@ export default function CheckoutPage() {
   const [paymentResult, setPaymentResult] = useState<PaymentResultData | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "yape">("card");
   const [shippingBreakdown, setShippingBreakdown] = useState<{
     courier: "shalom" | "olva";
     courierName: string;
@@ -156,11 +158,46 @@ export default function CheckoutPage() {
                   <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em] mb-4">
                     Método de pago
                   </p>
-                  <CustomCardForm
-                    amount={shippingBreakdown ? sub + shippingBreakdown.shippingCost + shippingBreakdown.mpFee : sub}
-                    onCreateOrder={handleCreateOrder}
-                    onPaymentResult={handlePaymentResult}
-                  />
+
+                  {/* Tabs */}
+                  <div className="flex border border-[#d5d5d5]/60 mb-5">
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("card")}
+                      className={`flex-1 py-2.5 text-xs font-medium tracking-wide transition-colors duration-150 ${
+                        paymentMethod === "card"
+                          ? "bg-[#1a1a2e] text-white"
+                          : "bg-white text-[#111111]/50 hover:text-[#111111]"
+                      }`}
+                    >
+                      Tarjeta
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("yape")}
+                      className={`flex-1 py-2.5 text-xs font-medium tracking-wide transition-colors duration-150 border-l border-[#d5d5d5]/60 ${
+                        paymentMethod === "yape"
+                          ? "bg-[#6c3dab] text-white"
+                          : "bg-white text-[#111111]/50 hover:text-[#111111]"
+                      }`}
+                    >
+                      Yape
+                    </button>
+                  </div>
+
+                  {paymentMethod === "card" ? (
+                    <CustomCardForm
+                      amount={shippingBreakdown ? sub + shippingBreakdown.shippingCost + shippingBreakdown.mpFee : sub}
+                      onCreateOrder={handleCreateOrder}
+                      onPaymentResult={handlePaymentResult}
+                    />
+                  ) : (
+                    <YapeForm
+                      amount={shippingBreakdown ? sub + shippingBreakdown.shippingCost + shippingBreakdown.mpFee : sub}
+                      onCreateOrder={handleCreateOrder}
+                      onPaymentResult={handlePaymentResult}
+                    />
+                  )}
                 </div>
               </>
             )}
