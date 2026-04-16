@@ -6,7 +6,7 @@ import { ChevronDown } from "lucide-react";
 
 type FaqItem = {
   question: string;
-  answer: string;
+  answer: React.ReactNode;
 };
 
 type FaqCategory = {
@@ -20,33 +20,85 @@ const faqData: FaqCategory[] = [
     items: [
       {
         question: "¿Cuáles son sus destinos de envío y los costos asociados?",
-        answer:
-          "Área de envío: Nacional. Gastos de envío:\n• Shalom: S/ 8.\n• Olva Courier: S/ 10–18 (puede variar según la región destino).\n• Olva Courier vía aérea: S/ 25.\n\nTenga en cuenta que nuestros accesorios para gafas no están disponibles para su compra individual; solo se pueden adquirir con la compra de un producto para gafas. En algunos casos, es posible que no se pueda realizar la entrega en ciertas regiones. Si su ubicación se ve afectada, le notificaremos de inmediato y emitiremos un reembolso.",
+        answer: (
+          <>
+            <p className="mb-2"><strong>Área de envío:</strong> Nacional.</p>
+            <p className="mb-2"><strong>Gastos de envío:</strong></p>
+            <ul className="list-disc list-inside mb-2 space-y-1">
+              <li>Shalom: S/ 8.00</li>
+              <li>Olva Courier: S/ 10–18 (puede variar según la región destino)</li>
+              <li>Olva Courier vía aérea: S/ 25.00</li>
+            </ul>
+            <p>
+              En algunos casos, es posible que no se pueda realizar la entrega en ciertas regiones debido a
+              circunstancias locales (condiciones climáticas adversas, emergencias, huelgas, etc.). Si su
+              ubicación se ve afectada, le notificaremos de inmediato y emitiremos un reembolso.
+            </p>
+          </>
+        ),
       },
       {
         question: "¿Puede proporcionarme un tiempo de entrega estimado para mi pedido?",
-        answer:
-          "Periodo de procesamiento del pedido: espere que su pedido se procese dentro de 1 a 2 días hábiles.\n\nPeriodo de envío: después del procesamiento, anticipamos la entrega dentro de 2 a 3 días.",
+        answer: (
+          <>
+            <p className="mb-2">
+              <strong>Periodo de procesamiento del pedido:</strong> 1 a 2 días hábiles (excluye fines de semana
+              y festivos nacionales).
+            </p>
+            <p>
+              <strong>Periodo de envío:</strong> después del procesamiento, la entrega se realiza dentro de 2 a
+              3 días.
+            </p>
+          </>
+        ),
       },
       {
-        question: "Si decido cambiar o cancelar mi pedido, ¿cuál es el proceso y los cargos asociados?",
-        answer:
-          "Puede cancelar su pedido antes de su envío contactando a nuestro WhatsApp. Sin embargo, le recomendamos revisar su pedido cuidadosamente antes de realizar el pago para evitar inconvenientes.\n\nUna vez enviado, no es posible cancelar, pero puedes solicitar una devolución al recibirlo, asumiendo el coste del envío de devolución.",
+        question: "Si decido cambiar o cancelar mi pedido, ¿cuál es el proceso?",
+        answer: (
+          <>
+            <p className="mb-2">
+              Puede cancelar su pedido <strong>antes de su envío</strong> contactando a nuestro{" "}
+              <strong>WhatsApp</strong>. Le recomendamos revisar su pedido cuidadosamente antes de realizar el
+              pago para evitar inconvenientes.
+            </p>
+            <p>
+              Una vez enviado, no es posible cancelar el pedido. En ese caso, puede solicitar una devolución al
+              recibirlo, asumiendo el coste del envío de devolución.
+            </p>
+          </>
+        ),
       },
       {
         question: "¿Es posible actualizar mi dirección de envío después de realizar un pedido?",
-        answer:
-          "Sí, si necesita cambiar su dirección de envío, notifíquenoslo lo antes posible. Sin embargo, los cambios se complican una vez completado el envío.",
+        answer: (
+          <p>
+            Sí. Si necesita cambiar su dirección de envío, notifíquenoslo lo antes posible a través de nuestro{" "}
+            <strong>WhatsApp</strong> o a{" "}
+            <a href="mailto:luminus.eyewear@gmail.com" className="text-[#d4af37] hover:underline">
+              luminus.eyewear@gmail.com
+            </a>
+            . Una vez que el paquete esté en tránsito, los cambios pueden resultar difíciles de gestionar.
+          </p>
+        ),
       },
       {
         question: "¿Dónde puedo encontrar información de seguimiento de mi paquete?",
-        answer:
-          "Una vez enviado tu pedido, recibirás un mensaje con el número de seguimiento. Podrás rastrear tu paquete directamente desde la página web de la empresa de envío (Olva Courier, Shalom).",
+        answer: (
+          <p>
+            Una vez enviado tu pedido, recibirás un <strong>mensaje con el número de seguimiento</strong>.
+            Podrás rastrear tu paquete directamente desde la página web de la empresa de envío (
+            <strong>Olva Courier</strong> o <strong>Shalom</strong>).
+          </p>
+        ),
       },
       {
-        question: "¿Cuál es el procedimiento si mi pedido no logra ser entregado por el transportista?",
-        answer:
-          "Nos haremos responsables si el pedido no es entregado. Se le envía un nuevo pedido en tal caso.",
+        question: "¿Cuál es el procedimiento si mi pedido no logra ser entregado?",
+        answer: (
+          <p>
+            Nos hacemos responsables si el pedido no es entregado por parte del transportista. En ese caso, se
+            le enviará un nuevo pedido sin costo adicional.
+          </p>
+        ),
       },
     ],
   },
@@ -55,42 +107,107 @@ const faqData: FaqCategory[] = [
     items: [
       {
         question: "¿Ofrecen servicios de graduación para sus lentes?",
-        answer:
-          "Sí. Para tal caso necesita adjuntar una foto de su ficha de ojos. Con ello los realizamos a su medida.",
+        answer: (
+          <p>
+            Sí. Para tal caso necesita adjuntar una foto de su <strong>ficha de ojos</strong>. Con ello
+            realizamos sus lentes a medida. Puede contactarnos por <strong>WhatsApp</strong> o{" "}
+            <strong>Instagram</strong> para coordinar el proceso.
+          </p>
+        ),
       },
       {
         question: "¿Dónde puedo consultar las medidas del producto?",
-        answer:
-          "Las medidas y detalles del producto están disponibles en la página de cada producto en el menú \"descripción\".",
+        answer: (
+          <p>
+            Las medidas y detalles del producto están disponibles en la página de cada artículo, en el menú{" "}
+            <strong>"Descripción"</strong>.
+          </p>
+        ),
       },
       {
         question: "¿Qué hacer si un artículo que quiero comprar está agotado?",
-        answer:
-          "Puede solicitar una notificación de disponibilidad contactándonos al WhatsApp indicando \"Notificarme cuando esté disponible\". Le notificaremos en cuanto el artículo vuelva a estar disponible.",
+        answer: (
+          <p>
+            Puede solicitar una notificación de disponibilidad contactándonos al <strong>WhatsApp</strong>{" "}
+            indicando <em>"Notificarme cuando esté disponible"</em>. Le avisaremos en cuanto el artículo vuelva
+            a estar en stock.
+          </p>
+        ),
       },
       {
         question: "¿Qué tipos de lentes están disponibles para la selección de gafas?",
-        answer:
-          "Al elegir nuestras gafas, los clientes pueden elegir entre lentes de demostración (Montura) y lentes con Filtro de luz azul. En caso de desear lentes a medida, debe contactarnos por WhatsApp o Instagram. Tenga en cuenta que los lentes con Filtro de luz azul tienen un cargo adicional.\n\nNuestras lentes opcionales con Filtro de luz azul cuentan con protección UV 400 y antirreflejo, con una tasa de bloqueo estimada del 30 %. Tenga en cuenta que las gafas con estas lentes opcionales no se pueden devolver.",
+        answer: (
+          <>
+            <p className="mb-2">Al elegir nuestras gafas, puede optar entre:</p>
+            <ul className="list-disc list-inside mb-2 space-y-1">
+              <li>
+                <strong>Lentes de demostración (Montura):</strong> incluidas sin costo adicional.
+              </li>
+              <li>
+                <strong>Filtro de luz azul:</strong> protección UV 400 y antirreflejo, con una tasa de bloqueo
+                estimada del 30 %. Tienen un cargo adicional.
+              </li>
+            </ul>
+            <p>
+              Para lentes a medida (graduados), contáctenos por <strong>WhatsApp</strong> o{" "}
+              <strong>Instagram</strong>. Tenga en cuenta que las gafas con lentes de filtro de luz azul{" "}
+              <strong>no se pueden devolver</strong>.
+            </p>
+          </>
+        ),
       },
       {
         question: "¿Ofrecen gafas de sol polarizadas en su colección?",
-        answer:
-          "Sí, ofrecemos gafas de sol polarizadas que bloquean eficazmente los rayos UV y la luz reflejada, reduciendo el deslumbramiento para una visión clara durante las actividades al aire libre.",
+        answer: (
+          <p>
+            Sí. Nuestras gafas de sol polarizadas bloquean eficazmente los rayos UV y la luz reflejada,
+            reduciendo el deslumbramiento para una visión clara durante actividades al aire libre.
+          </p>
+        ),
       },
       {
         question: "¿A qué categoría de filtro solar pertenecen sus gafas de sol?",
-        answer:
-          "Todas nuestras lentes de gafas de sol ofrecen protección UV 400 / 100 % contra los rayos UVA, UVB y UVC.",
+        answer: (
+          <p>
+            Todas nuestras lentes de gafas de sol ofrecen protección{" "}
+            <strong>UV 400 / 100 % contra los rayos UVA, UVB y UVC</strong>.
+          </p>
+        ),
       },
       {
-        question: "¿Cuáles son los procedimientos de mantenimiento y cuidado recomendados para las monturas?",
-        answer:
-          "Para garantizar la longevidad de sus gafas y mantener una visión clara y cómoda, siga estos consejos:\n\n• Limpieza: utilice un limpiador de lentes suave y un paño de microfibra. Evite productos químicos agresivos o materiales abrasivos.\n• Almacenamiento: guarde sus gafas en un estuche protector cuando no las use. Evite colocarlas con los lentes hacia abajo.\n• Evitar el calor: manténgalas lejos de fuentes de calor directas (agua caliente, secadores, tableros de automóviles).\n• Ajuste y mantenimiento: revise periódicamente tornillos, plaquetas nasales y terminales de patillas. Acuda a un óptico si necesita ajuste.\n• Evitar la humedad: mantenga sus gafas lejos de áreas con mucha humedad.",
+        question: "¿Cuáles son los procedimientos de mantenimiento recomendados para las monturas?",
+        answer: (
+          <>
+            <p className="mb-2">Para garantizar la longevidad de sus gafas:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>
+                <strong>Limpieza:</strong> use un limpiador de lentes suave y un paño de microfibra. Evite
+                productos químicos agresivos o materiales abrasivos.
+              </li>
+              <li>
+                <strong>Almacenamiento:</strong> guárdalas en un estuche protector. Evite colocarlas con los
+                lentes hacia abajo.
+              </li>
+              <li>
+                <strong>Evitar el calor:</strong> manténgalas lejos de fuentes de calor directas (agua
+                caliente, secadores, tableros de automóviles).
+              </li>
+              <li>
+                <strong>Mantenimiento:</strong> revise periódicamente tornillos, plaquetas nasales y terminales
+                de patillas.
+              </li>
+              <li>
+                <strong>Evitar la humedad:</strong> mantenga sus gafas alejadas de áreas con mucha humedad.
+              </li>
+            </ul>
+          </>
+        ),
       },
       {
         question: "¿Reparan monturas o lunas?",
-        answer: "LUMINUS no realiza servicios de reparación de monturas.",
+        answer: (
+          <p>LUMINUS no realiza servicios de reparación de monturas ni lunas.</p>
+        ),
       },
     ],
   },
@@ -99,28 +216,85 @@ const faqData: FaqCategory[] = [
     items: [
       {
         question: "¿Cuál es su política con respecto a las devoluciones?",
-        answer:
-          "En LUMINUS, nuestra principal prioridad es garantizar su completa satisfacción con cada compra. Si por cualquier motivo no está satisfecho, ofrecemos un proceso formal de devolución y reembolso para atender sus inquietudes. Visita nuestra página de Política de devoluciones y reembolsos para obtener más detalles.",
+        answer: (
+          <p>
+            En LUMINUS, nuestra prioridad es su completa satisfacción. Si por cualquier motivo no está
+            satisfecho con su compra, ofrecemos un proceso formal de devolución y reembolso. Visita nuestra{" "}
+            <Link
+              href="/politica-de-devoluciones-y-reembolsos"
+              className="text-[#d4af37] hover:underline"
+            >
+              Política de devoluciones y reembolsos
+            </Link>{" "}
+            para obtener todos los detalles.
+          </p>
+        ),
       },
       {
-        question: "¿Cómo debo proceder para devolver o cambiar artículos dañados o incorrectos?",
-        answer:
-          "Puede iniciar fácilmente una devolución contactando a nuestro WhatsApp. Nuestro horario de atención es de lunes a viernes, de 9:00 a. m. a 8:00 p. m.\n\nSi encuentra algún problema con el producto al recibirlo, proporcione una descripción detallada del problema junto con una foto que muestre el daño.",
+        question: "¿Cómo proceder para devolver o cambiar artículos dañados o incorrectos?",
+        answer: (
+          <>
+            <p className="mb-2">
+              Inicie la devolución contactando nuestro <strong>WhatsApp</strong>. Nuestro horario de atención
+              es <strong>lunes a viernes, de 9:00 a. m. a 8:00 p. m.</strong>
+            </p>
+            <p>
+              Si encuentra algún problema con el producto al recibirlo, proporcione una descripción detallada
+              del problema junto con una <strong>foto que muestre el daño</strong>.
+            </p>
+          </>
+        ),
       },
       {
-        question: "¿Es posible cambiar un artículo si cambio de opinión sobre mi compra?",
-        answer:
-          "Sí. Para devoluciones por cambio de opinión, organice el envío por la misma agencia de envío inicial y cubra los gastos de envío. Una vez recibido el artículo devuelto, le reembolsaremos el importe íntegro lo antes posible. Si desea cambiar el producto por otro, le rogamos que realice un nuevo pedido.",
+        question: "¿Es posible cambiar un artículo si cambio de opinión?",
+        answer: (
+          <>
+            <p className="mb-2">
+              Sí. Para devoluciones por cambio de opinión, organice el envío de retorno a través de la misma
+              agencia de envío inicial y cubra los gastos de envío.
+            </p>
+            <p>
+              Una vez recibido e inspeccionado el artículo, le reembolsaremos el importe íntegro. Si desea
+              cambiar el producto por otro, le rogamos que realice un nuevo pedido.
+            </p>
+          </>
+        ),
       },
       {
-        question: "¿Cuánto tiempo suele tardar en procesarse una devolución?",
-        answer:
-          "Una vez que recibamos e inspeccionemos los productos devueltos, procesaremos su reembolso en un plazo de 3 días hábiles. Tenga en cuenta que el tiempo de envío puede variar según la empresa de transporte.",
+        question: "¿Cuánto tiempo tarda en procesarse una devolución?",
+        answer: (
+          <p>
+            Una vez que recibamos e inspeccionemos los productos devueltos, procesaremos su reembolso en un
+            plazo de <strong>3 días hábiles</strong>. El tiempo de acreditación puede variar según el medio de
+            pago.
+          </p>
+        ),
       },
       {
-        question: "¿Qué cubre su póliza de garantía y cuánto dura?",
-        answer:
-          "Todos nuestros lentes cuentan con una garantía de 180 días para fallas de fábrica.\n\nSi sientes que ha habido un error en la medida de tus lunas, cuentas con 15 días desde la fecha de recepción para hacernos llegar tus lentes. Si comprobamos que hubo un error, las reemplazaremos de manera gratuita cubriendo los gastos de envío.\n\nMonturas Titanio y Acetato: garantía de 180 días desde la recepción. Monturas TR90 y Metal: garantía de 90 días. De darse el caso, recibirás un reembolso del 100 % del monto pagado como crédito en la tienda o el cambio por una montura nueva del mismo modelo, incluyendo el traspaso de tus lunas.",
+        question: "¿Qué cubre la garantía y cuánto dura?",
+        answer: (
+          <>
+            <ul className="list-disc list-inside space-y-1 mb-2">
+              <li>
+                <strong>Todos los lentes:</strong> 180 días para fallas de fábrica.
+              </li>
+              <li>
+                <strong>Monturas Titanio y Acetato:</strong> garantía de 180 días desde la recepción.
+              </li>
+              <li>
+                <strong>Monturas TR90 y Metal:</strong> garantía de 90 días desde la recepción.
+              </li>
+              <li>
+                <strong>Error en medida de lunas:</strong> 15 días desde la recepción para comunicarlo.
+                Si comprobamos el error, las reemplazamos de forma gratuita cubriendo el envío.
+              </li>
+            </ul>
+            <p>
+              En caso de garantía, recibirás un reembolso del 100 % como crédito en tienda o el cambio por
+              una montura nueva del mismo modelo, incluyendo el traspaso de tus lunas.
+            </p>
+          </>
+        ),
       },
     ],
   },
@@ -148,9 +322,9 @@ function FaqAccordion({ items }: { items: FaqItem[] }) {
             />
           </button>
           {openIndex === i && (
-            <p className="pb-5 text-[#334155]/70 text-[15px] leading-relaxed">
+            <div className="pb-5 text-[#334155]/70 text-[15px] leading-relaxed">
               {item.answer}
-            </p>
+            </div>
           )}
         </div>
       ))}
@@ -201,10 +375,10 @@ export default function PreguntasFrecuentesPage() {
         <div className="pt-4 border-t border-[#d5d5d5]">
           <p className="text-[#334155]/70 text-[15px] leading-relaxed">
             ¿No encontraste lo que buscabas? Escríbenos a{" "}
-            <a href="mailto:contacto@luminuseyewear.com" className="text-[#d4af37] hover:underline">
-              contacto@luminuseyewear.com
+            <a href="mailto:luminus.eyewear@gmail.com" className="text-[#d4af37] hover:underline">
+              luminus.eyewear@gmail.com
             </a>{" "}
-            y te responderemos a la brevedad.
+            o contáctanos por <strong>WhatsApp</strong> y te responderemos a la brevedad.
           </p>
         </div>
       </div>
