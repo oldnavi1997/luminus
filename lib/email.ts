@@ -122,14 +122,18 @@ export async function sendOrderConfirmation(orderId: string): Promise<void> {
 
             <!-- Total -->
             <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-              ${Number(order.shippingCost) > 0 ? `
               <tr>
                 <td style="padding:6px 12px;color:#555;">Subtotal</td>
                 <td style="padding:6px 12px;text-align:right;color:#555;">${formatPEN(Number(order.subtotal))}</td>
               </tr>
               <tr>
                 <td style="padding:6px 12px;color:#555;">Envío</td>
-                <td style="padding:6px 12px;text-align:right;color:#555;">${formatPEN(Number(order.shippingCost))}</td>
+                <td style="padding:6px 12px;text-align:right;color:#555;">${Number(order.shippingCost) > 0 ? formatPEN(Number(order.shippingCost)) : "Gratis"}</td>
+              </tr>
+              ${Number(order.total) - Number(order.subtotal) - Number(order.shippingCost) > 0 ? `
+              <tr>
+                <td style="padding:6px 12px;color:#555;">Comisión MP</td>
+                <td style="padding:6px 12px;text-align:right;color:#555;">${formatPEN(Number(order.total) - Number(order.subtotal) - Number(order.shippingCost))}</td>
               </tr>` : ""}
               <tr>
                 <td style="padding:12px 12px 6px;font-weight:700;font-size:16px;color:#1a1a2e;border-top:2px solid #1a1a2e;">Total pagado</td>

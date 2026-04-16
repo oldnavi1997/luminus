@@ -240,6 +240,14 @@ export default function AdminOrderDetailPage({
             <span>Envío</span>
             <span className="tabular-nums">{formatPEN(Number(order.shippingCost))}</span>
           </div>
+          {Number(order.total) - Number(order.subtotal) - Number(order.shippingCost) > 0 && (
+            <div className="flex justify-between text-gray-600">
+              <span>Comisión MP</span>
+              <span className="tabular-nums">
+                {formatPEN(Number(order.total) - Number(order.subtotal) - Number(order.shippingCost))}
+              </span>
+            </div>
+          )}
           <div className="flex justify-between font-bold text-[#111111] text-base mt-2">
             <span>Total</span>
             <span className="tabular-nums">{formatPEN(Number(order.total))}</span>
