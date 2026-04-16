@@ -32,55 +32,107 @@ export default function PoliticaEnviosPage() {
           ← Volver al inicio
         </Link>
 
-        {/* Envíos */}
+        {/* Intro */}
         <section className="space-y-4">
-          <h2
-            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
-            className="text-xl font-light text-[#1e293b] tracking-wide"
-          >
-            Envíos a nivel nacional
-          </h2>
           <p className="text-[#334155]/70 text-[15px] leading-relaxed">
-            Realizamos envíos a todo el territorio peruano a través de operadores logísticos de confianza como{" "}
-            <strong>Olva Courier</strong> y <strong>Shalom</strong>. Una vez confirmado y pagado tu pedido, recibirás
-            un correo de confirmación con los detalles de tu compra.
+            En <strong>LUMINUS</strong>, nos esforzamos por brindarte una experiencia de compra fluida de principio
+            a fin. Aquí tienes lo que necesitas saber sobre nuestro proceso de envío y política de cancelación de
+            pedidos.
+          </p>
+
+          {/* Tabla resumen */}
+          <div className="border border-[#d5d5d5] overflow-hidden text-[14px]">
+            <div className="grid grid-cols-2 border-b border-[#d5d5d5]">
+              <div className="px-4 py-3 bg-[#f1ede4] font-medium text-[#1e293b]">Método de envío</div>
+              <div className="px-4 py-3 text-[#334155]/70">Olva Courier y Shalom</div>
+            </div>
+            <div className="grid grid-cols-2 border-b border-[#d5d5d5]">
+              <div className="px-4 py-3 bg-[#f1ede4] font-medium text-[#1e293b]">Área de envío</div>
+              <div className="px-4 py-3 text-[#334155]/70">Nacional</div>
+            </div>
+            <div className="grid grid-cols-2 border-b border-[#d5d5d5]">
+              <div className="px-4 py-3 bg-[#f1ede4] font-medium text-[#1e293b]">Tarifa de envío</div>
+              <div className="px-4 py-3 text-[#334155]/70 space-y-1">
+                <p>Shalom: S/ 8.00</p>
+                <p>Olva Courier: S/ 10–18 (según región)</p>
+                <p>Olva Courier vía aérea: S/ 25.00</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 border-b border-[#d5d5d5]">
+              <div className="px-4 py-3 bg-[#f1ede4] font-medium text-[#1e293b]">Procesamiento</div>
+              <div className="px-4 py-3 text-[#334155]/70">1–2 días laborables (excluye fines de semana y festivos)</div>
+            </div>
+            <div className="grid grid-cols-2">
+              <div className="px-4 py-3 bg-[#f1ede4] font-medium text-[#1e293b]">Plazo de envío</div>
+              <div className="px-4 py-3 text-[#334155]/70">2–3 días tras el procesamiento</div>
+            </div>
+          </div>
+
+          <p className="text-[#334155]/70 text-[14px] leading-relaxed">
+            El envío a ciertas zonas puede verse restringido o cancelado debido a circunstancias locales, como
+            condiciones climáticas adversas, emergencias, huelgas y situaciones similares.
           </p>
         </section>
 
-        {/* Tiempos */}
+        {/* Envío de pedidos */}
         <section className="space-y-4">
           <h2
             style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
-            Tiempos de entrega
+            Envío de pedidos
           </h2>
-          <ul className="text-[#334155]/70 text-[15px] leading-relaxed space-y-2 list-disc list-inside">
-            <li>
-              <strong>Lima Metropolitana:</strong> 2 a 4 días hábiles.
-            </li>
-            <li>
-              <strong>Provincias:</strong> 5 a 8 días hábiles.
-            </li>
-          </ul>
           <p className="text-[#334155]/70 text-[15px] leading-relaxed">
-            Los plazos se cuentan a partir de la confirmación del pago. En temporadas de alta demanda (Navidad,
-            Cyber WOW, etc.) los tiempos pueden extenderse ligeramente; te informaremos si esto ocurre.
+            Su pedido se procesará en un plazo de <strong>1 a 2 días</strong> una vez que se haya realizado el
+            pago. Tenga en cuenta que los fines de semana y festivos nacionales no se incluyen en el tiempo de
+            procesamiento.
+          </p>
+          <p className="text-[#334155]/70 text-[15px] leading-relaxed">
+            Se pueden realizar cambios en su pedido comunicándose con nuestro equipo de atención al cliente a
+            través de nuestro <strong>WhatsApp</strong> o enviando un correo electrónico a{" "}
+            <a href="mailto:luminus.eyewear@gmail.com" className="text-[#d4af37] hover:underline">
+              luminus.eyewear@gmail.com
+            </a>{" "}
+            antes de que se programe la entrega del pedido.
+          </p>
+          <p className="text-[#334155]/70 text-[15px] leading-relaxed">
+            En caso de devolución de un envío debido a intentos fallidos de entrega, emitiremos un{" "}
+            <strong>reembolso completo</strong>. Sin embargo, deberá realizar un nuevo pedido a través de nuestro
+            sitio web.
           </p>
         </section>
 
-        {/* Costo */}
+        {/* Cambiar dirección */}
         <section className="space-y-4">
           <h2
             style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
-            Costo de envío
+            Cambiar la dirección de envío
           </h2>
           <p className="text-[#334155]/70 text-[15px] leading-relaxed">
-            El costo de envío se calcula al momento del checkout según tu ubicación. Los pedidos con un subtotal
-            igual o mayor a <strong>S/ 199</strong> califican para <strong>envío gratuito</strong> a cualquier
-            punto del país.
+            Si necesita cambiar su dirección de envío, notifíquenoslo lo antes posible. Una vez que el paquete
+            esté en tránsito, puede resultar difícil realizar cambios. Contáctenos por{" "}
+            <strong>WhatsApp</strong> o a{" "}
+            <a href="mailto:luminus.eyewear@gmail.com" className="text-[#d4af37] hover:underline">
+              luminus.eyewear@gmail.com
+            </a>{" "}
+            a la brevedad.
+          </p>
+        </section>
+
+        {/* Entrega a ciertas regiones */}
+        <section className="space-y-4">
+          <h2
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
+            className="text-xl font-light text-[#1e293b] tracking-wide"
+          >
+            Entrega a determinadas regiones
+          </h2>
+          <p className="text-[#334155]/70 text-[15px] leading-relaxed">
+            En algunos casos, es posible que no se pueda realizar la entrega en ciertas regiones por
+            circunstancias ajenas a nuestra operación. Si su ubicación se ve afectada, le notificaremos de
+            inmediato y emitiremos un <strong>reembolso completo</strong>.
           </p>
         </section>
 
@@ -90,19 +142,12 @@ export default function PoliticaEnviosPage() {
             style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
-            Seguimiento de tu pedido
+            Seguimiento de paquetes
           </h2>
           <p className="text-[#334155]/70 text-[15px] leading-relaxed">
-            Una vez que tu pedido sea despachado, recibirás un correo electrónico con el{" "}
-            <strong>código de seguimiento</strong> y el enlace para rastrear tu paquete directamente en el sitio
-            web del courier. Si no recibes este correo en 24 horas hábiles, escríbenos a{" "}
-            <a
-              href="mailto:contacto@luminuseyewear.com"
-              className="text-[#d4af37] hover:underline"
-            >
-              contacto@luminuseyewear.com
-            </a>
-            .
+            Una vez enviado tu pedido, recibirás un <strong>mensaje con el número de seguimiento</strong>. Podrás
+            rastrear tu paquete directamente desde la página web de la empresa de envío (
+            <strong>Olva Courier</strong> o <strong>Shalom</strong>).
           </p>
         </section>
 
@@ -112,44 +157,35 @@ export default function PoliticaEnviosPage() {
             style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
-            Cancelación de pedidos
+            Cancelación de pedido
           </h2>
           <p className="text-[#334155]/70 text-[15px] leading-relaxed">
-            Puedes cancelar tu pedido sin costo alguno <strong>antes de que sea despachado</strong>. Para
-            solicitar la cancelación, contáctanos a{" "}
-            <a
-              href="mailto:contacto@luminuseyewear.com"
-              className="text-[#d4af37] hover:underline"
-            >
-              contacto@luminuseyewear.com
-            </a>{" "}
-            con el número de tu pedido.
+            Puedes cancelar tu pedido <strong>antes de su envío</strong> contactando con nuestro{" "}
+            <strong>WhatsApp</strong>. Sin embargo, te recomendamos revisar tu pedido antes de confirmar el pago
+            para evitar inconvenientes.
           </p>
           <p className="text-[#334155]/70 text-[15px] leading-relaxed">
-            Una vez que el pedido haya sido despachado, no es posible cancelarlo. En ese caso, deberás esperar
-            la entrega e iniciar el proceso de devolución según nuestra{" "}
-            <Link href="/politica-de-devoluciones-y-reembolsos" className="text-[#d4af37] hover:underline">
-              Política de devoluciones y reembolsos
-            </Link>
-            .
+            Si tienes alguna pregunta sobre envíos, cambios o devoluciones, no dudes en contactar con nuestro
+            equipo de atención al cliente. Estamos aquí para ayudarte en cada paso del proceso.
+          </p>
+          <p className="text-[#334155]/60 text-[14px] leading-relaxed">
+            Puedes consultar la versión más reciente de los Términos de Servicio en cualquier momento en esta
+            página.
           </p>
         </section>
 
-        {/* No entregados */}
-        <section className="space-y-4">
-          <h2
-            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
-            className="text-xl font-light text-[#1e293b] tracking-wide"
-          >
-            Pedidos no entregados
-          </h2>
-          <p className="text-[#334155]/70 text-[15px] leading-relaxed">
-            Si el courier no puede completar la entrega (dirección incorrecta, destinatario ausente, etc.), el
-            paquete será devuelto a nuestro almacén. En ese caso te contactaremos para coordinar una nueva
-            entrega. Los gastos adicionales de reenvío corren por cuenta del cliente si la causa es atribuible
-            a información incorrecta proporcionada al momento de la compra.
-          </p>
-        </section>
+        {/* Links relacionados */}
+        <div className="border-t border-[#d5d5d5] pt-8">
+          <p className="text-[13px] text-[#334155]/50 mb-3">Ver también</p>
+          <div className="flex flex-wrap gap-4 text-sm">
+            <Link href="/politica-de-devoluciones-y-reembolsos" className="text-[#d4af37] hover:underline">
+              Política de devoluciones y reembolsos
+            </Link>
+            <Link href="/condiciones-de-servicio" className="text-[#d4af37] hover:underline">
+              Condiciones de servicio
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
