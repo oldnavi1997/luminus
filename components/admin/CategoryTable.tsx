@@ -516,7 +516,7 @@ export function CategoryTable({ categories }: CategoryTableProps) {
       {items.length === 0 ? (
         <div className="text-center py-16 text-[#111111]/30">
           <Tag className="h-8 w-8 mx-auto mb-3 opacity-20" />
-          <p className="text-sm font-light" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+          <p className="text-sm font-light" style={{ fontFamily: "var(--font-inter, sans-serif)" }}>
             No hay categorías todavía
           </p>
         </div>

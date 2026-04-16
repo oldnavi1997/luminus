@@ -37,7 +37,7 @@ export function HeroSection() {
           {/* Main heading */}
           <h1
             className="text-5xl md:text-7xl font-light leading-[1.08] mb-7 animate-[slide-up_0.7s_0.1s_cubic-bezier(0.22,1,0.36,1)_both]"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
           >
             Lentes que se adaptan
             <br />

@@ -38,7 +38,7 @@ export function StatsCard({ title, value, icon, description, className, accent }
               "text-2xl font-light truncate tabular-nums",
               accent ? "text-white" : "text-[#111111]"
             )}
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
           >
             {value}
           </p>

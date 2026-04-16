@@ -18,7 +18,7 @@ export function ProductGrid({ products, view = "dense", mview = "2" }: ProductGr
             <line x1="8" y1="8" x2="40" y2="40" stroke="currentColor" strokeWidth="1.5"/>
           </svg>
         </div>
-        <p className="text-sm font-light text-[#111111]/50" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+        <p className="text-sm font-light text-[#111111]/50" style={{ fontFamily: "var(--font-inter, sans-serif)" }}>
           No se encontraron productos
         </p>
         <p className="text-[11px] text-[#111111]/30 mt-2 uppercase tracking-[0.15em]">

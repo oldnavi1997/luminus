@@ -8,6 +8,7 @@ import { OrderSummary } from "@/components/checkout/OrderSummary";
 import { CustomCardForm } from "@/components/checkout/CardPaymentBrick";
 import { PaymentResult } from "@/components/checkout/PaymentResult";
 import { formatPEN } from "@/lib/utils";
+import { getShippingCost, getMpFee } from "@/lib/shipping";
 
 interface PaymentResultData {
   status: string;
@@ -27,9 +28,27 @@ export default function CheckoutPage() {
   const [paymentResult, setPaymentResult] = useState<PaymentResultData | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [shippingBreakdown, setShippingBreakdown] = useState<{
+    courier: "shalom" | "olva";
+    courierName: string;
+    shippingCost: number;
+    mpFee: number;
+  } | null>(null);
 
   const itemList = items;
   const sub = subtotal();
+
+  function handleShippingUpdate({ courier, department }: { courier: "shalom" | "olva"; department: string }) {
+    if (!department) return;
+    const shippingCost = getShippingCost(courier, department);
+    const mpFee = getMpFee(sub + shippingCost);
+    setShippingBreakdown({
+      courier,
+      courierName: courier === "shalom" ? "Shalom" : "Olva",
+      shippingCost,
+      mpFee,
+    });
+  }
 
   useEffect(() => {
     if (itemList.length === 0 && !showResult && !isRedirectingRef.current) {
@@ -69,6 +88,7 @@ export default function CheckoutPage() {
           shipping: shippingData,
         }),
       });
+
 
       if (!res.ok) {
         const err = await res.json();
@@ -130,14 +150,14 @@ export default function CheckoutPage() {
               />
             ) : (
               <>
-                <CheckoutForm ref={formRef} />
+                <CheckoutForm ref={formRef} onShippingUpdate={handleShippingUpdate} />
 
                 <div className="bg-white border border-[#d5d5d5]/60 p-6">
                   <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em] mb-4">
                     Método de pago
                   </p>
                   <CustomCardForm
-                    amount={sub}
+                    amount={shippingBreakdown ? sub + shippingBreakdown.shippingCost + shippingBreakdown.mpFee : sub}
                     onCreateOrder={handleCreateOrder}
                     onPaymentResult={handlePaymentResult}
                   />
@@ -156,15 +176,33 @@ export default function CheckoutPage() {
               >
                 <span>Resumen del pedido</span>
                 <span className="flex items-center gap-2">
-                  <span>{formatPEN(sub)}</span>
+                  <span>
+                    {shippingBreakdown
+                      ? formatPEN(sub + shippingBreakdown.shippingCost + shippingBreakdown.mpFee)
+                      : formatPEN(sub)}
+                  </span>
                   <span className="text-xs">{summaryOpen ? "▲" : "▼"}</span>
                 </span>
               </button>
-              {summaryOpen && <OrderSummary items={itemList} subtotal={sub} />}
+              {summaryOpen && (
+                <OrderSummary
+                  items={itemList}
+                  subtotal={sub}
+                  shippingCost={shippingBreakdown?.shippingCost}
+                  mpFee={shippingBreakdown?.mpFee}
+                  courierName={shippingBreakdown?.courierName}
+                />
+              )}
             </div>
             {/* Desktop: siempre visible */}
             <div className="hidden lg:block">
-              <OrderSummary items={itemList} subtotal={sub} />
+              <OrderSummary
+                items={itemList}
+                subtotal={sub}
+                shippingCost={shippingBreakdown?.shippingCost}
+                mpFee={shippingBreakdown?.mpFee}
+                courierName={shippingBreakdown?.courierName}
+              />
             </div>
           </div>
 

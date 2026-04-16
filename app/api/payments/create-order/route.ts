@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { generateOrderNumber } from "@/lib/utils";
 import { Prisma } from "@/app/generated/prisma/client";
+import { getShippingCost, getMpFee } from "@/lib/shipping";
 
 const createOrderSchema = z.object({
   items: z.array(z.object({
@@ -27,6 +28,7 @@ const createOrderSchema = z.object({
     province: z.string().min(2),
     postal: z.string().min(4),
     country: z.string().default("Perú"),
+    courier: z.enum(["shalom", "olva"]),
   }),
 });
 
@@ -84,7 +86,9 @@ export async function POST(request: NextRequest) {
     });
 
     const subtotal = orderItems.reduce((sum, i) => sum + Number(i.total), 0);
-    const total = subtotal; // free shipping for now
+    const shippingCost = getShippingCost(shipping.courier, shipping.province);
+    const mpFee = getMpFee(subtotal + shippingCost);
+    const total = subtotal + shippingCost + mpFee;
 
     const order = await prisma.order.create({
       data: {
@@ -100,7 +104,7 @@ export async function POST(request: NextRequest) {
         shippingPostal: shipping.postal,
         shippingCountry: shipping.country,
         subtotal: new Prisma.Decimal(subtotal),
-        shippingCost: new Prisma.Decimal(0),
+        shippingCost: new Prisma.Decimal(shippingCost),
         discount: new Prisma.Decimal(0),
         total: new Prisma.Decimal(total),
         paymentStatus: "PENDING",
@@ -111,7 +115,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ orderId: order.id, total });
+    return NextResponse.json({ orderId: order.id, total, shippingCost, mpFee });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues }, { status: 400 });

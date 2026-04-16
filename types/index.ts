@@ -55,4 +55,5 @@ export type ShippingFormData = {
   province: string;
   postal: string;
   country: string;
+  courier: "shalom" | "olva";
 };

@@ -21,7 +21,7 @@ export default async function AdminOrdersPage() {
         </p>
         <h1
           className="text-2xl font-light text-[#111111]"
-          style={{ fontFamily: "var(--font-playfair, serif)" }}
+          style={{ fontFamily: "var(--font-inter, sans-serif)" }}
         >
           Pedidos
         </h1>

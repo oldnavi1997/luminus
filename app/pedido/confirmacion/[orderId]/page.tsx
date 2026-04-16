@@ -202,7 +202,21 @@ export default async function OrderConfirmationPage({ params }: Props) {
             <div className="space-y-1">
               <div className="flex items-center gap-6 text-xs text-[#1a1a2e]/40">
                 <span>Subtotal <span className="text-[#1a1a2e]/70">{formatPEN(Number(order.subtotal))}</span></span>
-                <span>Envío <span className="text-emerald-600">Gratis</span></span>
+                <span>
+                  Envío{" "}
+                  {Number(order.shippingCost) > 0
+                    ? <span className="text-[#1a1a2e]/70">{formatPEN(Number(order.shippingCost))}</span>
+                    : <span className="text-emerald-600">Gratis</span>
+                  }
+                </span>
+                {Number(order.total) - Number(order.subtotal) - Number(order.shippingCost) > 0 && (
+                  <span>
+                    Comisión MP{" "}
+                    <span className="text-[#1a1a2e]/70">
+                      {formatPEN(Number(order.total) - Number(order.subtotal) - Number(order.shippingCost))}
+                    </span>
+                  </span>
+                )}
               </div>
             </div>
             <div className="text-right">

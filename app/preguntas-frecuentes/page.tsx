@@ -166,7 +166,7 @@ export default function PreguntasFrecuentesPage() {
         <div className="max-w-3xl mx-auto px-5 sm:px-8 py-14">
           <p className="text-[10px] text-[#d4af37] uppercase tracking-[0.3em] mb-3">Luminus</p>
           <h1
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-3xl font-light text-[#1e293b] tracking-wide"
           >
             Preguntas frecuentes
@@ -187,7 +187,7 @@ export default function PreguntasFrecuentesPage() {
         {faqData.map((category, i) => (
           <section key={i} className="space-y-2">
             <h2
-              style={{ fontFamily: "var(--font-playfair, serif)" }}
+              style={{ fontFamily: "var(--font-inter, sans-serif)" }}
               className="text-xl font-light text-[#1e293b] tracking-wide mb-4"
             >
               {category.title}

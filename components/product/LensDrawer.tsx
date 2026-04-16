@@ -551,7 +551,7 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
             <div>
               <h6
                 className="text-[15px] font-light text-[#1e293b] tracking-[0.15em] uppercase"
-                style={{ fontFamily: "var(--font-playfair, serif)" }}
+                style={{ fontFamily: "var(--font-inter, sans-serif)" }}
               >
                 {stepTitle[step]}
               </h6>
@@ -611,7 +611,7 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
                     <div className="space-y-1 min-w-0">
                       <p
                         className="text-[14px] font-medium text-[#1e293b] group-hover:text-[#d4af37] transition-colors"
-                        style={{ fontFamily: "var(--font-playfair, serif)" }}
+                        style={{ fontFamily: "var(--font-inter, sans-serif)" }}
                       >
                         {opt.label}
                       </p>
@@ -655,7 +655,7 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
                     <div className="space-y-0.5 min-w-0">
                       <p
                         className="text-[13px] font-medium text-[#1e293b] group-hover:text-[#d4af37] transition-colors"
-                        style={{ fontFamily: "var(--font-playfair, serif)" }}
+                        style={{ fontFamily: "var(--font-inter, sans-serif)" }}
                       >
                         {st.label}
                       </p>
@@ -693,7 +693,7 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
                     <div className="space-y-0.5 min-w-0">
                       <p
                         className="text-[13px] font-medium text-[#1e293b] group-hover:text-[#d4af37] transition-colors"
-                        style={{ fontFamily: "var(--font-playfair, serif)" }}
+                        style={{ fontFamily: "var(--font-inter, sans-serif)" }}
                       >
                         {v.label}
                       </p>

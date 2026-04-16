@@ -36,7 +36,7 @@ export default async function AdminDashboard() {
           </p>
           <h1
             className="text-2xl font-light text-[#111111] text-pretty"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
           >
             Dashboard
           </h1>
@@ -95,7 +95,7 @@ export default async function AdminDashboard() {
 
           {recentOrders.length === 0 ? (
             <div className="py-12 text-center text-[#111111]/25 text-sm font-light"
-              style={{ fontFamily: "var(--font-playfair, serif)" }}>
+              style={{ fontFamily: "var(--font-inter, sans-serif)" }}>
               Sin pedidos todavía
             </div>
           ) : (
@@ -151,7 +151,7 @@ export default async function AdminDashboard() {
             </p>
             <p
               className="text-3xl font-light text-[#111111] mb-3 tabular-nums"
-              style={{ fontFamily: "var(--font-playfair, serif)" }}
+              style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             >
               {totalCategories}
             </p>

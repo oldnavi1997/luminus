@@ -33,7 +33,7 @@ export function CartItemComponent({ item }: CartItemProps) {
       <div className="flex-1 min-w-0">
         <h3
           className="font-light text-[#111111] text-sm line-clamp-2 leading-snug"
-          style={{ fontFamily: "var(--font-playfair, serif)" }}
+          style={{ fontFamily: "var(--font-inter, sans-serif)" }}
         >
           {item.name}
         </h3>

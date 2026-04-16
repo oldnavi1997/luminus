@@ -108,7 +108,7 @@ export function CartDrawer() {
           <div className="flex items-center gap-3">
             <h6
               className="text-[15px] font-light text-[#1e293b] tracking-[0.15em] uppercase"
-              style={{ fontFamily: "var(--font-playfair, serif)" }}
+              style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             >
               Tu carrito
             </h6>
@@ -141,7 +141,7 @@ export function CartDrawer() {
             <div className="space-y-2">
               <p
                 className="text-[#334155]/70 text-sm font-light"
-                style={{ fontFamily: "var(--font-playfair, serif)" }}
+                style={{ fontFamily: "var(--font-inter, sans-serif)" }}
               >
                 Tu carrito está vacío
               </p>
@@ -193,7 +193,7 @@ export function CartDrawer() {
                         <div className="space-y-1 min-w-0">
                           <h6
                             className="text-[#1e293b] text-[13px] font-light leading-snug line-clamp-2"
-                            style={{ fontFamily: "var(--font-playfair, serif)" }}
+                            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
                           >
                             {item.name}
                           </h6>
@@ -294,7 +294,7 @@ export function CartDrawer() {
                 </span>
                 <span
                   className="text-2xl font-light text-[#1e293b]"
-                  style={{ fontFamily: "var(--font-playfair, serif)" }}
+                  style={{ fontFamily: "var(--font-inter, sans-serif)" }}
                 >
                   {formatPEN(total)}
                 </span>

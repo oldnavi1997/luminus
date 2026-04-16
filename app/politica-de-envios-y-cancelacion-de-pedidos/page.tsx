@@ -14,7 +14,7 @@ export default function PoliticaEnviosPage() {
         <div className="max-w-3xl mx-auto px-5 sm:px-8 py-14">
           <p className="text-[10px] text-[#d4af37] uppercase tracking-[0.3em] mb-3">Luminus</p>
           <h1
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-3xl font-light text-[#1e293b] tracking-wide"
           >
             Política de envíos y cancelación de pedidos
@@ -35,7 +35,7 @@ export default function PoliticaEnviosPage() {
         {/* Envíos */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Envíos a nivel nacional
@@ -50,7 +50,7 @@ export default function PoliticaEnviosPage() {
         {/* Tiempos */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Tiempos de entrega
@@ -72,7 +72,7 @@ export default function PoliticaEnviosPage() {
         {/* Costo */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Costo de envío
@@ -87,7 +87,7 @@ export default function PoliticaEnviosPage() {
         {/* Seguimiento */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Seguimiento de tu pedido
@@ -109,7 +109,7 @@ export default function PoliticaEnviosPage() {
         {/* Cancelación */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Cancelación de pedidos
@@ -138,7 +138,7 @@ export default function PoliticaEnviosPage() {
         {/* No entregados */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Pedidos no entregados

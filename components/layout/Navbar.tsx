@@ -107,7 +107,7 @@ export function Navbar({ categories }: NavbarProps) {
                 <Link href="/" className="flex items-center gap-2 group">
                   <span
                     className="text-[15px] tracking-[0.25em] text-[#1e293b] font-light uppercase"
-                    style={{ fontFamily: "var(--font-playfair, serif)" }}
+                    style={{ fontFamily: "var(--font-inter, sans-serif)" }}
                   >
                     Luminus
                   </span>
@@ -144,7 +144,7 @@ export function Navbar({ categories }: NavbarProps) {
                 <Link href="/" className="flex items-center gap-2.5 group">
                   <span
                     className="text-[15px] tracking-[0.25em] text-[#1e293b] font-light uppercase"
-                    style={{ fontFamily: "var(--font-playfair, serif)" }}
+                    style={{ fontFamily: "var(--font-inter, sans-serif)" }}
                   >
                     Luminus
                   </span>
@@ -300,7 +300,7 @@ export function Navbar({ categories }: NavbarProps) {
           <Link href="/" className="flex items-center gap-2 group" onClick={closeMenu}>
             <span
               className="text-[13px] tracking-[0.3em] text-[#1e293b] font-light uppercase"
-              style={{ fontFamily: "var(--font-playfair, serif)" }}
+              style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             >
               Luminus
             </span>

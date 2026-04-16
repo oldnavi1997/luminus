@@ -57,12 +57,12 @@ export function CategoryGridCarousel({
           <p className="text-[10px] font-medium uppercase tracking-[0.25em] text-[#c9a84c] mb-1">
             {label}
           </p>
-          <h2
+          <h4
             className="text-3xl text-[#1a1a2e] leading-tight"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
           >
             {categoryName}
-          </h2>
+          </h4>
         </div>
 
         <div className="flex items-center gap-4 shrink-0">

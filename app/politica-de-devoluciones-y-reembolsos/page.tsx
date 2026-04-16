@@ -14,7 +14,7 @@ export default function PoliticaDevolucionesPage() {
         <div className="max-w-3xl mx-auto px-5 sm:px-8 py-14">
           <p className="text-[10px] text-[#d4af37] uppercase tracking-[0.3em] mb-3">Luminus</p>
           <h1
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-3xl font-light text-[#1e293b] tracking-wide"
           >
             Política de devoluciones y reembolsos
@@ -41,7 +41,7 @@ export default function PoliticaDevolucionesPage() {
         {/* Elegibilidad */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Elegibilidad para cambio y devolución
@@ -113,7 +113,7 @@ export default function PoliticaDevolucionesPage() {
         {/* Cómo iniciar */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Cómo iniciar una devolución
@@ -139,7 +139,7 @@ export default function PoliticaDevolucionesPage() {
         {/* Gastos de envío */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Gastos de envío de devolución
@@ -161,7 +161,7 @@ export default function PoliticaDevolucionesPage() {
         {/* Período de reembolso */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Período de reembolso
@@ -175,7 +175,7 @@ export default function PoliticaDevolucionesPage() {
         {/* Garantía */}
         <section className="space-y-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Política de garantía
@@ -198,7 +198,7 @@ export default function PoliticaDevolucionesPage() {
         {/* Precauciones */}
         <section className="space-y-6">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             Precauciones
@@ -246,7 +246,7 @@ export default function PoliticaDevolucionesPage() {
         {/* Ayuda */}
         <section className="space-y-4 pb-4">
           <h2
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             className="text-xl font-light text-[#1e293b] tracking-wide"
           >
             ¿Necesita ayuda?

@@ -20,7 +20,7 @@ export default async function AdminCategoriasPage() {
         </p>
         <h1
           className="text-2xl font-light text-[#111111]"
-          style={{ fontFamily: "var(--font-playfair, serif)" }}
+          style={{ fontFamily: "var(--font-inter, sans-serif)" }}
         >
           Categorías
         </h1>

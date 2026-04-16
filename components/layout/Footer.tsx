@@ -12,7 +12,7 @@ export function Footer() {
           <div className="md:col-span-2">
             <span
               className="text-base tracking-[0.3em] text-white/90 uppercase font-light"
-              style={{ fontFamily: "var(--font-playfair, serif)" }}
+              style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             >
               Luminus
             </span>

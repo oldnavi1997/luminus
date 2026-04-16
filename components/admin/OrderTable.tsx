@@ -14,7 +14,7 @@ export function OrderTable({ orders }: OrderTableProps) {
   if (orders.length === 0) {
     return (
       <div className="text-center py-16 text-[#111111]/30">
-        <p className="text-sm font-light" style={{ fontFamily: "var(--font-playfair, serif)" }}>
+        <p className="text-sm font-light" style={{ fontFamily: "var(--font-inter, sans-serif)" }}>
           No hay pedidos todavía
         </p>
       </div>

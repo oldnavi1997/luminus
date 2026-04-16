@@ -28,9 +28,12 @@ function buildLensLabel(type?: string, sub?: string, variant?: string): string |
 interface OrderSummaryProps {
   items: CartItem[];
   subtotal: number;
+  shippingCost?: number;
+  mpFee?: number;
+  courierName?: string;
 }
 
-export function OrderSummary({ items, subtotal }: OrderSummaryProps) {
+export function OrderSummary({ items, subtotal, shippingCost, mpFee, courierName }: OrderSummaryProps) {
   return (
     <div className="bg-white border border-[#d5d5d5]/60 p-6">
       <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em] mb-5">
@@ -98,9 +101,27 @@ export function OrderSummary({ items, subtotal }: OrderSummaryProps) {
           );
         })}
       </div>
-      <div className="border-t border-[#d5d5d5]/60 mt-5 pt-4 flex justify-between font-bold text-[#111111]">
-        <span>Total</span>
-        <span>{formatPEN(subtotal)}</span>
+      <div className="border-t border-[#d5d5d5]/60 mt-5 pt-4 space-y-2">
+        <div className="flex justify-between text-xs text-[#111111]/60">
+          <span>Subtotal</span>
+          <span>{formatPEN(subtotal)}</span>
+        </div>
+        <div className="flex justify-between text-xs text-[#111111]/60">
+          <span>Envío{courierName ? ` (${courierName})` : ""}</span>
+          <span>{shippingCost != null ? formatPEN(shippingCost) : "—"}</span>
+        </div>
+        <div className="flex justify-between text-xs text-[#111111]/60">
+          <span>Comisión MP</span>
+          <span>{mpFee != null ? formatPEN(mpFee) : "—"}</span>
+        </div>
+        <div className="flex justify-between font-bold text-[#111111] pt-2 border-t border-[#d5d5d5]/60">
+          <span>Total</span>
+          <span>
+            {shippingCost != null && mpFee != null
+              ? formatPEN(subtotal + shippingCost + mpFee)
+              : "—"}
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ export function CartSummary({ subtotal, itemCount }: CartSummaryProps) {
     <div className="bg-white border border-[#111111]/6 p-6 space-y-5 sticky top-24">
       <h2
         className="text-lg font-light text-[#111111]"
-        style={{ fontFamily: "var(--font-playfair, serif)" }}
+        style={{ fontFamily: "var(--font-inter, sans-serif)" }}
       >
         Resumen
       </h2>

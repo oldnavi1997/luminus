@@ -51,7 +51,7 @@ export function LoginForm() {
         <div className="text-center mb-10">
           <span
             className="text-[15px] tracking-[0.3em] text-[#111111] uppercase font-light"
-            style={{ fontFamily: "var(--font-playfair, serif)" }}
+            style={{ fontFamily: "var(--font-inter, sans-serif)" }}
           >
             Luminus
           </span>

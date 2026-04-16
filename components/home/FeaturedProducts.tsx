@@ -20,7 +20,7 @@ export function FeaturedProducts({ products }: FeaturedProductsProps) {
             </p>
             <h2
               className="text-3xl md:text-4xl font-light text-[#111111] leading-tight"
-              style={{ fontFamily: "var(--font-playfair, serif)" }}
+              style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             >
               Productos destacados
             </h2>

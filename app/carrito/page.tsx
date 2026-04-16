@@ -20,7 +20,7 @@ export default function CartPage() {
         </div>
         <h1
           className="text-2xl font-light text-[#111111] mb-3"
-          style={{ fontFamily: "var(--font-playfair, serif)" }}
+          style={{ fontFamily: "var(--font-inter, sans-serif)" }}
         >
           Tu carrito está vacío
         </h1>
@@ -40,7 +40,7 @@ export default function CartPage() {
       <div className="flex items-center gap-4 mb-8">
         <h1
           className="text-2xl font-light text-[#111111]"
-          style={{ fontFamily: "var(--font-playfair, serif)" }}
+          style={{ fontFamily: "var(--font-inter, sans-serif)" }}
         >
           Carrito
         </h1>

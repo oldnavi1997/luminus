@@ -37,7 +37,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#111111]/6">
             <h2
               className="text-base font-light text-[#111111]"
-              style={{ fontFamily: "var(--font-playfair, serif)" }}
+              style={{ fontFamily: "var(--font-inter, sans-serif)" }}
             >
               {title}
             </h2>

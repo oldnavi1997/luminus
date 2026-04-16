@@ -22,7 +22,7 @@ export function AdminSidebar() {
       <div className="px-6 py-6 border-b border-white/5">
         <span
           className="text-[13px] tracking-[0.3em] text-white/80 uppercase font-light"
-          style={{ fontFamily: "var(--font-playfair, serif)" }}
+          style={{ fontFamily: "var(--font-inter, sans-serif)" }}
         >
           Luminus
         </span>

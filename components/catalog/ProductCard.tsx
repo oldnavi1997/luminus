@@ -112,12 +112,12 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
         <p className="text-[9px] font-medium text-[#111111]/40 uppercase tracking-[0.2em] mb-1.5">
           {primaryCategory?.name}
         </p>
-        <h3
+        <h5
           className="text-sm font-medium text-[#111111] line-clamp-2 leading-snug group-hover:text-[#1c1c1c] transition-colors duration-300"
-          style={{ fontFamily: "var(--font-playfair, serif)" }}
+          style={{ fontFamily: "var(--font-inter, sans-serif)" }}
         >
           {product.name}
-        </h3>
+        </h5>
         {product.brand && (
           <p className="text-[10px] text-[#111111]/35 mt-1">{product.brand}</p>
         )}
