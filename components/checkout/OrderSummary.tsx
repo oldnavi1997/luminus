@@ -3,9 +3,10 @@ import { CartItem } from "@/types";
 import { formatPEN } from "@/lib/utils";
 
 const LENS_LABELS: Record<string, string> = {
-  descanso: "Descanso",
+  sin_medida: "Sin medida",
   con_medida: "Con medida",
   solo_montura: "Solo montura",
+  descanso: "Descanso",
   nk: "Lunas NK",
   policarbonato: "Policarbonato",
   fotocromatico: "Fotocromático clásico",
@@ -13,7 +14,6 @@ const LENS_LABELS: Record<string, string> = {
   alto_indice: "Alto índice",
   convencional: "Convencional",
   crizal_sapphire: "Crizal Sapphire",
-  sin_medida: "Sin medida",
   con_ficha: "Con ficha",
   ar16: "Base Kodak",
   sapphire: "Sapphire",

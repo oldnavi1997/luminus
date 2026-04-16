@@ -28,7 +28,7 @@ export type CartItem = {
   quantity: number;
   slug: string;
   stock: number;
-  lensType?: "descanso" | "con_medida" | "solo_montura";
+  lensType?: "sin_medida" | "con_medida" | "solo_montura";
   lensSubType?: string;
   lensVariant?: string;
   lensPrice?: number;

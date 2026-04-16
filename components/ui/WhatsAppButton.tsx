@@ -7,7 +7,7 @@ export function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chatea con nosotros por WhatsApp"
-      className="fixed bottom-6 right-6 z-50 group flex items-center gap-2 flex-row-reverse"
+      className="fixed bottom-6 left-6 z-50 group flex items-center gap-2"
     >
       <div className="relative flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1ebe5d] shadow-lg transition-transform duration-200 hover:scale-110">
         <svg

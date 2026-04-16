@@ -11,7 +11,7 @@ import { formatPEN } from "@/lib/utils";
 function lensLabel(item: CartItem): string {
   const parts: string[] = [];
   const typeMap: Record<string, string> = {
-    descanso: "Descanso",
+    sin_medida: "Sin medida",
     con_medida: "Con medida",
     solo_montura: "Solo montura",
   };
@@ -30,7 +30,6 @@ function lensLabel(item: CartItem): string {
     const varMap: Record<string, string> = {
       convencional: "Convencional",
       crizal_sapphire: "Crizal Sapphire",
-      sin_medida: "Sin medida",
       con_ficha: "Con ficha",
       ar16: "Base Kodak",
       sapphire: "Sapphire",

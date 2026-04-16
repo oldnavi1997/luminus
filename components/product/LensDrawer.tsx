@@ -33,7 +33,7 @@ interface SubType {
 }
 
 interface Level1Option {
-  id: "descanso" | "con_medida" | "solo_montura";
+  id: "sin_medida" | "con_medida" | "solo_montura";
   label: string;
   description: string;
   price?: number;
@@ -43,11 +43,68 @@ interface Level1Option {
 
 const LENS_TREE: Level1Option[] = [
   {
-    id: "descanso",
-    label: "Descanso",
-    description: "Luna sin graduación para descanso visual, poseen Filtro de luz azul, Antireflex y UV400",
-    price: 80,
+    id: "sin_medida",
+    label: "Sin medida",
+    description: "Lunas sin graduación para uso cotidiano",
     action: "direct",
+    subTypes: [
+      {
+        id: "descanso",
+        label: "Descanso",
+        description: "Luna sin graduación para descanso visual, poseen Filtro de luz azul, Antireflex y UV400",
+        price: 80,
+        action: "direct",
+      },
+      {
+        id: "fotocromatico",
+        label: "Fotocromático clásico",
+        description: [
+          "Luna fotocromática sin graduación",
+          "Se oscurece automáticamente con la luz solar",
+          "Regresa a claro en interiores",
+          "Protección UV integrada",
+        ],
+        price: 200,
+        action: "direct",
+      },
+      {
+        id: "transition",
+        label: "Transition Gen S",
+        description: [
+          "Última generación de lentes fotocromáticos",
+          "Activación y recuperación más rápida",
+          "Disponible con antirreflejo Base Kodak o Sapphire",
+        ],
+        action: "direct",
+        variants: [
+          {
+            id: "ar16",
+            label: "Base Kodak",
+            description: [
+              "Se oscurecen al aire libre y recuperan el tono en interiores",
+              "Se oscurecen en segundos y vuelven a ser claros más rápido que nunca",
+              "Ideales para personas con exposición a dispositivos digitales",
+              "Bloquean el 100% de los rayos UV y UVB",
+            ],
+            price: 650,
+            action: "direct",
+          },
+          {
+            id: "sapphire",
+            label: "Sapphire",
+            description: [
+              "Capa adicional de protección sobre tus lentes",
+              "Elimina los reflejos molestos",
+              "Hidrofóbico y oleofóbico: repele agua, suciedad y grasa",
+              "Lentes más limpios por más tiempo",
+              "Visión clara y nítida, limpieza más rápida y sencilla",
+            ],
+            price: 850,
+            action: "direct",
+          },
+        ],
+      },
+    ],
   },
   {
     id: "con_medida",
@@ -111,17 +168,6 @@ const LENS_TREE: Level1Option[] = [
         ],
         action: "form",
         variants: [
-          {
-            id: "sin_medida",
-            label: "Sin medida",
-            description: [
-              "Luna fotocromática sin graduación",
-              "Solo efecto de oscurecimiento solar",
-              "Ideal como lente de sol adaptable",
-            ],
-            price: 200,
-            action: "direct",
-          },
           {
             id: "con_ficha",
             label: "Con ficha",
@@ -242,7 +288,6 @@ function resolvePricing(
   const l1 = LENS_TREE.find((o) => o.id === lensType);
   if (!l1) return { lensPrice: 0 };
 
-  if (lensType === "descanso") return { lensPrice: 80 };
   if (lensType === "solo_montura") return { lensPrice: 0 };
 
   if (!subType) return { lensPrice: 0 };
@@ -293,8 +338,8 @@ const AXIS_OPTIONS = Array.from({ length: 180 }, (_, i) => String(i + 1));
 
 const PD_OPTIONS = (() => {
   const opts: string[] = [];
-  for (let v = 500; v <= 800; v += 5) {
-    opts.push((v / 10).toFixed(1));
+  for (let v = 50; v <= 80; v += 1) {
+    opts.push(String(v));
   }
   return opts;
 })();
@@ -581,6 +626,10 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
                         <span className="text-[10px] text-[#334155]/40 uppercase tracking-wide">
                           desde S/140
                         </span>
+                      ) : opt.id === "sin_medida" ? (
+                        <span className="text-[10px] text-[#334155]/40 uppercase tracking-wide">
+                          desde S/80
+                        </span>
                       ) : null}
                       <ChevronRight className="h-4 w-4 text-[#334155]/30 group-hover:text-[#d4af37] transition-colors" />
                     </div>
@@ -672,55 +721,6 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
           {/* ── Form / Upload ── */}
           {step === "form" && (
             <div className="space-y-6">
-              {/* Price preview */}
-              {(() => {
-                const d = calcularDesglose(
-                  prescription.od.sphere, prescription.od.cylinder,
-                  prescription.oi.sphere, prescription.oi.cylinder
-                );
-                const showCalc = d.hasValues;
-                return (
-                  <div className="p-4 bg-white border border-[#d5d5d5] rounded-sm space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-[#334155]/50 uppercase tracking-[0.15em]">
-                        {getLensLabel(lensType ?? "", subType, variant)}
-                      </span>
-                      <span className="text-[13px] font-semibold text-[#d4af37]">
-                        {showCalc ? formatPEN(d.total) : previewRange ? previewRange : formatPEN(previewPrice)}
-                      </span>
-                    </div>
-                    {showCalc ? (
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 pt-1 border-t border-[#f0ede8]">
-                        {d.pOdEsf > 0 && (
-                          <div className="flex justify-between text-[10px] text-[#334155]/50">
-                            <span>OD esfera</span><span>{formatPEN(d.pOdEsf)}</span>
-                          </div>
-                        )}
-                        {d.pOdCil > 0 && (
-                          <div className="flex justify-between text-[10px] text-[#334155]/50">
-                            <span>OD cilindro</span><span>{formatPEN(d.pOdCil)}</span>
-                          </div>
-                        )}
-                        {d.pOiEsf > 0 && (
-                          <div className="flex justify-between text-[10px] text-[#334155]/50">
-                            <span>OI esfera</span><span>{formatPEN(d.pOiEsf)}</span>
-                          </div>
-                        )}
-                        {d.pOiCil > 0 && (
-                          <div className="flex justify-between text-[10px] text-[#334155]/50">
-                            <span>OI cilindro</span><span>{formatPEN(d.pOiCil)}</span>
-                          </div>
-                        )}
-                      </div>
-                    ) : previewRange ? (
-                      <p className="text-[10px] text-[#334155]/40">
-                        El precio exacto se confirma según tu graduación
-                      </p>
-                    ) : null}
-                  </div>
-                );
-              })()}
-
               {/* WhatsApp ficha */}
               <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-sm space-y-3">
                 <p className="text-[12px] text-emerald-800 leading-snug">
@@ -814,6 +814,46 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
                     {PD_OPTIONS.map((v) => <option key={v} value={v}>{v} mm</option>)}
                   </select>
                 </div>
+
+                {/* Price preview */}
+                {(() => {
+                  const d = calcularDesglose(
+                    prescription.od.sphere, prescription.od.cylinder,
+                    prescription.oi.sphere, prescription.oi.cylinder
+                  );
+                  const showCalc = d.hasValues;
+                  const monturaCost = Number(product.price);
+                  const lensCost = showCalc ? d.total : previewPrice;
+                  const totalCost = monturaCost + lensCost;
+                  return (
+                    <div className="p-4 bg-white border border-[#d5d5d5] rounded-sm space-y-2">
+                      {/* Montura */}
+                      <div className="flex items-center justify-between text-[11px] text-[#334155]/50">
+                        <span className="uppercase tracking-[0.15em]">Montura</span>
+                        <span>{formatPEN(monturaCost)}</span>
+                      </div>
+                      {/* Lunas */}
+                      <div className="flex items-center justify-between text-[11px] text-[#334155]/50">
+                        <span className="uppercase tracking-[0.15em]">{getLensLabel(lensType ?? "", subType, variant)}</span>
+                        <span>
+                          {showCalc ? formatPEN(d.total) : previewRange ? previewRange : formatPEN(previewPrice)}
+                        </span>
+                      </div>
+                      {previewRange && !showCalc ? (
+                        <p className="text-[10px] text-[#334155]/40">
+                          El precio exacto de lunas se confirma según tu graduación
+                        </p>
+                      ) : null}
+                      {/* Total */}
+                      {(showCalc || !previewRange) && (
+                        <div className="flex items-center justify-between pt-2 border-t border-[#d5d5d5]">
+                          <span className="text-[11px] font-semibold text-[#1e293b] uppercase tracking-[0.15em]">Total</span>
+                          <span className="text-[14px] font-semibold text-[#d4af37]">{formatPEN(totalCost)}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
               </div>
             </div>
