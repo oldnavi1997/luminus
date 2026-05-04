@@ -24,7 +24,7 @@ interface SearchParams {
 }
 
 async function getProducts(params: SearchParams) {
-  const where: Prisma.ProductWhereInput = { active: true };
+  const where: Prisma.ProductWhereInput = { active: true, images: { isEmpty: false } };
 
   if (params.category) where.categories = { some: { slug: params.category } };
   if (params.brand) where.brand = params.brand;

@@ -42,6 +42,9 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
   const orderedCategories = sortedCategories(categories);
   const indent = (depth: number) => (depth > 0 ? "\u00a0".repeat(depth * 2) + "↳ " : "");
   const [query, setQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterStock, setFilterStock] = useState<"all" | "in" | "low" | "out">("all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkPanelOpen, setBulkPanelOpen] = useState(false);
   const [bulkCategoryIds, setBulkCategoryIds] = useState<string[]>([]);
@@ -161,16 +164,30 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const filtered = algoliaIds !== null
-    ? products.filter((p) => algoliaIds.has(p.id))
-    : query.trim()
-    ? products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query.trim().toLowerCase()) ||
-          (p.brand ?? "").toLowerCase().includes(query.trim().toLowerCase()) ||
-          p.categories.some((c) => c.name.toLowerCase().includes(query.trim().toLowerCase()))
-      )
-    : products;
+  const filtered = (() => {
+    let result = algoliaIds !== null
+      ? products.filter((p) => algoliaIds.has(p.id))
+      : query.trim()
+      ? products.filter(
+          (p) =>
+            p.name.toLowerCase().includes(query.trim().toLowerCase()) ||
+            (p.brand ?? "").toLowerCase().includes(query.trim().toLowerCase()) ||
+            p.categories.some((c) => c.name.toLowerCase().includes(query.trim().toLowerCase()))
+        )
+      : products;
+
+    if (filterCategory)
+      result = result.filter((p) => p.categories.some((c) => c.id === filterCategory));
+
+    if (filterStock === "out") result = result.filter((p) => p.stockAlmacen === 0);
+    else if (filterStock === "low") result = result.filter((p) => p.stockAlmacen > 0 && p.stockAlmacen < 5);
+    else if (filterStock === "in") result = result.filter((p) => p.stockAlmacen >= 5);
+
+    if (filterStatus === "active") result = result.filter((p) => p.active);
+    else if (filterStatus === "inactive") result = result.filter((p) => !p.active);
+
+    return result;
+  })();
 
   if (products.length === 0) {
     return (
@@ -187,34 +204,91 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
 
   return (
     <div>
-      <div className="px-5 py-4 border-b border-[#111111]/6 flex items-center gap-4">
+      <div className="px-5 py-4 border-b border-[#111111]/6 flex flex-wrap items-center gap-3">
         <p className="text-[11px] text-[#111111]/40 uppercase tracking-[0.2em] shrink-0">
           {filtered.length} {filtered.length === 1 ? "producto" : "productos"}
-          {query.trim() && products.length !== filtered.length && (
-            <span className="ml-1 text-[#111111]/25">de {products.length}</span>
-          )}
+          {(query.trim() || filterCategory || filterStock !== "all" || filterStatus !== "all") &&
+            products.length !== filtered.length && (
+              <span className="ml-1 text-[#111111]/25">de {products.length}</span>
+            )}
         </p>
-        <div className="relative ml-auto w-56">
-          {algoliaLoading ? (
-            <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 animate-spin pointer-events-none" aria-hidden="true" />
-          ) : (
-            <Search aria-hidden="true" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 pointer-events-none" />
-          )}
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar con Algolia…"
-            aria-label="Buscar productos"
-            className="w-full pl-8 pr-7 py-1.5 text-[11px] bg-[#f8f7f4] border border-[#111111]/8 text-[#111111] placeholder-[#111111]/30 focus:outline-none focus:border-[#111111]/25 transition-colors"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              aria-label="Limpiar búsqueda"
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-[#111111]/30 hover:text-[#111111]/60"
+
+        <div className="flex items-center gap-2 ml-auto flex-wrap">
+          {/* Category filter */}
+          {categories.length > 0 && (
+            <select
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              aria-label="Filtrar por categoría"
+              className="py-1.5 pl-2 pr-6 text-[11px] bg-[#f8f7f4] border border-[#111111]/8 text-[#111111]/60 focus:outline-none focus:border-[#111111]/25 transition-colors appearance-none cursor-pointer"
             >
-              <X aria-hidden="true" className="h-3 w-3" />
+              <option value="">Todas las categorías</option>
+              {orderedCategories.map(({ cat, depth }) => (
+                <option key={cat.id} value={cat.id}>
+                  {indent(depth)}{cat.name}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Stock filter */}
+          <select
+            value={filterStock}
+            onChange={(e) => setFilterStock(e.target.value as typeof filterStock)}
+            aria-label="Filtrar por stock"
+            className="py-1.5 pl-2 pr-6 text-[11px] bg-[#f8f7f4] border border-[#111111]/8 text-[#111111]/60 focus:outline-none focus:border-[#111111]/25 transition-colors appearance-none cursor-pointer"
+          >
+            <option value="all">Todo el stock</option>
+            <option value="in">En stock (≥5)</option>
+            <option value="low">Stock bajo (1–4)</option>
+            <option value="out">Sin stock</option>
+          </select>
+
+          {/* Status filter */}
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as typeof filterStatus)}
+            aria-label="Filtrar por estado"
+            className="py-1.5 pl-2 pr-6 text-[11px] bg-[#f8f7f4] border border-[#111111]/8 text-[#111111]/60 focus:outline-none focus:border-[#111111]/25 transition-colors appearance-none cursor-pointer"
+          >
+            <option value="all">Todos los estados</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+          </select>
+
+          {/* Search */}
+          <div className="relative w-52">
+            {algoliaLoading ? (
+              <Loader2 className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 animate-spin pointer-events-none" aria-hidden="true" />
+            ) : (
+              <Search aria-hidden="true" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 pointer-events-none" />
+            )}
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar con Algolia…"
+              aria-label="Buscar productos"
+              className="w-full pl-8 pr-7 py-1.5 text-[11px] bg-[#f8f7f4] border border-[#111111]/8 text-[#111111] placeholder-[#111111]/30 focus:outline-none focus:border-[#111111]/25 transition-colors"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                aria-label="Limpiar búsqueda"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[#111111]/30 hover:text-[#111111]/60"
+              >
+                <X aria-hidden="true" className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Clear all filters */}
+          {(filterCategory || filterStock !== "all" || filterStatus !== "all") && (
+            <button
+              onClick={() => { setFilterCategory(""); setFilterStock("all"); setFilterStatus("all"); }}
+              className="text-[10px] text-[#111111]/40 hover:text-[#111111]/70 uppercase tracking-[0.1em] transition-colors whitespace-nowrap"
+            >
+              Limpiar filtros
             </button>
           )}
         </div>
@@ -426,14 +500,14 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                     <span
                       className={cn(
                         "text-sm font-medium",
-                        product.stock === 0
+                        product.stockAlmacen === 0
                           ? "text-red-500"
-                          : product.stock < 5
+                          : product.stockAlmacen < 5
                           ? "text-amber-600"
                           : "text-[#111111]/70"
                       )}
                     >
-                      {product.stock}
+                      {product.stockAlmacen}
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-center">

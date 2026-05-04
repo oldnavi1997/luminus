@@ -10,6 +10,8 @@ datasource db {
 enum Role {
   USER
   ADMIN
+  CASHIER
+  SUPERVISOR
 }
 
 enum PaymentStatus {
@@ -67,6 +69,8 @@ model Product {
   price             Decimal               @db.Decimal(10, 2)
   comparePrice      Decimal?              @db.Decimal(10, 2)
   stock             Int                   @default(0)
+  stockAlmacen      Int                   @default(0)
+  stockTienda       Int                   @default(0)
   images            String[]
   brand             String?
   frameType         String?

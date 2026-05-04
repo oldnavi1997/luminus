@@ -43,6 +43,8 @@ interface ProductItem {
   brand: string | null;
   price: string;
   stock: number;
+  stockAlmacen: number;
+  stockTienda: number;
   active: boolean;
   images: string[];
   slug: string;
@@ -623,14 +625,14 @@ export function CategoryTable({ categories }: CategoryTableProps) {
                     <td className="py-2.5 px-3 text-center">
                       <span
                         className={
-                          p.stock === 0
+                          p.stockAlmacen === 0
                             ? "text-sm font-medium text-red-500"
-                            : p.stock <= 5
+                            : p.stockAlmacen <= 5
                             ? "text-sm font-medium text-amber-600"
                             : "text-sm font-medium text-emerald-600"
                         }
                       >
-                        {p.stock}
+                        {p.stockAlmacen}
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-center">

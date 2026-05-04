@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     for (const [productId, qty] of Object.entries(qtyByProduct)) {
       const product = products.find((p) => p.id === productId);
-      if (!product || product.stock < qty) {
+      if (!product || product.stockAlmacen < qty) {
         return NextResponse.json(
           { error: `Stock insuficiente para ${product?.name || productId}` },
           { status: 400 }

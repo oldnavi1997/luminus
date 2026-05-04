@@ -428,7 +428,7 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
         imageUrl: product.images[0],
         quantity: 1,
         slug: product.slug,
-        stock: product.stock,
+        stock: product.stockAlmacen,
         lensType: lt as CartItem["lensType"],
         lensSubType: st ?? undefined,
         lensVariant: va ?? undefined,

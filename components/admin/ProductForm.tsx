@@ -79,7 +79,8 @@ const productSchema = z.object({
   description: z.string().optional(),
   price: z.string().min(1, "Precio requerido"),
   comparePrice: z.string().optional(),
-  stock: z.string(),
+  stockAlmacen: z.string(),
+  stockTienda: z.string(),
   brand: z.string().optional(),
   frameType: z.string().optional(),
   frameMaterial: z.string().optional(),
@@ -143,7 +144,8 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           description: product.description || "",
           price: product.price.toString(),
           comparePrice: product.comparePrice?.toString() || "",
-          stock: product.stock.toString(),
+          stockAlmacen: product.stockAlmacen.toString(),
+          stockTienda: product.stockTienda.toString(),
           brand: product.brand || "",
           frameType: product.frameType || "",
           frameMaterial: product.frameMaterial || "",
@@ -158,7 +160,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           featured: product.featured,
           active: product.active,
         }
-      : { active: true, featured: false, stock: "0" },
+      : { active: true, featured: false, stockAlmacen: "0", stockTienda: "0" },
   });
 
   const sensors = useSensors(useSensor(PointerSensor));
@@ -265,7 +267,8 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         ...data,
         price: parseFloat(data.price),
         comparePrice: data.comparePrice ? parseFloat(data.comparePrice) : null,
-        stock: parseInt(data.stock),
+        stockAlmacen: parseInt(data.stockAlmacen),
+        stockTienda: parseInt(data.stockTienda),
         images,
         categoryIds: selectedCategoryIds,
         primaryCategoryId: primaryCategoryId || selectedCategoryIds[0],
@@ -393,10 +396,16 @@ export function ProductForm({ categories, product }: ProductFormProps) {
             {...register("comparePrice")}
           />
           <Input
-            label="Stock"
+            label="Stock Almacén"
             type="number"
-            error={errors.stock?.message}
-            {...register("stock")}
+            error={errors.stockAlmacen?.message}
+            {...register("stockAlmacen")}
+          />
+          <Input
+            label="Stock Tienda"
+            type="number"
+            error={errors.stockTienda?.message}
+            {...register("stockTienda")}
           />
         </div>
       </div>

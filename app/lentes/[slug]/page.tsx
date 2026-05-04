@@ -62,7 +62,7 @@ const variantSelect = {
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
   const product = await prisma.product.findUnique({
-    where: { slug, active: true },
+    where: { slug, active: true, images: { isEmpty: false } },
     include: {
       categories: true,
       colorVariants: { select: { variant: { select: variantSelect } } },

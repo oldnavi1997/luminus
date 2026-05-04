@@ -36,7 +36,7 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
               </svg>
             </div>
           )}
-          {product.stock === 0 && (
+          {product.stockAlmacen === 0 && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-[1px]">
               <span className="text-[10px] font-medium text-[#111111]/50 uppercase tracking-[0.2em] border border-[#111111]/20 px-3 py-1.5">
                 Sin stock
@@ -95,7 +95,7 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
             </span>
           </div>
         )}
-        {product.stock === 0 && (
+        {product.stockAlmacen === 0 && (
           <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-[1px]">
             <span className="text-[10px] font-medium text-[#111111]/50 uppercase tracking-[0.2em] border border-[#111111]/20 px-3 py-1.5">
               Sin stock

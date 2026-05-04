@@ -8,7 +8,7 @@ type SyncProduct = {
   description: string | null;
   price: unknown;
   images: string[];
-  stock: number;
+  stockAlmacen: number;
   active: boolean;
   category: { name: string; slug: string } | null;
 };
@@ -24,7 +24,7 @@ export async function indexProduct(p: SyncProduct) {
       description: p.description ?? "",
       price: Number(p.price),
       images: p.images,
-      stock: p.stock,
+      stock: p.stockAlmacen,
       active: p.active,
       category: p.category?.name ?? "",
       categorySlug: p.category?.slug ?? "",

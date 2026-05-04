@@ -12,7 +12,7 @@ function escapeCsvField(value: string): string {
 
 export async function GET() {
   const products = await prisma.product.findMany({
-    where: { active: true },
+    where: { active: true, images: { isEmpty: false } },
     select: {
       id: true,
       name: true,

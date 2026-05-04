@@ -12,7 +12,8 @@ const productCreateSchema = z.object({
   description: z.string().optional(),
   price: z.number().positive(),
   comparePrice: z.number().positive().optional().nullable(),
-  stock: z.number().int().min(0).default(0),
+  stockAlmacen: z.number().int().min(0).default(0),
+  stockTienda: z.number().int().min(0).default(0),
   images: z.array(z.string()).default([]),
   brand: z.string().optional(),
   frameType: z.string().optional(),
@@ -46,7 +47,10 @@ export async function GET(request: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get("page") || "1"));
   const limit = Math.min(48, parseInt(searchParams.get("limit") || "24"));
 
-  if (!searchParams.has("admin")) where.active = true;
+  if (!searchParams.has("admin")) {
+    where.active = true;
+    where.images = { isEmpty: false };
+  }
   if (category) where.categories = { some: { slug: category } };
   if (gender) where.gender = gender;
   if (frameType) where.frameType = frameType;
