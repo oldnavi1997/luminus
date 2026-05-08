@@ -96,8 +96,28 @@ export default async function ProductPage({ params }: Props) {
     { label: "Género", value: product.gender },
   ].filter((s) => s.value);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    ...(product.description && { description: product.description }),
+    ...(product.images?.[0] && { image: product.images[0] }),
+    brand: { "@type": "Brand", name: product.brand ?? "Luminus" },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "PEN",
+      price: Number(product.price).toFixed(2),
+      availability: "https://schema.org/InStock",
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/lentes/${product.slug}`,
+    },
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-5 sm:px-8 sm:py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* Breadcrumb */}
       <nav className="hidden sm:flex items-center gap-2 mb-8 text-[10px] uppercase tracking-[0.2em] text-[#111111]/35">
         <Link href="/lentes" className="hover:text-[#111111]/60 transition-colors">

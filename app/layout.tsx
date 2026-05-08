@@ -7,7 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { StoreChrome } from "@/components/layout/StoreChrome";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { prisma } from "@/lib/prisma";
-import { Analytics } from "@vercel/analytics/next";
+import { AnalyticsProvider } from "@/components/layout/AnalyticsProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,11 +22,17 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: {
     default: "Luminus – Lentes con estilo",
     template: "%s | Luminus",
   },
   description: "Tu destino de confianza para lentes de calidad en Perú.",
+  openGraph: {
+    siteName: "Luminus",
+    locale: "es_PE",
+    type: "website",
+  },
 };
 
 export default async function RootLayout({
@@ -61,7 +67,7 @@ export default async function RootLayout({
           <StoreChrome><Footer /></StoreChrome>
           <StoreChrome><WhatsAppButton /></StoreChrome>
         </Providers>
-        <Analytics />
+        <AnalyticsProvider />
       </body>
     </html>
   );

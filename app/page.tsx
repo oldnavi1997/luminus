@@ -1,10 +1,26 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { HeroSection } from "@/components/home/HeroSection";
 import { TrustBar } from "@/components/home/CategoryGrid";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { CategoryGridOneRow } from "@/components/home/CategoryGrid-oneraw";
+
+export const metadata: Metadata = {
+  title: "Luminus – Lentes con estilo",
+  description: "Descubre nuestra colección de lentes de sol y ópticos. Diseño, protección y visión clara. Envíos a todo el Perú.",
+  openGraph: {
+    title: "Luminus – Lentes con estilo",
+    description: "Descubre nuestra colección de lentes de sol y ópticos. Envíos a todo el Perú.",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Luminus – Lentes con estilo",
+    description: "Descubre nuestra colección de lentes de sol y ópticos. Envíos a todo el Perú.",
+  },
+};
 
 export default async function HomePage() {
   const featuredProducts = await prisma.product.findMany({

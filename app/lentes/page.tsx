@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
@@ -7,6 +8,21 @@ import { CatalogToolbar } from "@/components/catalog/CatalogToolbar";
 import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { Prisma } from "@/app/generated/prisma/client";
 import { seededShuffle } from "@/lib/utils";
+
+export const metadata: Metadata = {
+  title: "Catálogo de lentes | Luminus",
+  description: "Explora nuestra colección completa de lentes de sol y ópticos. Calidad, estilo y envíos a todo el Perú.",
+  openGraph: {
+    title: "Catálogo de lentes | Luminus",
+    description: "Explora nuestra colección completa de lentes. Envíos a todo el Perú.",
+    url: "/lentes",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Catálogo de lentes | Luminus",
+    description: "Explora nuestra colección completa de lentes. Envíos a todo el Perú.",
+  },
+};
 
 interface SearchParams {
   category?: string;
