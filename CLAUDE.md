@@ -36,6 +36,19 @@ Next.js 16 App Router, React 19. No `src/` dir. All pages under `app/`, componen
 
 **Dynamic pages:** `app/page.tsx` and `app/lentes/page.tsx` export `export const dynamic = "force-dynamic"` to prevent static generation errors during build when DB is unreachable.
 
+## Critical: Shared Prisma schema with POS
+
+The Postgres DB (`luminus` local on :5433, single Postgres service on Railway) is **shared** with the sister project `D:\Cursor\luminus-puntoventa`. This repo owns the canonical schema; the POS repo carries a synced copy.
+
+- **Source of truth:** `prisma/schema.prisma` in this repo. All schema changes start here.
+- **Only this repo runs migrations.** POS never runs `prisma db push`, `prisma migrate dev`, or `prisma migrate deploy`. Its `railway.toml` `startCommand` is just `npm start` — it must NEVER touch the schema.
+- **POS sync flow:** in POS, `npm run sync:schema` copies `../luminus/prisma/schema.prisma` into the POS repo. `npm run verify:schema` fails the build if the two files drift. POS hooks `predev` (sync) and `prebuild` (verify) enforce this.
+- **Workflow for schema changes:**
+  1. Edit `prisma/schema.prisma` here, run `npx prisma migrate dev --name <descriptor>`, commit, push.
+  2. In POS repo: `npm run sync:schema`, commit the updated `prisma/schema.prisma`, push.
+  3. Railway deploys ecommerce first (runs `prisma migrate deploy`); then POS deploys and only regenerates client.
+- **Never** run `prisma db push` from either project against this DB — it will drop tables from the other (this already happened once; data was recoverable only because Railway had a copy).
+
 ## Critical: Prisma 7
 
 This project uses **Prisma 7**, which has breaking changes vs Prisma 5:

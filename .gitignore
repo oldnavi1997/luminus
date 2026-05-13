@@ -44,3 +44,17 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# DB dumps and ad-hoc SQL scripts (may contain credentials or data)
+*.dump
+*.dump.toc.txt
+backups/
+users_dump.sql
+products_railway.sql
+scripts/
+
+# Tool / IDE local config
+.agents/
+.claude/
+.junie/
+.vscode/
