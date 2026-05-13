@@ -49,6 +49,29 @@ The Postgres DB (`luminus` local on :5433, single Postgres service on Railway) i
   3. Railway deploys ecommerce first (runs `prisma migrate deploy`); then POS deploys and only regenerates client.
 - **Never** run `prisma db push` from either project against this DB — it will drop tables from the other (this already happened once; data was recoverable only because Railway had a copy).
 
+### Workflow for schema changes (add/modify/drop a table)
+
+Follow these steps in order. Steps 1–3 always run in `D:\Cursor\luminus`; steps 4–5 in `D:\Cursor\luminus-puntoventa`.
+
+1. **Edit canonical schema** — `D:\Cursor\luminus\prisma\schema.prisma`. Validate: `npx prisma validate`.
+2. **Create + apply migration** — `npx prisma migrate dev --name <descriptor>`. This generates `prisma/migrations/<ts>_<descriptor>/migration.sql`, applies it to the local DB, and regenerates the client. Use `--create-only` first if you want to review the SQL (e.g. for renames, NOT NULL backfills) before applying.
+3. **Verify ecommerce** — `npm run build` to catch type errors.
+4. **Sync POS** — `cd D:\Cursor\luminus-puntoventa && npm run sync:schema && npx prisma generate`. (Done automatically by POS `predev`/`prebuild` hooks too.)
+5. **Implement the feature** — in whichever repo uses the new table/column. Import the model from `@/app/generated/prisma/client` as usual.
+6. **Commit + push, ecommerce FIRST then POS.** Order matters on Railway: ecommerce deploy runs `prisma migrate deploy` (creates the table); POS deploy only regenerates client. Pushing POS first means its app starts querying a table that doesn't exist yet until the ecommerce deploy completes.
+
+**Special cases:**
+- *Rename column:* edit the generated SQL to use `ALTER TABLE ... RENAME COLUMN ...` — Prisma's default is drop+add (loses data).
+- *Add NOT NULL column without default:* Prisma will prompt; either add a `@default()` in the schema, or edit migration SQL to backfill before adding the NOT NULL constraint.
+- *Drop a table:* back up first (`pg_dump -t "TableName" ...`); migration will include `DROP TABLE`.
+- *Table only used by POS:* still goes in the canonical schema. Ecommerce simply doesn't import it.
+
+**Things that will break the contract — do not do these:**
+- Edit `D:\Cursor\luminus-puntoventa\prisma\schema.prisma` directly (gets overwritten by `sync:schema`; `verify:schema` will fail the POS build).
+- Run `npx prisma migrate dev`, `prisma migrate deploy`, or `prisma db push` from the POS project.
+- Push POS commits with schema changes before pushing the corresponding ecommerce migration.
+- Add `prisma migrate` or `db push` back to POS `railway.toml` `startCommand`.
+
 ## Critical: Prisma 7
 
 This project uses **Prisma 7**, which has breaking changes vs Prisma 5:
