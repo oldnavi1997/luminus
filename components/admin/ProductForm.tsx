@@ -334,10 +334,13 @@ export function ProductForm({ categories, product }: ProductFormProps) {
             {categories.map((cat) => {
               const isSelected = selectedCategoryIds.includes(cat.id);
               const isPrimary = primaryCategoryId === cat.id;
+              const isChild = Boolean(cat.parentId);
               return (
                 <label
                   key={cat.id}
                   className={`flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer text-sm transition-colors ${
+                    isChild ? "pl-6" : ""
+                  } ${
                     isSelected
                       ? "border-[#111111] bg-[#111111]/5 text-[#111111]"
                       : "border-gray-200 text-gray-500 hover:border-gray-300"
@@ -350,7 +353,10 @@ export function ProductForm({ categories, product }: ProductFormProps) {
                     className="accent-[#111111]"
                   />
                   <span className="flex-1 min-w-0">
-                    <span className="block truncate">{cat.name}</span>
+                    <span className="block truncate">
+                      {isChild && <span className="text-gray-400 mr-1">›</span>}
+                      {cat.name}
+                    </span>
                     <span className="block truncate text-[10px] text-gray-400 font-mono">{cat.slug}</span>
                   </span>
                   {isSelected && (

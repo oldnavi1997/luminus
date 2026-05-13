@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ColorVariantProduct } from "@/types";
+import { flattenCategoryHierarchy } from "@/lib/categories";
 
 export const metadata = { title: "Editar producto | Admin" };
 
@@ -29,10 +30,12 @@ export default async function EditProductPage({
         isVariantOf: { select: { product: { select: variantSelect } } },
       },
     }),
-    prisma.category.findMany({ orderBy: { name: "asc" } }),
+    prisma.category.findMany({ orderBy: [{ sortOrder: "asc" }, { name: "asc" }] }),
   ]);
 
   if (!rawProduct) notFound();
+
+  const orderedCategories = flattenCategoryHierarchy(categories);
 
   const seen = new Set<string>();
   const variants: ColorVariantProduct[] = [
@@ -50,7 +53,7 @@ export default async function EditProductPage({
   return (
     <div>
       <h1 className="text-2xl font-bold text-[#111111] mb-6">Editar producto</h1>
-      <ProductForm categories={categories} product={product} />
+      <ProductForm categories={orderedCategories} product={product} />
     </div>
   );
 }
