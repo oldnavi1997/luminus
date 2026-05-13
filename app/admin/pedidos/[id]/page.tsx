@@ -11,6 +11,11 @@ import { formatPEN } from "@/lib/utils";
 import { OrderStatus } from "@/app/generated/prisma/client";
 import { PrescriptionData } from "@/types";
 
+const COURIER_LABELS: Record<string, string> = {
+  shalom: "Shalom",
+  olva: "Olva Courier",
+};
+
 const LENS_LABELS: Record<string, string> = {
   sin_medida: "Sin medida",
   con_medida: "Con medida",
@@ -110,12 +115,42 @@ export default function AdminOrderDetailPage({
                 <dd className="font-medium">{order.shippingPhone}</dd>
               </div>
             )}
+            {order.documentNumber && (
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Documento</dt>
+                <dd className="font-medium">
+                  {order.documentType ?? "DOC"} {order.documentNumber}
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between">
               <dt className="text-gray-500">Dirección</dt>
-              <dd className="font-medium text-right max-w-[200px]">
-                {order.shippingAddress}, {order.shippingCity}, {order.shippingProvince} ({order.shippingPostal})
-              </dd>
+              <dd className="font-medium text-right max-w-[220px]">{order.shippingAddress}</dd>
             </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">Distrito</dt>
+              <dd className="font-medium">{order.shippingCity}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">Departamento</dt>
+              <dd className="font-medium">{order.shippingProvince}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">Código postal</dt>
+              <dd className="font-medium tabular-nums">{order.shippingPostal}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-gray-500">País</dt>
+              <dd className="font-medium">{order.shippingCountry}</dd>
+            </div>
+            {order.shippingCourier && (
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Courier</dt>
+                <dd className="font-medium">
+                  {COURIER_LABELS[order.shippingCourier] ?? order.shippingCourier}
+                </dd>
+              </div>
+            )}
           </dl>
         </div>
 
@@ -138,10 +173,33 @@ export default function AdminOrderDetailPage({
               Actualizar estado
             </Button>
           </div>
-          {order.mpPaymentId && (
-            <div className="mt-4 pt-4 border-t border-gray-100 text-sm">
-              <p className="text-gray-500">ID de pago MP: <span className="font-mono">{order.mpPaymentId}</span></p>
-            </div>
+          {(order.mpPaymentId || order.mpStatus || order.mpPreferenceId || order.updatedAt) && (
+            <dl className="mt-4 pt-4 border-t border-gray-100 text-sm space-y-1.5">
+              {order.mpPaymentId && (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-500 whitespace-nowrap">ID pago MP</dt>
+                  <dd className="font-mono text-xs text-right break-all">{order.mpPaymentId}</dd>
+                </div>
+              )}
+              {order.mpStatus && (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-500">Estado MP</dt>
+                  <dd className="font-medium">{order.mpStatus}</dd>
+                </div>
+              )}
+              {order.mpPreferenceId && (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-500 whitespace-nowrap">Preference ID</dt>
+                  <dd className="font-mono text-xs text-right break-all">{order.mpPreferenceId}</dd>
+                </div>
+              )}
+              <div className="flex justify-between gap-3">
+                <dt className="text-gray-500">Última actualización</dt>
+                <dd className="text-right text-xs text-gray-700">
+                  {new Date(order.updatedAt).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}
+                </dd>
+              </div>
+            </dl>
           )}
         </div>
       </div>
@@ -166,6 +224,22 @@ export default function AdminOrderDetailPage({
                     {item.product.name} <span className="text-gray-400 font-normal">x{item.quantity}</span>
                   </span>
                   <span className="font-semibold">{formatPEN(Number(item.total))}</span>
+                </div>
+                <div className="text-xs text-gray-500 space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>Precio unitario</span>
+                    <span className="tabular-nums">
+                      {formatPEN(Number(item.unitPrice))} × {item.quantity}
+                    </span>
+                  </div>
+                  {item.lensPrice != null && Number(item.lensPrice) > 0 && (
+                    <div className="flex justify-between">
+                      <span>Luna (c/u)</span>
+                      <span className="tabular-nums">
+                        + {formatPEN(Number(item.lensPrice))} × {item.quantity}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {lensLabel && (
@@ -240,11 +314,17 @@ export default function AdminOrderDetailPage({
             <span>Envío</span>
             <span className="tabular-nums">{formatPEN(Number(order.shippingCost))}</span>
           </div>
-          {Number(order.total) - Number(order.subtotal) - Number(order.shippingCost) > 0 && (
+          {Number(order.discount) > 0 && (
+            <div className="flex justify-between text-gray-600">
+              <span>Descuento</span>
+              <span className="tabular-nums">- {formatPEN(Number(order.discount))}</span>
+            </div>
+          )}
+          {Number(order.total) - Number(order.subtotal) - Number(order.shippingCost) + Number(order.discount) > 0 && (
             <div className="flex justify-between text-gray-600">
               <span>Comisión MP</span>
               <span className="tabular-nums">
-                {formatPEN(Number(order.total) - Number(order.subtotal) - Number(order.shippingCost))}
+                {formatPEN(Number(order.total) - Number(order.subtotal) - Number(order.shippingCost) + Number(order.discount))}
               </span>
             </div>
           )}

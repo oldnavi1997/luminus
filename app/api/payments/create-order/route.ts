@@ -29,6 +29,8 @@ const createOrderSchema = z.object({
     postal: z.string().min(4),
     country: z.string().default("Perú"),
     courier: z.enum(["shalom", "olva"]),
+    documentType: z.enum(["DNI", "CE"]).optional(),
+    documentNumber: z.string().optional(),
   }),
 });
 
@@ -103,6 +105,9 @@ export async function POST(request: NextRequest) {
         shippingProvince: shipping.province,
         shippingPostal: shipping.postal,
         shippingCountry: shipping.country,
+        shippingCourier: shipping.courier,
+        documentType: shipping.documentType ?? null,
+        documentNumber: shipping.documentNumber ?? null,
         subtotal: new Prisma.Decimal(subtotal),
         shippingCost: new Prisma.Decimal(shippingCost),
         discount: new Prisma.Decimal(0),

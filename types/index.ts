@@ -56,4 +56,6 @@ export type ShippingFormData = {
   postal: string;
   country: string;
   courier: "shalom" | "olva";
+  documentType?: "DNI" | "CE";
+  documentNumber?: string;
 };

@@ -84,6 +84,8 @@ export const CheckoutForm = forwardRef<CheckoutFormHandle, CheckoutFormProps>(
           postal: data.postalCode,
           country: "Perú",
           courier: data.courier,
+          documentType: data.documentType,
+          documentNumber: data.documentNumber,
         };
       },
     }));
