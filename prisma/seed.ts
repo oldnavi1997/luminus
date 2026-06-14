@@ -189,7 +189,66 @@ async function main() {
     });
   }
 
-  console.log("✅ Seed completado: admin + 4 categorías + 5 productos (precios en PEN)");
+  // Bio (links page) — reemplaza Linktree
+  await prisma.bioProfile.upsert({
+    where: { id: "main" },
+    update: {},
+    create: {
+      id: "main",
+      handle: "@luminus.eyewear",
+      tagline: "Ver bien y verte bien",
+      instagramUrl: "https://instagram.com/luminus.eyewear",
+      tiktokUrl: "https://tiktok.com/@luminus.eyewear",
+    },
+  });
+
+  const bioLinks = [
+    {
+      id: "bio-whatsapp",
+      label: "WhatsApp (Usar la opción \"Abrir en el navegador\")",
+      url: "https://wa.me/51961700746",
+      icon: "message-circle",
+      sortOrder: 10,
+    },
+    {
+      id: "bio-hombres",
+      label: "Lentes Hombres",
+      url: "/lentes",
+      icon: null,
+      sortOrder: 20,
+    },
+    {
+      id: "bio-mujeres",
+      label: "Lentes Mujeres",
+      url: "/lentes",
+      icon: null,
+      sortOrder: 30,
+    },
+    {
+      id: "bio-instagram",
+      label: "Instagram (Fotos, Videos)",
+      url: "https://instagram.com/luminus.eyewear",
+      icon: "instagram",
+      sortOrder: 40,
+    },
+    {
+      id: "bio-web",
+      label: "Página Web / Compra online",
+      url: "/",
+      icon: "shopping-bag",
+      sortOrder: 50,
+    },
+  ];
+
+  for (const link of bioLinks) {
+    await prisma.bioLink.upsert({
+      where: { id: link.id },
+      update: {},
+      create: { ...link, active: true },
+    });
+  }
+
+  console.log("✅ Seed completado: admin + 4 categorías + 5 productos + bio profile + 5 bio links");
 }
 
 main()

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { paymentClient } from "@/lib/mercadopago";
+import { enviarPushNuevaVenta } from "@/lib/push";
 
 function mapMpStatusToPaymentStatus(mpStatus: string) {
   switch (mpStatus) {
@@ -61,7 +62,13 @@ export async function POST(request: NextRequest) {
     const mpStatus = payment.status || "pending";
     const paymentStatus = mapMpStatusToPaymentStatus(mpStatus);
 
-    await prisma.order.update({
+    // Estado previo para detectar la transición a APROBADO (evita avisos duplicados)
+    const prev = await prisma.order.findUnique({
+      where: { id: payment.external_reference },
+      select: { paymentStatus: true },
+    });
+
+    const order = await prisma.order.update({
       where: { id: payment.external_reference },
       data: {
         mpPaymentId: paymentId,
@@ -70,6 +77,11 @@ export async function POST(request: NextRequest) {
         orderStatus: paymentStatus === "APPROVED" ? "PAID" : undefined,
       },
     });
+
+    // Recién aprobado → avisar a los admins por push
+    if (paymentStatus === "APPROVED" && prev?.paymentStatus !== "APPROVED") {
+      await enviarPushNuevaVenta(order);
+    }
 
     return NextResponse.json({ received: true });
   } catch (error) {

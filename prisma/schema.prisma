@@ -75,6 +75,8 @@ model User {
   documents      SaleDocument[] @relation("DocumentCashier")
   saldosCobrados SaleDocument[] @relation("DocumentSaldoCobrador")
   retiros        CajaRetiro[]
+  movimientosStock StockMovimiento[]
+  pushTokens     PushToken[]
 }
 
 model Category {
@@ -126,6 +128,7 @@ model Product {
   colorVariants     ProductColorVariant[] @relation("ProductVariants")
   isVariantOf       ProductColorVariant[] @relation("ProductIsVariantOf")
   saleItems         SaleDocumentItem[]
+  movimientos       StockMovimiento[]
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
 }
@@ -390,4 +393,60 @@ model TarifaLuna {
   foto   Decimal @db.Decimal(6, 2)
 
   @@map("tarifas_luna")
+}
+
+model BioProfile {
+  id           String   @id @default("main")
+  handle       String   @default("@luminus.eyewear")
+  avatarUrl    String?
+  tagline      String?
+  instagramUrl String?
+  tiktokUrl    String?
+  updatedAt    DateTime @updatedAt
+}
+
+model BioLink {
+  id        String   @id @default(cuid())
+  label     String
+  url       String
+  icon      String?
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active, sortOrder])
+}
+
+enum TipoMovimientoStock {
+  INGRESO // nuevo stock al almacén
+  TRASLADO // almacén → tienda
+}
+
+model StockMovimiento {
+  id                     String              @id @default(cuid())
+  productId              String
+  product                Product             @relation(fields: [productId], references: [id])
+  tipo                   TipoMovimientoStock
+  cantidad               Int
+  stockAlmacenResultante Int
+  stockTiendaResultante  Int
+  userId                 String
+  user                   User                @relation(fields: [userId], references: [id])
+  nota                   String?
+  createdAt              DateTime            @default(now())
+
+  @@index([productId, createdAt])
+}
+
+model PushToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  platform  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
