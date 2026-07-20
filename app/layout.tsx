@@ -42,7 +42,7 @@ export default async function RootLayout({
 }) {
   let navCategories: NavCategory[] = [];
   try {
-    navCategories = await prisma.category.findMany({
+    const roots = await prisma.category.findMany({
       where: { parentId: null, slug: { notIn: ["sin-categorizar", "uncategorized"] } },
       include: {
         children: {
@@ -54,6 +54,30 @@ export default async function RootLayout({
       },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     });
+
+    // Adjuntar hasta 2 imágenes de productos destacados por categoría raíz (mega menú)
+    navCategories = await Promise.all(
+      roots.map(async (cat) => {
+        const descendantIds = [
+          cat.id,
+          ...cat.children.flatMap((c) => [c.id, ...c.children.map((g) => g.id)]),
+        ];
+        const prods = await prisma.product.findMany({
+          where: {
+            active: true,
+            images: { isEmpty: false },
+            categories: { some: { id: { in: descendantIds } } },
+          },
+          orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+          take: 2,
+          select: { images: true, slug: true, name: true },
+        });
+        return {
+          ...cat,
+          promos: prods.map((p) => ({ image: p.images[0], slug: p.slug, name: p.name })),
+        };
+      })
+    );
   } catch {
     // DB unavailable during build (e.g. Railway build phase)
   }

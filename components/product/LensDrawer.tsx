@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useCartStore } from "@/stores/cart";
 import { ProductWithCategory, PrescriptionData } from "@/types";
 import { formatPEN } from "@/lib/utils";
-import { calcularDesglose } from "@/hooks/useCalculoLunas";
+import { calcularDesglose, type Desglose } from "@/hooks/useCalculoLunas";
 
 // ─── Lens tree data ────────────────────────────────────────────────────────────
 
@@ -120,7 +120,7 @@ const LENS_TREE: Level1Option[] = [
           "Ligera y resistente a los impactos",
           "Buena claridad óptica",
         ],
-        priceRange: "S/140 - S/230",
+        priceRange: "S/140 - S/220",
         action: "form",
       },
       {
@@ -141,7 +141,7 @@ const LENS_TREE: Level1Option[] = [
               "Tratamiento básico de dureza",
               "Excelente relación calidad-precio",
             ],
-            priceRange: "S/190 - S/280",
+            priceRange: "S/190 - S/270",
             action: "form",
           },
           {
@@ -176,7 +176,7 @@ const LENS_TREE: Level1Option[] = [
               "Lente correctivo y de sol en uno",
               "Comodidad visual en todo momento",
             ],
-            priceRange: "S/250 - S/320",
+            priceRange: "S/240 - S/300",
             action: "form",
           },
         ],
@@ -308,6 +308,14 @@ function resolvePricing(
   return { lensPrice: 0 };
 }
 
+// Elige el total según el material de la luna graduada seleccionada.
+function pickLensTotal(d: Desglose, subType: string | null): number {
+  if (subType === "nk") return d.totalNk;
+  if (subType === "fotocromatico") return d.totalFoto;
+  // policarbonato (convencional) y cualquier otro material graduado
+  return d.totalPoli;
+}
+
 const EMPTY_PRESCRIPTION: PrescriptionData = {
   od: { sphere: "", cylinder: "", axis: "" },
   oi: { sphere: "", cylinder: "", axis: "" },
@@ -411,8 +419,9 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
           prescription.od.sphere, prescription.od.cylinder,
           prescription.oi.sphere, prescription.oi.cylinder
         );
-        if (d.hasValues && d.total > 0) {
-          lensPrice = d.total;
+        const computed = pickLensTotal(d, st);
+        if (d.hasValues && computed > 0) {
+          lensPrice = computed;
           lensPriceRange = undefined;
         }
       }
@@ -822,8 +831,9 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
                     prescription.oi.sphere, prescription.oi.cylinder
                   );
                   const showCalc = d.hasValues;
+                  const calcTotal = pickLensTotal(d, subType);
                   const monturaCost = Number(product.price);
-                  const lensCost = showCalc ? d.total : previewPrice;
+                  const lensCost = showCalc ? calcTotal : previewPrice;
                   const totalCost = monturaCost + lensCost;
                   return (
                     <div className="p-4 bg-white border border-[#d5d5d5] rounded-sm space-y-2">
@@ -836,7 +846,7 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
                       <div className="flex items-center justify-between text-[11px] text-[#334155]/50">
                         <span className="uppercase tracking-[0.15em]">{getLensLabel(lensType ?? "", subType, variant)}</span>
                         <span>
-                          {showCalc ? formatPEN(d.total) : previewRange ? previewRange : formatPEN(previewPrice)}
+                          {showCalc ? formatPEN(calcTotal) : previewRange ? previewRange : formatPEN(previewPrice)}
                         </span>
                       </div>
                       {previewRange && !showCalc ? (

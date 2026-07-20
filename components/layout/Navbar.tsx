@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ShoppingBag, Menu, X, ChevronDown } from "lucide-react";
 import { SearchBar } from "@/components/search/SearchBar";
 import { useState, useEffect, useRef } from "react";
@@ -10,11 +11,14 @@ type NavLeaf = { id: string; name: string; slug: string };
 
 type NavChild = NavLeaf & { children: NavLeaf[] };
 
+type NavPromo = { image: string; slug: string; name: string };
+
 export type NavCategory = {
   id: string;
   name: string;
   slug: string;
   children: NavChild[];
+  promos?: NavPromo[];
 };
 
 interface NavbarProps {
@@ -78,6 +82,8 @@ export function Navbar({ categories }: NavbarProps) {
     setMenuOpen(true);
     setSearchOpen(false);
   };
+
+  const activeCat = categories.find((c) => c.id === openCatId) ?? null;
 
   return (
     <>
@@ -153,76 +159,33 @@ export function Navbar({ categories }: NavbarProps) {
               </div>
 
             {/* Desktop nav — centro */}
-            <div ref={navRef} className="flex items-center gap-8">
+            <div ref={navRef} className="flex items-center gap-8" onMouseLeave={handleCatLeave}>
               {/* Per-category items */}
               {categories.map((cat) =>
                 cat.children.length > 0 ? (
-                  <div
+                  <button
                     key={cat.id}
-                    className="relative"
-                    onMouseLeave={handleCatLeave}
+                    onMouseEnter={() => handleCatEnter(cat.id)}
+                    onClick={() => setOpenCatId((v) => (v === cat.id ? null : cat.id))}
+                    className={`relative flex items-center gap-1 text-[11px] font-medium tracking-[0.2em] uppercase transition-colors duration-200 ${
+                      openCatId === cat.id ? "text-[#1e293b]" : "text-[#334155]/60 hover:text-[#1e293b]"
+                    }`}
                   >
-                    <button
-                      onMouseEnter={() => handleCatEnter(cat.id)}
-                      onClick={() => setOpenCatId((v) => v === cat.id ? null : cat.id)}
-                      className="flex items-center gap-1 text-[11px] font-medium text-[#334155]/60 hover:text-[#1e293b] tracking-[0.2em] uppercase transition-colors duration-200"
-                    >
-                      {cat.name}
-                      <ChevronDown
-                        className={`h-3 w-3 transition-transform duration-200 ${openCatId === cat.id ? "rotate-180" : ""}`}
-                      />
-                    </button>
-
-                    {openCatId === cat.id && (
-                      <div
-                        className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-[#F8F7F4] shadow-[0_8px_24px_rgba(0,0,0,0.1)] z-50"
-                        style={{ border: "1px solid #d5d5d5" }}
-                        onMouseEnter={() => handleCatEnter(cat.id)}
-                      >
-                        <Link
-                          href={`/lentes?category=${cat.slug}`}
-                          onClick={() => setOpenCatId(null)}
-                          className="flex items-center px-5 py-3 text-[10px] font-medium tracking-[0.2em] uppercase text-[#334155]/50 hover:text-[#1e293b] hover:bg-white transition-colors border-b border-[#d5d5d5]/60"
-                        >
-                          Ver todo — {cat.name}
-                        </Link>
-                        <div className="py-2">
-                          {cat.children.map((child) =>
-                            child.children.length > 0 ? (
-                              <div key={child.id} className="px-5 py-2">
-                                <p className="text-[9px] text-[#334155]/40 uppercase tracking-[0.15em] mb-0.5">
-                                  {child.name}
-                                </p>
-                                {child.children.map((gc) => (
-                                  <Link
-                                    key={gc.id}
-                                    href={`/lentes?category=${gc.slug}`}
-                                    onClick={() => setOpenCatId(null)}
-                                    className="block pl-2 py-1 text-[11px] text-[#334155]/60 hover:text-[#1e293b] transition-colors"
-                                  >
-                                    {gc.name}
-                                  </Link>
-                                ))}
-                              </div>
-                            ) : (
-                              <Link
-                                key={child.id}
-                                href={`/lentes?category=${child.slug}`}
-                                onClick={() => setOpenCatId(null)}
-                                className="flex items-center px-5 py-2 text-[11px] text-[#334155]/60 hover:text-[#1e293b] hover:bg-white transition-colors"
-                              >
-                                {child.name}
-                              </Link>
-                            )
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    {cat.name}
+                    <ChevronDown
+                      className={`h-3 w-3 transition-transform duration-200 ${openCatId === cat.id ? "rotate-180" : ""}`}
+                    />
+                    <span
+                      className={`absolute -bottom-2 left-0 h-px bg-[#1e293b] transition-all duration-200 ${
+                        openCatId === cat.id ? "w-full" : "w-0"
+                      }`}
+                    />
+                  </button>
                 ) : (
                   <Link
                     key={cat.id}
                     href={`/lentes?category=${cat.slug}`}
+                    onMouseEnter={() => setOpenCatId(null)}
                     className="text-[11px] font-medium text-[#334155]/60 hover:text-[#1e293b] tracking-[0.2em] uppercase transition-colors duration-200"
                   >
                     {cat.name}
@@ -233,6 +196,7 @@ export function Navbar({ categories }: NavbarProps) {
               {/* Ver todo */}
               <Link
                 href="/lentes"
+                onMouseEnter={() => setOpenCatId(null)}
                 className="text-[11px] font-medium text-[#334155]/40 hover:text-[#1e293b] tracking-[0.2em] uppercase transition-colors duration-200"
               >
                 Ver todo
@@ -265,6 +229,97 @@ export function Navbar({ categories }: NavbarProps) {
 
           </div>
         </div>
+
+        {/* Mega menu panel (desktop) */}
+        {activeCat && activeCat.children.length > 0 && (
+          <div
+            className="hidden md:block absolute left-0 top-full w-full bg-[#F8F7F4] shadow-[0_12px_24px_rgba(0,0,0,0.08)] z-40"
+            style={{ borderTop: "1px solid #d5d5d5", borderBottom: "1px solid #d5d5d5" }}
+            onMouseEnter={() => handleCatEnter(activeCat.id)}
+            onMouseLeave={handleCatLeave}
+          >
+            <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10 flex gap-10">
+              {/* Columnas de subcategorías */}
+              <div className="flex flex-wrap gap-x-12 gap-y-8 flex-1">
+                {/* 1ª columna: raíz + Ver todo + hijos sueltos */}
+                <div className="min-w-[140px]">
+                  <p className="text-[10px] font-semibold text-[#1e293b] uppercase tracking-[0.2em] mb-4">
+                    {activeCat.name}
+                  </p>
+                  <div className="flex flex-col gap-2.5">
+                    <Link
+                      href={`/lentes?category=${activeCat.slug}`}
+                      onClick={() => setOpenCatId(null)}
+                      className="text-[12px] text-[#334155]/60 hover:text-[#1e293b] transition-colors"
+                    >
+                      Ver todo
+                    </Link>
+                    {activeCat.children
+                      .filter((c) => c.children.length === 0)
+                      .map((child) => (
+                        <Link
+                          key={child.id}
+                          href={`/lentes?category=${child.slug}`}
+                          onClick={() => setOpenCatId(null)}
+                          className="text-[12px] text-[#334155]/60 hover:text-[#1e293b] transition-colors"
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                  </div>
+                </div>
+
+                {/* Columnas por hijo con nietos */}
+                {activeCat.children
+                  .filter((c) => c.children.length > 0)
+                  .map((child) => (
+                    <div key={child.id} className="min-w-[140px]">
+                      <p className="text-[10px] font-semibold text-[#1e293b] uppercase tracking-[0.2em] mb-4">
+                        {child.name}
+                      </p>
+                      <div className="flex flex-col gap-2.5">
+                        {child.children.map((gc) => (
+                          <Link
+                            key={gc.id}
+                            href={`/lentes?category=${gc.slug}`}
+                            onClick={() => setOpenCatId(null)}
+                            className="text-[12px] text-[#334155]/60 hover:text-[#1e293b] transition-colors"
+                          >
+                            {gc.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+              {/* Imágenes promocionales */}
+              {activeCat.promos && activeCat.promos.length > 0 && (
+                <div className="flex gap-4 flex-shrink-0">
+                  {activeCat.promos.map((promo) => (
+                    <Link
+                      key={promo.slug}
+                      href={`/lentes/${promo.slug}`}
+                      onClick={() => setOpenCatId(null)}
+                      className="group relative block w-52 h-60 overflow-hidden bg-white"
+                    >
+                      <Image
+                        src={promo.image}
+                        alt={promo.name}
+                        fill
+                        sizes="208px"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <span className="absolute bottom-0 left-0 right-0 px-3 py-2 text-[10px] uppercase tracking-[0.15em] text-white bg-gradient-to-t from-black/50 to-transparent line-clamp-1">
+                        {promo.name}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Backdrop */}
