@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingBag, Menu, X, ChevronDown } from "lucide-react";
+import { ShoppingBag, Menu, X, ChevronDown, ChevronRight, ChevronLeft, Plus, Minus } from "lucide-react";
 import { SearchBar } from "@/components/search/SearchBar";
 import { useState, useEffect, useRef } from "react";
 import { useCartStore } from "@/stores/cart";
@@ -30,7 +30,9 @@ export function Navbar({ categories }: NavbarProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [openCatId, setOpenCatId] = useState<string | null>(null);
-  const [openMobileCatId, setOpenMobileCatId] = useState<string | null>(null);
+  // Mobile two-level navigation
+  const [mobileCatId, setMobileCatId] = useState<string | null>(null);
+  const [openSubIds, setOpenSubIds] = useState<Set<string>>(new Set());
   const itemCount = useCartStore((s) => s.itemCount());
   const openDrawer = useCartStore((s) => s.openDrawer);
   const [mounted, setMounted] = useState(false);
@@ -75,7 +77,11 @@ export function Navbar({ categories }: NavbarProps) {
 
   const closeMenu = () => {
     setMenuOpen(false);
-    setOpenMobileCatId(null);
+    // Reset a nivel 1 tras cerrar (deja terminar la animación)
+    setTimeout(() => {
+      setMobileCatId(null);
+      setOpenSubIds(new Set());
+    }, 350);
   };
 
   const openMenu = () => {
@@ -83,7 +89,22 @@ export function Navbar({ categories }: NavbarProps) {
     setSearchOpen(false);
   };
 
+  const backToLevel1 = () => {
+    setMobileCatId(null);
+    setOpenSubIds(new Set());
+  };
+
+  const toggleSub = (id: string) => {
+    setOpenSubIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const activeCat = categories.find((c) => c.id === openCatId) ?? null;
+  const mobileCat = categories.find((c) => c.id === mobileCatId) ?? null;
 
   return (
     <>
@@ -334,12 +355,12 @@ export function Navbar({ categories }: NavbarProps) {
 
       {/* Mobile drawer panel */}
       <div
-        className={`fixed top-0 left-0 h-full z-50 md:hidden flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 left-0 h-full z-50 md:hidden flex flex-col transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)] ${
           menuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{
-          width: "72vw",
-          maxWidth: "300px",
+          width: "88vw",
+          maxWidth: "400px",
           backgroundColor: "#F8F7F4",
           borderRight: "1px solid #d5d5d5",
         }}
@@ -347,121 +368,151 @@ export function Navbar({ categories }: NavbarProps) {
         aria-modal="true"
         aria-label="Menú de navegación"
       >
-        {/* Drawer header */}
-        <div
-          className="flex items-center justify-between px-6 h-[60px]"
-          style={{ borderBottom: "1px solid #d5d5d5" }}
-        >
-          <Link href="/" className="flex items-center gap-2 group" onClick={closeMenu}>
-            <span
-              className="text-[13px] tracking-[0.3em] text-[#1e293b] font-light uppercase"
-              style={{ fontFamily: "var(--font-inter, sans-serif)" }}
-            >
-              Luminus
-            </span>
-            <span className="w-1 h-1 rounded-full bg-[#d4af37] opacity-70" />
-          </Link>
+        {/* Drawer header — solo cerrar */}
+        <div className="flex items-center h-[60px] px-5 flex-shrink-0">
           <button
             onClick={closeMenu}
-            className="text-[#334155]/40 hover:text-[#1e293b] transition-colors p-1"
+            className="text-[#1e293b] hover:text-[#334155] transition-colors p-1 -ml-1"
             aria-label="Cerrar menú"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Drawer nav links */}
-        <nav className="flex-1 px-6 py-8 flex flex-col gap-1 overflow-y-auto">
-          <div className="mb-4 h-px bg-gradient-to-r from-[#d4af37]/40 to-transparent" />
-
-          {/* Ver todo */}
-          <Link
-            href="/lentes"
-            onClick={closeMenu}
-            className="py-3 text-[11px] font-medium tracking-[0.2em] uppercase text-[#334155]/50 hover:text-[#1e293b] transition-colors"
+        {/* Track de dos niveles con deslizamiento */}
+        <div className="flex-1 overflow-hidden">
+          <div
+            className="flex h-full w-[200%] transition-transform duration-400 ease-[cubic-bezier(0.32,0.72,0,1)]"
+            style={{ transform: mobileCatId ? "translateX(-50%)" : "translateX(0)" }}
           >
-            Ver todo
-          </Link>
+            {/* ── Nivel 1: categorías principales ── */}
+            <div className="w-1/2 h-full overflow-y-auto px-5 pb-10">
+              {categories.map((cat) =>
+                cat.children.length > 0 ? (
+                  <button
+                    key={cat.id}
+                    onClick={() => setMobileCatId(cat.id)}
+                    className="flex items-center justify-between w-full py-4 text-[15px] text-[#1e293b] border-b border-[#d5d5d5]/70 transition-colors"
+                  >
+                    {cat.name}
+                    <ChevronRight className="h-4 w-4 text-[#334155]/40" />
+                  </button>
+                ) : (
+                  <Link
+                    key={cat.id}
+                    href={`/lentes?category=${cat.slug}`}
+                    onClick={closeMenu}
+                    className="flex items-center justify-between w-full py-4 text-[15px] text-[#1e293b] border-b border-[#d5d5d5]/70"
+                  >
+                    {cat.name}
+                  </Link>
+                )
+              )}
+              <Link
+                href="/lentes"
+                onClick={closeMenu}
+                className="flex items-center w-full py-4 text-[15px] text-[#334155]/60 hover:text-[#1e293b] transition-colors"
+              >
+                Ver todo
+              </Link>
+            </div>
 
-          {/* Per-category items */}
-          {categories.map((cat) =>
-            cat.children.length > 0 ? (
-              <div key={cat.id}>
-                <button
-                  onClick={() => setOpenMobileCatId((v) => v === cat.id ? null : cat.id)}
-                  className="flex items-center justify-between w-full py-3 text-[11px] font-medium text-[#334155]/60 hover:text-[#1e293b] uppercase tracking-[0.3em] transition-colors duration-200"
-                >
-                  {cat.name}
-                  <ChevronDown
-                    className={`h-3 w-3 transition-transform duration-200 ${openMobileCatId === cat.id ? "rotate-180" : ""}`}
-                  />
-                </button>
+            {/* ── Nivel 2: subcategorías de la categoría activa ── */}
+            <div className="w-1/2 h-full overflow-y-auto px-5 pb-10">
+              {mobileCat && (
+                <>
+                  {/* Volver */}
+                  <button
+                    onClick={backToLevel1}
+                    className="flex items-center gap-2 w-full py-3 text-[13px] text-[#334155]/55 hover:text-[#1e293b] border-b border-[#d5d5d5]/70 transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    {mobileCat.name}
+                  </button>
 
-                {openMobileCatId === cat.id && (
-                  <div className="pl-2 pb-2 flex flex-col gap-0.5">
-                    <Link
-                      href={`/lentes?category=${cat.slug}`}
-                      onClick={closeMenu}
-                      className="py-1.5 text-[10px] font-medium tracking-[0.15em] uppercase text-[#334155]/40 hover:text-[#1e293b] transition-colors"
-                    >
-                      Ver todo — {cat.name}
-                    </Link>
-                    {cat.children.map((child) =>
-                      child.children.length > 0 ? (
-                        <div key={child.id} className="mt-1.5">
-                          <p className="text-[9px] uppercase tracking-[0.25em] text-[#d4af37] mb-1">
-                            {child.name}
-                          </p>
-                          {child.children.map((gc) => (
-                            <Link
-                              key={gc.id}
-                              href={`/lentes?category=${gc.slug}`}
-                              onClick={closeMenu}
-                              className="block pl-4 py-1.5 text-[11px] text-[#334155]/60 hover:text-[#1e293b] transition-colors"
-                            >
-                              {gc.name}
-                            </Link>
-                          ))}
-                        </div>
-                      ) : (
-                        <Link
-                          key={child.id}
-                          href={`/lentes?category=${child.slug}`}
-                          onClick={closeMenu}
-                          className="block pl-2 py-1.5 text-[11px] text-[#334155]/60 hover:text-[#1e293b] transition-colors"
+                  {/* Ver todo de la categoría */}
+                  <Link
+                    href={`/lentes?category=${mobileCat.slug}`}
+                    onClick={closeMenu}
+                    className="block py-4 text-[15px] text-[#1e293b] border-b border-[#d5d5d5]/70"
+                  >
+                    Ver todo
+                  </Link>
+
+                  {/* Hijos: acordeón (con nietos) o enlace directo */}
+                  {mobileCat.children.map((child) =>
+                    child.children.length > 0 ? (
+                      <div key={child.id} className="border-b border-[#d5d5d5]/70">
+                        <button
+                          onClick={() => toggleSub(child.id)}
+                          className="flex items-center justify-between w-full py-4 text-[15px] text-[#1e293b]"
                         >
                           {child.name}
+                          {openSubIds.has(child.id) ? (
+                            <Minus className="h-4 w-4 text-[#334155]/40" />
+                          ) : (
+                            <Plus className="h-4 w-4 text-[#334155]/40" />
+                          )}
+                        </button>
+                        <div
+                          className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+                            openSubIds.has(child.id) ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                          }`}
+                        >
+                          <div className="overflow-hidden">
+                            <div className="ml-1 pl-4 border-l border-[#d5d5d5] flex flex-col pb-3">
+                              {child.children.map((gc) => (
+                                <Link
+                                  key={gc.id}
+                                  href={`/lentes?category=${gc.slug}`}
+                                  onClick={closeMenu}
+                                  className="py-2 text-[14px] text-[#334155]/70 hover:text-[#1e293b] transition-colors"
+                                >
+                                  {gc.name}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <Link
+                        key={child.id}
+                        href={`/lentes?category=${child.slug}`}
+                        onClick={closeMenu}
+                        className="block py-4 text-[15px] text-[#1e293b] border-b border-[#d5d5d5]/70"
+                      >
+                        {child.name}
+                      </Link>
+                    )
+                  )}
+
+                  {/* Imágenes promocionales */}
+                  {mobileCat.promos && mobileCat.promos.length > 0 && (
+                    <div className="grid grid-cols-2 gap-3 mt-6">
+                      {mobileCat.promos.map((promo) => (
+                        <Link
+                          key={promo.slug}
+                          href={`/lentes/${promo.slug}`}
+                          onClick={closeMenu}
+                          className="group relative block aspect-[3/4] overflow-hidden bg-white"
+                        >
+                          <Image
+                            src={promo.image}
+                            alt={promo.name}
+                            fill
+                            sizes="45vw"
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
                         </Link>
-                      )
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link
-                key={cat.id}
-                href={`/lentes?category=${cat.slug}`}
-                onClick={closeMenu}
-                className="py-3 text-[11px] font-medium text-[#334155]/60 hover:text-[#1e293b] uppercase tracking-[0.3em] transition-colors duration-200"
-              >
-                {cat.name}
-              </Link>
-            )
-          )}
-
-          <div className="mt-4 h-px bg-[#d5d5d5]/60" />
-
-        </nav>
-
-
-        {/* Decorative accent */}
-        <div
-          aria-hidden="true"
-          className="absolute bottom-0 left-0 w-24 h-24 pointer-events-none"
-          style={{
-            background: "radial-gradient(circle at bottom left, rgba(212,175,55,0.08) 0%, transparent 70%)",
-          }}
-        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
