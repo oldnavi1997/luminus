@@ -165,6 +165,14 @@ export function ProductForm({ categories, product }: ProductFormProps) {
 
   const sensors = useSensors(useSensor(PointerSensor));
 
+  // Depth per category for the hierarchical list (categories arrive parent-first)
+  const depthById = new Map<string, number>();
+  for (const cat of categories) {
+    const depth =
+      cat.parentId && depthById.has(cat.parentId) ? depthById.get(cat.parentId)! + 1 : 0;
+    depthById.set(cat.id, depth);
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (over && active.id !== over.id) {
@@ -330,34 +338,34 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Categorías * <span className="text-[10px] text-gray-400 font-normal">(⭐ = principal)</span>
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-72 overflow-y-auto">
+            {categories.length === 0 && (
+              <p className="px-3 py-4 text-sm text-gray-400">No hay categorías todavía</p>
+            )}
             {categories.map((cat) => {
               const isSelected = selectedCategoryIds.includes(cat.id);
               const isPrimary = primaryCategoryId === cat.id;
-              const isChild = Boolean(cat.parentId);
+              const depth = depthById.get(cat.id) ?? 0;
               return (
                 <label
                   key={cat.id}
-                  className={`flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer text-sm transition-colors ${
-                    isChild ? "pl-6" : ""
-                  } ${
+                  style={{ paddingLeft: `${12 + depth * 20}px` }}
+                  className={`flex items-center gap-2.5 pr-3 py-2 cursor-pointer text-sm transition-colors ${
                     isSelected
-                      ? "border-[#111111] bg-[#111111]/5 text-[#111111]"
-                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                      ? "bg-[#111111]/5 text-[#111111]"
+                      : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => toggleCategory(cat.id)}
-                    className="accent-[#111111]"
+                    className="accent-[#111111] shrink-0"
                   />
-                  <span className="flex-1 min-w-0">
-                    <span className="block truncate">
-                      {isChild && <span className="text-gray-400 mr-1">›</span>}
-                      {cat.name}
-                    </span>
-                    <span className="block truncate text-[10px] text-gray-400 font-mono">{cat.slug}</span>
+                  {depth > 0 && <span className="text-gray-300 shrink-0">↳</span>}
+                  <span className="flex-1 min-w-0 flex items-baseline gap-2">
+                    <span className="truncate">{cat.name}</span>
+                    <span className="truncate text-[10px] text-gray-400 font-mono">{cat.slug}</span>
                   </span>
                   {isSelected && (
                     <button
@@ -367,7 +375,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
                         e.preventDefault();
                         setPrimary(cat.id);
                       }}
-                      className={`text-base leading-none transition-opacity ${
+                      className={`text-base leading-none shrink-0 transition-opacity ${
                         isPrimary ? "opacity-100" : "opacity-25 hover:opacity-60"
                       }`}
                     >
