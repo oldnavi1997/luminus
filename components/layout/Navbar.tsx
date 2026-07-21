@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { ShoppingBag, Menu, X, ChevronDown, ChevronRight, ChevronLeft, Plus, Minus } from "lucide-react";
 import { SearchBar } from "@/components/search/SearchBar";
 import { useState, useEffect, useRef } from "react";
@@ -11,14 +10,11 @@ type NavLeaf = { id: string; name: string; slug: string };
 
 type NavChild = NavLeaf & { children: NavLeaf[] };
 
-type NavPromo = { image: string; slug: string; name: string };
-
 export type NavCategory = {
   id: string;
   name: string;
   slug: string;
   children: NavChild[];
-  promos?: NavPromo[];
 };
 
 interface NavbarProps {
@@ -313,31 +309,6 @@ export function Navbar({ categories }: NavbarProps) {
                     </div>
                   ))}
               </div>
-
-              {/* Imágenes promocionales */}
-              {activeCat.promos && activeCat.promos.length > 0 && (
-                <div className="flex gap-4 flex-shrink-0">
-                  {activeCat.promos.map((promo) => (
-                    <Link
-                      key={promo.slug}
-                      href={`/lentes/${promo.slug}`}
-                      onClick={() => setOpenCatId(null)}
-                      className="group relative block w-52 h-60 overflow-hidden bg-white"
-                    >
-                      <Image
-                        src={promo.image}
-                        alt={promo.name}
-                        fill
-                        sizes="208px"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <span className="absolute bottom-0 left-0 right-0 px-3 py-2 text-[10px] uppercase tracking-[0.15em] text-white bg-gradient-to-t from-black/50 to-transparent line-clamp-1">
-                        {promo.name}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         )}
@@ -485,28 +456,6 @@ export function Navbar({ categories }: NavbarProps) {
                         {child.name}
                       </Link>
                     )
-                  )}
-
-                  {/* Imágenes promocionales */}
-                  {mobileCat.promos && mobileCat.promos.length > 0 && (
-                    <div className="grid grid-cols-2 gap-3 mt-6">
-                      {mobileCat.promos.map((promo) => (
-                        <Link
-                          key={promo.slug}
-                          href={`/lentes/${promo.slug}`}
-                          onClick={closeMenu}
-                          className="group relative block aspect-[3/4] overflow-hidden bg-white"
-                        >
-                          <Image
-                            src={promo.image}
-                            alt={promo.name}
-                            fill
-                            sizes="45vw"
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
-                          />
-                        </Link>
-                      ))}
-                    </div>
                   )}
                 </>
               )}
