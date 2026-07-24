@@ -34,6 +34,7 @@ export function Navbar({ categories }: NavbarProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const navRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleCatEnter = (id: string) => {
@@ -63,7 +64,10 @@ export function Navbar({ categories }: NavbarProps) {
   // Close desktop dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const insideNav = navRef.current?.contains(target);
+      const insidePanel = panelRef.current?.contains(target);
+      if (!insideNav && !insidePanel) {
         setOpenCatId(null);
       }
     };
@@ -250,6 +254,7 @@ export function Navbar({ categories }: NavbarProps) {
         {/* Mega menu panel (desktop) */}
         {activeCat && activeCat.children.length > 0 && (
           <div
+            ref={panelRef}
             className="hidden md:block absolute left-0 top-full w-full bg-[#F8F7F4] shadow-[0_12px_24px_rgba(0,0,0,0.08)] z-40"
             style={{ borderTop: "1px solid #d5d5d5", borderBottom: "1px solid #d5d5d5" }}
             onMouseEnter={() => handleCatEnter(activeCat.id)}
