@@ -1,8 +1,8 @@
 /**
  * Points Product.images at the new Cloudinary account.
  *
- *   npx tsx tools/cloudinary-migration/cloudinary-rewrite-db.ts --dry-run   # default: shows the diff, writes nothing
- *   npx tsx tools/cloudinary-migration/cloudinary-rewrite-db.ts --apply     # writes
+ *   npx tsx tools/cloudinary-migration/cloudinary-rewrite-db.ts [--db ENV_VAR]            # dry-run
+ *   npx tsx tools/cloudinary-migration/cloudinary-rewrite-db.ts --db DATABASE_URL_PROD --apply
  *
  * Two changes per URL:
  *   1. cloud name  dzqns7kss -> <target>
@@ -12,10 +12,11 @@
  *      immune to this for any future move.
  *
  * Refuses to run unless every public_id it is about to rewrite is confirmed
- * present on the target account, per manifest-target.json.
+ * present on the target account, checked against a live listing of that account.
  *
  * Backs up the current values to product-images-backup.json before writing.
  */
+import { v2 as cloudinary } from "cloudinary";
 import { Client } from "pg";
 import * as dotenv from "dotenv";
 import { readFile, writeFile } from "node:fs/promises";
@@ -23,9 +24,39 @@ import { join, resolve } from "node:path";
 
 dotenv.config({ path: ".env.local" });
 
-const APPLY = process.argv.includes("--apply");
-const dirArg = process.argv.slice(2).find((a) => !a.startsWith("--"));
+const argv = process.argv.slice(2);
+const APPLY = argv.includes("--apply");
+const dbIdx = argv.indexOf("--db");
+const DB_ENV = dbIdx >= 0 ? argv[dbIdx + 1] : "DATABASE_URL";
+// Positional backup dir: skip flags and the value belonging to --db.
+const dirArg = argv.find((a, i) => !a.startsWith("--") && i !== dbIdx + 1);
 const BACKUP_DIR = resolve(dirArg ?? process.env.CLOUDINARY_BACKUP_DIR ?? "D:/Cursor/cloudinary-backup-luminus");
+
+cloudinary.config({
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+/** Built from the live account, not from a manifest: the manifests only cover
+ *  what a given run migrated, and the rewrite must validate against reality. */
+async function targetInventory(): Promise<Set<string>> {
+  const ids = new Set<string>();
+  for (const resource_type of ["image", "video"] as const) {
+    let next_cursor: string | undefined;
+    do {
+      const res = await cloudinary.api.resources({
+        resource_type,
+        type: "upload",
+        max_results: 500,
+        next_cursor,
+      });
+      for (const r of res.resources) ids.add(r.public_id);
+      next_cursor = res.next_cursor;
+    } while (next_cursor);
+  }
+  return ids;
+}
 
 /** Rewrites one delivery URL; returns null if it is not a Cloudinary URL. */
 function rewrite(url: string, sourceCloud: string, targetCloud: string): string | null {
@@ -54,13 +85,18 @@ async function main() {
       `El re-upload dejo ${target.counts.failed} fallos y ${target.counts.mismatched} discrepancias. Arreglalo antes de tocar la DB.`
     );
   }
-  const onTarget = new Set(target.assets.map((a) => a.public_id));
+  const dbUrl = process.env[DB_ENV];
+  if (!dbUrl) throw new Error(`Falta la variable ${DB_ENV} en .env.local`);
+
   console.log(`origen : ${target.source_cloud}`);
   console.log(`destino: ${target.target_cloud}`);
-  console.log(`assets confirmados en destino: ${onTarget.size}`);
-  console.log(`modo   : ${APPLY ? "APPLY (escribe)" : "DRY-RUN (no escribe)"}\n`);
+  console.log(`base   : ${DB_ENV} (${dbUrl.replace(/\/\/[^@]+@/, "//<oculto>@")})`);
+  console.log(`modo   : ${APPLY ? "APPLY (escribe)" : "DRY-RUN (no escribe)"}`);
 
-  const c = new Client({ connectionString: process.env.DATABASE_URL });
+  const onTarget = await targetInventory();
+  console.log(`assets en la cuenta destino: ${onTarget.size}\n`);
+
+  const c = new Client({ connectionString: dbUrl, connectionTimeoutMillis: 20000 });
   await c.connect();
 
   const rows = (await c.query<{ id: string; images: string[] }>(`SELECT id, images FROM "Product"`)).rows;
@@ -73,6 +109,8 @@ async function main() {
   let alreadyDone = 0;
 
   for (const row of rows) {
+    // Production has rows with images NULL, not just empty arrays.
+    if (!row.images?.length) continue;
     let changed = false;
     const next = row.images.map((url) => {
       const out = rewrite(url, target.source_cloud, target.target_cloud);
@@ -130,11 +168,18 @@ async function main() {
     return;
   }
 
+  // Namespaced per database: a production run must not clobber the local run's
+  // backup, since these files are the only rollback path.
+  const backupPath = join(BACKUP_DIR, `product-images-backup.${DB_ENV}.json`);
   await writeFile(
-    join(BACKUP_DIR, "product-images-backup.json"),
-    JSON.stringify({ generated_at: new Date().toISOString(), products: backup }, null, 2)
+    backupPath,
+    JSON.stringify(
+      { generated_at: new Date().toISOString(), db_env: DB_ENV, products: backup },
+      null,
+      2
+    )
   );
-  console.log(`\nrespaldo de valores previos: ${join(BACKUP_DIR, "product-images-backup.json")}`);
+  console.log(`\nrespaldo de valores previos: ${backupPath}`);
 
   await c.query("BEGIN");
   try {
