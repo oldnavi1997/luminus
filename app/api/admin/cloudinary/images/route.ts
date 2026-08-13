@@ -14,8 +14,12 @@ export async function GET(request: NextRequest) {
   const next_cursor = searchParams.get("next_cursor") ?? undefined;
 
   try {
+    // No folder scoping: the account is dedicated to Luminus since the migration
+    // off the shared one. A folder: filter would return nothing anyway — this
+    // account uses dynamic folder mode, where asset_folder is a field separate
+    // from public_id, and the migration preserved only public_id.
     const query = cloudinary.search
-      .expression("folder:luminus")
+      .expression("resource_type:image AND -public_id:samples/*")
       .sort_by("created_at", "desc")
       .max_results(max_results);
 
