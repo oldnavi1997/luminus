@@ -6,26 +6,26 @@ import { LazyVideo } from "@/components/ui/LazyVideo";
 
 // Shared between the <LazyVideo> and seekToColor so both point at the same rendition.
 const COLORS_VIDEO_SRC =
-  "https://res.cloudinary.com/dzqns7kss/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_640/v1773437207/8-colors-720_on4mcc.mp4";
+  "https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_640/8-colors-720_on4mcc.mp4";
 
 const colors = [
-  { name: "Gris",      icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436154/3e0b81c3a4959bed93bb361e4740b370_fkby8p.png",  videoTime: 0,  isNew: false, soon: false },
-  { name: "Verde",     icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436155/2902d392307a9655aa4fb2495a1a08e5_ntujkm.png",  videoTime: 5,  isNew: false, soon: false },
-  { name: "Amatista",  icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436152/3f02d839c7403fd8f05c946ed73ae4f6_oipklg.png",  videoTime: 10, isNew: false, soon: false },
-  { name: "Ámbar",     icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436156/03db061a2b83ddf42c8c932dea46ffdc_sgcjbr.png",  videoTime: 15, isNew: false, soon: true  },
-  { name: "Zafiro",    icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436152/d40753570a582bb5a028caf79fab71cb_gle3gv.png",  videoTime: 20, isNew: false, soon: false },
-  { name: "Esmeralda", icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436915/emerald_hllhj3.webp",                          videoTime: 25, isNew: false, soon: true  },
-  { name: "Café",      icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436151/3db386aa7867d2e71385119e3dc74a00_ojrpny.png",  videoTime: 30, isNew: false, soon: false },
-  { name: "Rubí",      icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436158/6ac8376d1d21390f09b8afeff8d9acb1_jnlxl9.png",  videoTime: 35, isNew: true,  soon: false },
+  { name: "Gris",      icon: "https://res.cloudinary.com/sztba5xb/image/upload/3e0b81c3a4959bed93bb361e4740b370_fkby8p.png",  videoTime: 0,  isNew: false, soon: false },
+  { name: "Verde",     icon: "https://res.cloudinary.com/sztba5xb/image/upload/2902d392307a9655aa4fb2495a1a08e5_ntujkm.png",  videoTime: 5,  isNew: false, soon: false },
+  { name: "Amatista",  icon: "https://res.cloudinary.com/sztba5xb/image/upload/3f02d839c7403fd8f05c946ed73ae4f6_oipklg.png",  videoTime: 10, isNew: false, soon: false },
+  { name: "Ámbar",     icon: "https://res.cloudinary.com/sztba5xb/image/upload/03db061a2b83ddf42c8c932dea46ffdc_sgcjbr.png",  videoTime: 15, isNew: false, soon: true  },
+  { name: "Zafiro",    icon: "https://res.cloudinary.com/sztba5xb/image/upload/d40753570a582bb5a028caf79fab71cb_gle3gv.png",  videoTime: 20, isNew: false, soon: false },
+  { name: "Esmeralda", icon: "https://res.cloudinary.com/sztba5xb/image/upload/emerald_hllhj3.webp",                          videoTime: 25, isNew: false, soon: true  },
+  { name: "Café",      icon: "https://res.cloudinary.com/sztba5xb/image/upload/3db386aa7867d2e71385119e3dc74a00_ojrpny.png",  videoTime: 30, isNew: false, soon: false },
+  { name: "Rubí",      icon: "https://res.cloudinary.com/sztba5xb/image/upload/6ac8376d1d21390f09b8afeff8d9acb1_jnlxl9.png",  videoTime: 35, isNew: true,  soon: false },
 ];
 
 const features = [
-  { icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773434482/Gemini_Generated_Image_slrlh3slrlh3slrl_znshgw.png", label: "Visión sin esfuerzo" },
-  { icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773434490/Gemini_Generated_Image_jzpy6yjzpy6yjzpy_w5lpw0.png", label: "Desempeño fotocromático duradero" },
-  { icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773434486/Gemini_Generated_Image_i8wcefi8wcefi8wc_s77syw.png", label: "Totalmente claros en interiores" },
-  { icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773434492/Gemini_Generated_Image_q0x8n3q0x8n3q0x8_avrymz.png", label: "Sorprendentemente rápidos" },
-  { icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773434488/Gemini_Generated_Image_yuuub0yuuub0yuuu_jobmco.png", label: "Se activan en segundos¹" },
-  { icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773434615/Gemini_Generated_Image_534rsc534rsc534r_qbasri.png", label: "Bloquean el 100% de los rayos UVA & UVB. Filtran la luz azul-violeta en interiores y en exteriores²" },
+  { icon: "https://res.cloudinary.com/sztba5xb/image/upload/Gemini_Generated_Image_slrlh3slrlh3slrl_znshgw.png", label: "Visión sin esfuerzo" },
+  { icon: "https://res.cloudinary.com/sztba5xb/image/upload/Gemini_Generated_Image_jzpy6yjzpy6yjzpy_w5lpw0.png", label: "Desempeño fotocromático duradero" },
+  { icon: "https://res.cloudinary.com/sztba5xb/image/upload/Gemini_Generated_Image_i8wcefi8wcefi8wc_s77syw.png", label: "Totalmente claros en interiores" },
+  { icon: "https://res.cloudinary.com/sztba5xb/image/upload/Gemini_Generated_Image_q0x8n3q0x8n3q0x8_avrymz.png", label: "Sorprendentemente rápidos" },
+  { icon: "https://res.cloudinary.com/sztba5xb/image/upload/Gemini_Generated_Image_yuuub0yuuub0yuuu_jobmco.png", label: "Se activan en segundos¹" },
+  { icon: "https://res.cloudinary.com/sztba5xb/image/upload/Gemini_Generated_Image_534rsc534rsc534r_qbasri.png", label: "Bloquean el 100% de los rayos UVA & UVB. Filtran la luz azul-violeta en interiores y en exteriores²" },
 ];
 
 export default function TransitionsGenS() {
@@ -485,8 +485,8 @@ export default function TransitionsGenS() {
         <div className="tg-hero-section">
           <div className="tg-hero-bg">
             <LazyVideo
-              src="https://res.cloudinary.com/dzqns7kss/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_640/v1773435949/gen-s-genstyle_bvpgyx.mp4"
-              poster="https://res.cloudinary.com/dzqns7kss/video/upload/so_0,f_auto,q_auto,c_limit,w_640/v1773435949/gen-s-genstyle_bvpgyx.jpg"
+              src="https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_640/gen-s-genstyle_bvpgyx.mp4"
+              poster="https://res.cloudinary.com/sztba5xb/video/upload/so_0,f_auto,q_auto,c_limit,w_640/gen-s-genstyle_bvpgyx.jpg"
             />
           </div>
           <div className="tg-nuevo-watermark">NUEVO</div>
@@ -494,7 +494,7 @@ export default function TransitionsGenS() {
           <div className={`tg-hero-content fade-in ${visible ? "visible" : ""}`}>
             <div className={`tg-transitions-logo fade-in delay-1 ${visible ? "visible" : ""}`}>
               <Image
-                src="https://res.cloudinary.com/dzqns7kss/image/upload/v1773432848/imgi_1_transitionsgenslogo_eq17ca.png"
+                src="https://res.cloudinary.com/sztba5xb/image/upload/imgi_1_transitionsgenslogo_eq17ca.png"
                 alt="Transitions® GEN S logo"
                 width={220}
                 height={60}
@@ -509,13 +509,13 @@ export default function TransitionsGenS() {
 
             <div className={`tg-color-dots fade-in delay-4 ${visible ? "visible" : ""}`}>
               {[
-                "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436158/6ac8376d1d21390f09b8afeff8d9acb1_jnlxl9.png",
-                "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436156/03db061a2b83ddf42c8c932dea46ffdc_sgcjbr.png",
-                "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436155/2902d392307a9655aa4fb2495a1a08e5_ntujkm.png",
-                "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436154/3e0b81c3a4959bed93bb361e4740b370_fkby8p.png",
-                "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436152/d40753570a582bb5a028caf79fab71cb_gle3gv.png",
-                "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436152/3f02d839c7403fd8f05c946ed73ae4f6_oipklg.png",
-                "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436151/3db386aa7867d2e71385119e3dc74a00_ojrpny.png",
+                "https://res.cloudinary.com/sztba5xb/image/upload/6ac8376d1d21390f09b8afeff8d9acb1_jnlxl9.png",
+                "https://res.cloudinary.com/sztba5xb/image/upload/03db061a2b83ddf42c8c932dea46ffdc_sgcjbr.png",
+                "https://res.cloudinary.com/sztba5xb/image/upload/2902d392307a9655aa4fb2495a1a08e5_ntujkm.png",
+                "https://res.cloudinary.com/sztba5xb/image/upload/3e0b81c3a4959bed93bb361e4740b370_fkby8p.png",
+                "https://res.cloudinary.com/sztba5xb/image/upload/d40753570a582bb5a028caf79fab71cb_gle3gv.png",
+                "https://res.cloudinary.com/sztba5xb/image/upload/3f02d839c7403fd8f05c946ed73ae4f6_oipklg.png",
+                "https://res.cloudinary.com/sztba5xb/image/upload/3db386aa7867d2e71385119e3dc74a00_ojrpny.png",
               ].map((src, i) => (
                 <Image key={i} src={src} alt="" width={36} height={36} className="object-contain" style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.6))" }} />
               ))}
@@ -535,7 +535,7 @@ export default function TransitionsGenS() {
           <div className={`tg-info-header fade-in delay-1 ${visible ? "visible" : ""}`}>
             <div className="tg-gens-header-logo">
               <Image
-                src="https://res.cloudinary.com/dzqns7kss/image/upload/v1773435520/imgi_1_genslogo_vsxgk4.png"
+                src="https://res.cloudinary.com/sztba5xb/image/upload/imgi_1_genslogo_vsxgk4.png"
                 alt="Transitions® GEN S"
                 width={180}
                 height={56}
@@ -589,7 +589,7 @@ export default function TransitionsGenS() {
           src={COLORS_VIDEO_SRC}
           /* q_80, not q_auto: on this smooth colour gradient q_auto lands at 11 KB
              while a visually equal q_80 is 6 KB. */
-          poster="https://res.cloudinary.com/dzqns7kss/video/upload/so_0,f_auto,q_80,c_limit,w_768/v1773437207/8-colors-720_on4mcc.jpg"
+          poster="https://res.cloudinary.com/sztba5xb/video/upload/so_0,f_auto,q_80,c_limit,w_768/8-colors-720_on4mcc.jpg"
           className="tg-colors-fullwidth-video"
         />
         <div className="tg-colors-overlay" />

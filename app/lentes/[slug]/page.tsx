@@ -262,7 +262,7 @@ export default async function ProductPage({ params }: Props) {
               <div className="flex flex-row items-center gap-x-6">
                 <div className="relative w-[250px] aspect-[4/3]">
                   <Image
-                    src="https://res.cloudinary.com/dzqns7kss/image/upload/v1773427813/Dimnks_eewx3p.webp"
+                    src="https://res.cloudinary.com/sztba5xb/image/upload/Dimnks_eewx3p.webp"
                     alt="Guía de dimensiones"
                     fill
                     className="object-contain"
@@ -295,7 +295,7 @@ export default async function ProductPage({ params }: Props) {
               </ul>
               <div className="relative w-full aspect-[16/9]">
                 <Image
-                  src="https://res.cloudinary.com/dzqns7kss/image/upload/v1773430821/MG_44024-Mejorado-NR_resultado-scaled_dernru.webp"
+                  src="https://res.cloudinary.com/sztba5xb/image/upload/MG_44024-Mejorado-NR_resultado-scaled_dernru.webp"
                   alt="Contenido del paquete"
                   fill
                   className="object-cover rounded"

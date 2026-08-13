@@ -7,8 +7,8 @@ export function HeroSection() {
       {/* Video background. f_auto lets Cloudinary pick the codec instead of
           shipping mp4 to every browser; w_854 halves the bytes of the 1280px source. */}
       <LazyVideo
-        src="https://res.cloudinary.com/dzqns7kss/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_854/v1773378566/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.mp4"
-        poster="https://res.cloudinary.com/dzqns7kss/video/upload/so_0,f_auto,q_auto,c_limit,w_854/v1773378566/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.jpg"
+        src="https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_854/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.mp4"
+        poster="https://res.cloudinary.com/sztba5xb/video/upload/so_0,f_auto,q_auto,c_limit,w_854/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.jpg"
         className="absolute inset-0 w-full h-full object-cover"
       />
       <div className="absolute inset-0 bg-black/10" />

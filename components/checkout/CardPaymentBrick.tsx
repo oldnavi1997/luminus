@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { formatPEN } from "@/lib/utils";
 
 const BRAND_ICONS: Record<string, string> = {
-  visa: "https://res.cloudinary.com/dzqns7kss/image/upload/q_auto/f_auto/v1775929773/visa-729c05c240c4bdb47b03ac81d9945bfe_dnnmzm.svg",
-  mastercard: "https://res.cloudinary.com/dzqns7kss/image/upload/q_auto/f_auto/v1775929773/mastercard-4d8844094130711885b5e41b28c9848f_tz0moh.svg",
-  amex: "https://res.cloudinary.com/dzqns7kss/image/upload/q_auto/f_auto/v1775929773/amex-a49b82f46c5cd6a96a6e418a6ca1717c_m6wtzc.svg",
-  diners: "https://res.cloudinary.com/dzqns7kss/image/upload/q_auto/f_auto/v1775929773/diners-fbcbd3360f8e3f629cdaa80e93abdb8b_wc2q9y.svg",
+  visa: "https://res.cloudinary.com/sztba5xb/image/upload/q_auto/f_auto/visa-729c05c240c4bdb47b03ac81d9945bfe_dnnmzm.svg",
+  mastercard: "https://res.cloudinary.com/sztba5xb/image/upload/q_auto/f_auto/mastercard-4d8844094130711885b5e41b28c9848f_tz0moh.svg",
+  amex: "https://res.cloudinary.com/sztba5xb/image/upload/q_auto/f_auto/amex-a49b82f46c5cd6a96a6e418a6ca1717c_m6wtzc.svg",
+  diners: "https://res.cloudinary.com/sztba5xb/image/upload/q_auto/f_auto/diners-fbcbd3360f8e3f629cdaa80e93abdb8b_wc2q9y.svg",
 };
 
 // MP brand name → icon key

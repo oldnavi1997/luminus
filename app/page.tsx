@@ -35,11 +35,11 @@ export default async function HomePage() {
       <HeroSection />
       <CategoryGridOneRow
         categorySlug="aviador"
-        heroImage="https://res.cloudinary.com/dzqns7kss/image/upload/v1773365097/Gemini_Generated_Image_a17166a17166a171_12_03_2026_jnzkta.webp"
+        heroImage="https://res.cloudinary.com/sztba5xb/image/upload/Gemini_Generated_Image_a17166a17166a171_12_03_2026_jnzkta.webp"
       />
       <section className="flex flex-col sm:flex-row items-center gap-6 px-6 py-10 max-w-4xl mx-auto">
         <img
-          src="https://res.cloudinary.com/dzqns7kss/image/upload/v1773361587/325594040_695240712096317_750899441291301466_n_resultado_y4znsl.webp"
+          src="https://res.cloudinary.com/sztba5xb/image/upload/325594040_695240712096317_750899441291301466_n_resultado_y4znsl.webp"
           alt="Lentes a medida"
           className="w-full sm:w-72 rounded-2xl object-cover"
         />
