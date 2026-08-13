@@ -50,12 +50,25 @@ interface Missing {
   resource_type: "image" | "video";
 }
 
+/**
+ * The version segment is OPTIONAL: once a database has been rewritten, its URLs
+ * are versionless. Requiring /v<digits>/ made this return null for every already
+ * migrated URL, which quietly turned the "what is still missing" check into a
+ * no-op — and would have skipped a versionless URL still on the old cloud.
+ */
 function parse(url: string): Missing | null {
-  const m = url.match(
-    /res\.cloudinary\.com\/([^/]+)\/(image|video)\/upload\/(?:[^/]*\/)*?v\d+\/(.+)$/
-  );
+  const m = url.match(/res\.cloudinary\.com\/([^/]+)\/(image|video)\/upload\/(.+)$/);
   if (!m) return null;
-  const [, cloud, resource_type, tail] = m;
+  const [, cloud, resource_type, rest] = m;
+
+  const parts = rest.split("/");
+  // Leading transformation segments look like `w_640,q_auto,c_limit`. Never strip
+  // the final segment, so a root-level public_id is safe.
+  while (parts.length > 1 && /^[a-z]{1,3}_[^/]*$/.test(parts[0])) parts.shift();
+  if (parts.length > 1 && /^v\d+$/.test(parts[0])) parts.shift();
+
+  const tail = parts.join("/");
+  if (!tail) return null;
   const ext = (tail.match(/\.([a-z0-9]+)$/i) ?? [, ""])[1];
   return {
     url,
