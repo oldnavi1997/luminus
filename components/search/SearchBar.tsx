@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Search, X, ArrowRight, Loader2 } from "lucide-react";
 import { getSearchClient, INDEX_NAME } from "@/lib/algolia";
 import { formatPEN } from "@/lib/utils";
@@ -171,9 +172,15 @@ function SearchDrawer({ open, onClose }: { open: boolean; onClose: () => void })
                 className="flex items-center gap-4 w-full px-5 py-3 text-left transition-colors hover:bg-white"
                 style={{ borderBottom: i < results.length - 1 ? "1px solid #f0ede8" : "none" }}
               >
-                <div className="w-12 h-12 shrink-0 overflow-hidden bg-[#f0ede8]">
+                <div className="relative w-12 h-12 shrink-0 overflow-hidden bg-[#f0ede8]">
                   {hit.images[0] && (
-                    <img src={hit.images[0]} alt={hit.name} className="w-full h-full object-cover" />
+                    <Image
+                      src={hit.images[0]}
+                      alt={hit.name}
+                      fill
+                      sizes="48px"
+                      className="object-cover"
+                    />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">

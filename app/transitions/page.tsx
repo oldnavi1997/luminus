@@ -2,6 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { LazyVideo } from "@/components/ui/LazyVideo";
+
+// Shared between the <LazyVideo> and seekToColor so both point at the same rendition.
+const COLORS_VIDEO_SRC =
+  "https://res.cloudinary.com/dzqns7kss/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_640/v1773437207/8-colors-720_on4mcc.mp4";
 
 const colors = [
   { name: "Gris",      icon: "https://res.cloudinary.com/dzqns7kss/image/upload/v1773436154/3e0b81c3a4959bed93bb361e4740b370_fkby8p.png",  videoTime: 0,  isNew: false, soon: false },
@@ -44,10 +49,12 @@ export default function TransitionsGenS() {
   }, []);
 
   const seekToColor = (videoTime: number) => {
-    if (colorsVideoRef.current) {
-      colorsVideoRef.current.currentTime = videoTime;
-      colorsVideoRef.current.play();
-    }
+    const video = colorsVideoRef.current;
+    if (!video) return;
+    // The video loads lazily, so a click can land before the observer assigned a src.
+    if (!video.src) video.src = COLORS_VIDEO_SRC;
+    video.currentTime = videoTime;
+    void video.play().catch(() => {});
   };
 
   return (
@@ -477,17 +484,10 @@ export default function TransitionsGenS() {
         {/* LEFT: Hero */}
         <div className="tg-hero-section">
           <div className="tg-hero-bg">
-            <video
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              poster="https://res.cloudinary.com/dzqns7kss/video/upload/so_0,f_jpg,q_80,w_1280/v1773435949/gen-s-genstyle_bvpgyx.jpg"
-            >
-              <source src="https://res.cloudinary.com/dzqns7kss/video/upload/f_mp4,q_auto,vc_h264/v1773435949/gen-s-genstyle_bvpgyx.mp4" type="video/mp4" />
-              <source src="https://res.cloudinary.com/dzqns7kss/video/upload/f_webm,q_auto/v1773435949/gen-s-genstyle_bvpgyx.webm" type="video/webm" />
-            </video>
+            <LazyVideo
+              src="https://res.cloudinary.com/dzqns7kss/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_640/v1773435949/gen-s-genstyle_bvpgyx.mp4"
+              poster="https://res.cloudinary.com/dzqns7kss/video/upload/so_0,f_auto,q_auto,c_limit,w_640/v1773435949/gen-s-genstyle_bvpgyx.jpg"
+            />
           </div>
           <div className="tg-nuevo-watermark">NUEVO</div>
 
@@ -584,19 +584,14 @@ export default function TransitionsGenS() {
 
       {/* Colors — full bleed */}
       <div className={`tg-colors-fullwidth fade-in delay-4 ${visible ? "visible" : ""}`}>
-        <video
-          ref={colorsVideoRef}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          poster="https://res.cloudinary.com/dzqns7kss/video/upload/so_0,f_jpg,q_80,w_720/v1773437207/8-colors-720_on4mcc.jpg"
+        <LazyVideo
+          videoRef={colorsVideoRef}
+          src={COLORS_VIDEO_SRC}
+          /* q_80, not q_auto: on this smooth colour gradient q_auto lands at 11 KB
+             while a visually equal q_80 is 6 KB. */
+          poster="https://res.cloudinary.com/dzqns7kss/video/upload/so_0,f_auto,q_80,c_limit,w_768/v1773437207/8-colors-720_on4mcc.jpg"
           className="tg-colors-fullwidth-video"
-        >
-          <source src="https://res.cloudinary.com/dzqns7kss/video/upload/f_mp4,q_auto,vc_h264/v1773437207/8-colors-720_on4mcc.mp4" type="video/mp4" />
-          <source src="https://res.cloudinary.com/dzqns7kss/video/upload/f_webm,q_auto/v1773437207/8-colors-720_on4mcc.webm" type="video/webm" />
-        </video>
+        />
         <div className="tg-colors-overlay" />
 
         <div className="tg-colors-fullwidth-title">
