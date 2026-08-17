@@ -421,6 +421,7 @@ model BioLink {
 enum TipoMovimientoStock {
   INGRESO // nuevo stock al almacén
   TRASLADO // almacén → tienda
+  RETORNO // tienda → almacén (traslado inverso)
 }
 
 model StockMovimiento {
