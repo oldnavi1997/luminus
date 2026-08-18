@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useCartStore } from "@/stores/cart";
 import { ProductWithCategory, PrescriptionData } from "@/types";
 import { formatPEN } from "@/lib/utils";
+import { stockDisponible } from "@/lib/stock";
 import { calcularDesglose, type Desglose } from "@/hooks/useCalculoLunas";
 
 // ─── Lens tree data ────────────────────────────────────────────────────────────
@@ -437,7 +438,7 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
         imageUrl: product.images[0],
         quantity: 1,
         slug: product.slug,
-        stock: product.stockAlmacen,
+        stock: stockDisponible(product),
         lensType: lt as CartItem["lensType"],
         lensSubType: st ?? undefined,
         lensVariant: va ?? undefined,

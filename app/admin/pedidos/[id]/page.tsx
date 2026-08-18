@@ -10,34 +10,18 @@ import { Select } from "@/components/ui/Select";
 import { formatPEN } from "@/lib/utils";
 import { OrderStatus } from "@/app/generated/prisma/client";
 import { PrescriptionData } from "@/types";
+import { buildLensLabel } from "@/lib/lens-label";
 
 const COURIER_LABELS: Record<string, string> = {
   shalom: "Shalom",
   olva: "Olva Courier",
 };
 
-const LENS_LABELS: Record<string, string> = {
-  sin_medida: "Sin medida",
-  con_medida: "Con medida",
-  solo_montura: "Solo montura",
-  descanso: "Descanso",
-  nk: "Lunas NK",
-  policarbonato: "Policarbonato",
-  fotocromatico: "Fotocromático clásico",
-  transition: "Transition Gen S",
-  alto_indice: "Alto índice",
-  convencional: "Convencional",
-  crizal_sapphire: "Crizal Sapphire",
-  con_ficha: "Con ficha",
-  ar16: "Base Kodak",
-  sapphire: "Sapphire",
-};
 
-function buildLensLabel(type?: string | null, sub?: string | null, variant?: string | null): string | null {
-  const parts = [type, sub, variant].filter(Boolean);
-  if (parts.length === 0) return null;
-  return parts.map((k) => LENS_LABELS[k!] ?? k).join(" · ");
-}
+/** El GET de /api/orders/[id] adjunta el comprobante emitido para el POS. */
+type OrderWithComprobante = OrderWithItems & {
+  saleDocument?: { fullNumber: string; status: string } | null;
+};
 
 export default function AdminOrderDetailPage({
   params,
@@ -64,6 +48,17 @@ export default function AdminOrderDetailPage({
 
   const handleUpdateStatus = async () => {
     if (!order || !newStatus) return;
+
+    // Cancelar o reembolsar una orden pagada devuelve el stock y anula el comprobante.
+    const anula = newStatus === "CANCELLED" || newStatus === "REFUNDED";
+    if (anula && order.stockDeducted) {
+      const accion = newStatus === "REFUNDED" ? "reembolsar" : "cancelar";
+      const ok = window.confirm(
+        `Al ${accion} este pedido se devolverá el stock a almacén y tienda, y se anulará el comprobante en el POS. ¿Continuar?`
+      );
+      if (!ok) return;
+    }
+
     setUpdating(true);
     const res = await fetch(`/api/orders/${order.id}`, {
       method: "PUT",
@@ -73,6 +68,9 @@ export default function AdminOrderDetailPage({
     setUpdating(false);
     if (res.ok) {
       toast.success("Estado actualizado");
+      // La orden se cargó por fetch en el cliente: hay que releerla, no basta refresh().
+      const fresh = await fetch(`/api/orders/${order.id}`).then((r) => r.json());
+      setOrder(fresh);
       router.refresh();
     } else {
       toast.error("Error al actualizar");
@@ -81,6 +79,8 @@ export default function AdminOrderDetailPage({
 
   if (loading) return <div className="text-center py-12 text-gray-400">Cargando...</div>;
   if (!order) return <div className="text-center py-12 text-gray-400">Orden no encontrada</div>;
+
+  const comprobante = (order as OrderWithComprobante).saleDocument;
 
   return (
     <div className="space-y-6">
@@ -96,6 +96,27 @@ export default function AdminOrderDetailPage({
           <OrderStatusBadge status={order.orderStatus} />
         </div>
       </div>
+
+      {order.stockIssue && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <p className="text-sm font-semibold text-red-800">Revisión de inventario requerida</p>
+          <p className="text-xs text-red-700 mt-1">
+            El pago se cobró pero no había stock suficiente al aprobarlo. {order.stockIssue}
+          </p>
+        </div>
+      )}
+
+      {comprobante && (
+        <div className="rounded-xl border border-gray-100 bg-white shadow-sm px-4 py-3 flex items-center justify-between gap-3">
+          <span className="text-sm text-gray-500">Comprobante en el POS</span>
+          <span className="font-mono text-sm tabular-nums">
+            {comprobante.fullNumber}
+            {comprobante.status === "VOIDED" && (
+              <span className="ml-2 text-xs font-sans text-red-600">anulado</span>
+            )}
+          </span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -237,6 +258,14 @@ export default function AdminOrderDetailPage({
                       <span>Luna (c/u)</span>
                       <span className="tabular-nums">
                         + {formatPEN(Number(item.lensPrice))} × {item.quantity}
+                      </span>
+                    </div>
+                  )}
+                  {item.qtyFromAlmacen + item.qtyFromTienda > 0 && (
+                    <div className="flex justify-between">
+                      <span>Descontado de</span>
+                      <span className="tabular-nums">
+                        almacén {item.qtyFromAlmacen} · tienda {item.qtyFromTienda}
                       </span>
                     </div>
                   )}

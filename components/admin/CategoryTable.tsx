@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { formatPEN } from "@/lib/utils";
+import { stockDisponible } from "@/lib/stock";
 
 interface Category {
   id: string;
@@ -360,14 +361,15 @@ export function CategoryTable({ categories }: CategoryTableProps) {
                     <td className="py-2.5 px-3 text-center">
                       <span
                         className={
-                          p.stockAlmacen === 0
+                          stockDisponible(p) === 0
                             ? "text-sm font-medium text-red-500"
-                            : p.stockAlmacen <= 5
+                            : stockDisponible(p) <= 5
                             ? "text-sm font-medium text-amber-600"
                             : "text-sm font-medium text-emerald-600"
                         }
+                        title={`Almacén ${p.stockAlmacen} · Tienda ${p.stockTienda}`}
                       >
-                        {p.stockAlmacen}
+                        {stockDisponible(p)}
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-center">

@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
+import { buildLensLabel } from "@/lib/lens-label";
 
 let _resend: Resend | null = null;
 function getResend() {
@@ -11,28 +12,6 @@ function formatPEN(amount: number): string {
   return new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(amount);
 }
 
-const LENS_LABELS: Record<string, string> = {
-  sin_medida: "Sin medida",
-  con_medida: "Con medida",
-  solo_montura: "Solo montura",
-  descanso: "Descanso",
-  nk: "Lunas NK",
-  policarbonato: "Policarbonato",
-  fotocromatico: "Fotocromático clásico",
-  transition: "Transition Gen S",
-  alto_indice: "Alto índice",
-  convencional: "Convencional",
-  crizal_sapphire: "Crizal Sapphire",
-  con_ficha: "Con ficha",
-  ar16: "Base Kodak",
-  sapphire: "Sapphire",
-};
-
-function buildLensLabel(type?: string | null, sub?: string | null, variant?: string | null): string | null {
-  const parts = [type, sub, variant].filter(Boolean);
-  if (parts.length === 0) return null;
-  return parts.map((k) => LENS_LABELS[k!] ?? k).join(" · ");
-}
 
 export async function sendOrderConfirmation(orderId: string): Promise<void> {
   try {

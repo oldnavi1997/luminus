@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { generateOrderNumber } from "@/lib/utils";
 import { Prisma } from "@/app/generated/prisma/client";
 import { getShippingCost, getMpFee } from "@/lib/shipping";
+import { stockDisponible } from "@/lib/stock";
 
 const createOrderSchema = z.object({
   items: z.array(z.object({
@@ -50,7 +51,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Algunos productos no están disponibles" }, { status: 400 });
     }
 
-    // Verify stock (sum quantities per product across all lens options)
+    // Verify stock (sum quantities per product across all lens options).
+    // Se vende contra almacén + tienda; el descuento en cascada ocurre al aprobar el pago.
     const qtyByProduct = items.reduce<Record<string, number>>((acc, item) => {
       acc[item.id] = (acc[item.id] ?? 0) + item.quantity;
       return acc;
@@ -58,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     for (const [productId, qty] of Object.entries(qtyByProduct)) {
       const product = products.find((p) => p.id === productId);
-      if (!product || product.stockAlmacen < qty) {
+      if (!product || stockDisponible(product) < qty) {
         return NextResponse.json(
           { error: `Stock insuficiente para ${product?.name || productId}` },
           { status: 400 }

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { paymentClient } from "@/lib/mercadopago";
 import { sendOrderConfirmation } from "@/lib/email";
+import { aprobarOrden } from "@/lib/fulfillment";
 
 const processSchema = z.object({
   orderId: z.string(),
@@ -33,19 +34,19 @@ export async function POST(request: NextRequest) {
     if (process.env.NODE_ENV === "development" && body.devBypass === true) {
       const order = await prisma.order.findUnique({ where: { id: body.orderId } });
       if (!order) return NextResponse.json({ error: "Orden no encontrada" }, { status: 404 });
-      if (order.paymentStatus !== "PENDING") {
+
+      const result = await aprobarOrden(order.id, {
+        mpPaymentId: `dev-bypass-${Date.now()}`,
+        mpStatus: "approved",
+      });
+      if (result.yaProcesada) {
         return NextResponse.json({ error: "La orden ya fue procesada" }, { status: 400 });
       }
-      await prisma.order.update({
-        where: { id: order.id },
-        data: {
-          mpPaymentId: `dev-bypass-${Date.now()}`,
-          mpStatus: "approved",
-          paymentStatus: "APPROVED",
-          orderStatus: "PAID",
-        },
+      return NextResponse.json({
+        status: "approved",
+        paymentId: `dev-${order.id}`,
+        comprobante: result.fullNumber,
       });
-      return NextResponse.json({ status: "approved", paymentId: `dev-${order.id}` });
     }
 
     const data = processSchema.parse(body);
@@ -86,19 +87,26 @@ export async function POST(request: NextRequest) {
     const mpStatus = payment.status || "pending";
     const paymentStatus = mapMpStatusToPaymentStatus(mpStatus);
 
-    // Update order in DB
-    await prisma.order.update({
-      where: { id: order.id },
-      data: {
+    if (paymentStatus === "APPROVED") {
+      // Descuenta stock y emite el comprobante en una sola transacción idempotente.
+      const result = await aprobarOrden(order.id, {
         mpPaymentId: String(payment.id),
         mpStatus,
-        paymentStatus: paymentStatus as "PENDING" | "APPROVED" | "REJECTED" | "IN_PROCESS" | "CANCELLED",
-        orderStatus: paymentStatus === "APPROVED" ? "PAID" : "PENDING",
-      },
-    });
-
-    if (paymentStatus === "APPROVED") {
-      sendOrderConfirmation(order.id).catch(console.error);
+        mpPaymentMethodId: data.paymentMethodId,
+      });
+      // El email va fuera de la transacción: hace red y se traga sus propios errores.
+      if (!result.yaProcesada) sendOrderConfirmation(order.id).catch(console.error);
+    } else {
+      // No aprobado: sólo se refleja el estado del pago, sin tocar `orderStatus`
+      // para no pisar hacia atrás un PAID que el webhook pudo haber escrito ya.
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          mpPaymentId: String(payment.id),
+          mpStatus,
+          paymentStatus: paymentStatus as "PENDING" | "REJECTED" | "IN_PROCESS" | "CANCELLED",
+        },
+      });
     }
 
     return NextResponse.json({

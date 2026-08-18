@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ProductWithCategory } from "@/types";
 import { formatPEN, getPrimaryCategory } from "@/lib/utils";
+import { stockDisponible } from "@/lib/stock";
 
 interface ProductCardProps {
   product: ProductWithCategory;
@@ -10,6 +11,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, view = "dense" }: ProductCardProps) {
   const primaryCategory = getPrimaryCategory(product);
+  const sinStock = stockDisponible(product) === 0;
   const imageUrl = product.images[0] || null;
   const hasDiscount = product.comparePrice && Number(product.comparePrice) > Number(product.price);
   const discount = hasDiscount
@@ -36,7 +38,7 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
               </svg>
             </div>
           )}
-          {product.stockAlmacen === 0 && (
+          {sinStock && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-[1px]">
               <span className="text-[10px] font-medium text-[#111111]/50 uppercase tracking-[0.2em] border border-[#111111]/20 px-3 py-1.5">
                 Sin stock
@@ -95,7 +97,7 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
             </span>
           </div>
         )}
-        {product.stockAlmacen === 0 && (
+        {sinStock && (
           <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-[1px]">
             <span className="text-[10px] font-medium text-[#111111]/50 uppercase tracking-[0.2em] border border-[#111111]/20 px-3 py-1.5">
               Sin stock

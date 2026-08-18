@@ -168,7 +168,10 @@ model Order {
   mpStatus         String?
   paymentStatus    PaymentStatus @default(PENDING)
   orderStatus      OrderStatus   @default(PENDING)
+  stockDeducted    Boolean       @default(false)
+  stockIssue       String?
   items            OrderItem[]
+  saleDocument     SaleDocument?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 }
@@ -189,6 +192,8 @@ model OrderItem {
   lensPriceRange  String?
   prescriptionUrl String?
   prescription    Json?
+  qtyFromAlmacen  Int      @default(0)
+  qtyFromTienda   Int      @default(0)
 }
 
 // ─── POS models (shared schema; owned by ecommerce, consumed by luminus-puntoventa) ───
@@ -269,6 +274,9 @@ model SaleDocument {
   montoTarjeta        Decimal?           @db.Decimal(10, 2)
   montoYape           Decimal?           @db.Decimal(10, 2)
   location            String             @default("TIENDA")
+  channel             String             @default("POS")
+  orderId             String?            @unique
+  order               Order?             @relation(fields: [orderId], references: [id])
   notes               String?
   saldoCobradoPorId   String?
   saldoCobradoPor     User?              @relation("DocumentSaldoCobrador", fields: [saldoCobradoPorId], references: [id])
@@ -302,6 +310,7 @@ model SaleDocument {
   @@index([cashierId])
   @@index([posSessionId])
   @@index([buyerDocNumber])
+  @@index([channel, createdAt])
 }
 
 model SaleDocumentItem {
@@ -422,6 +431,8 @@ enum TipoMovimientoStock {
   INGRESO // nuevo stock al almacén
   TRASLADO // almacén → tienda
   RETORNO // tienda → almacén (traslado inverso)
+  VENTA_WEB // salida por venta del ecommerce (almacén y/o tienda)
+  ANULACION_WEB // reingreso por cancelación/reembolso de una venta web
 }
 
 model StockMovimiento {

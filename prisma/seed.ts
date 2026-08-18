@@ -20,6 +20,21 @@ async function main() {
     },
   });
 
+  // Cajero de sistema + serie propia para las ventas web.
+  // `lib/fulfillment.ts` también los crea al vuelo, así que en producción no
+  // hace falta correr el seed; esto es sólo para tener el entorno local completo.
+  await prisma.user.upsert({
+    where: { email: "web@luminus.pe" },
+    update: {},
+    create: { email: "web@luminus.pe", name: "Tienda Web", role: "USER" },
+  });
+
+  await prisma.documentSerie.upsert({
+    where: { type_serie: { type: "NOTA_VENTA", serie: "NV002" } },
+    update: {},
+    create: { type: "NOTA_VENTA", serie: "NV002", lastNumber: 0, active: true },
+  });
+
   // Categories
   const categories = [
     {

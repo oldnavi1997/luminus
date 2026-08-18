@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { stockDisponible } from "@/lib/stock";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,8 @@ export async function GET() {
       description: true,
       slug: true,
       price: true,
-      stock: true,
+      stockAlmacen: true,
+      stockTienda: true,
       images: true,
       brand: true,
     },
@@ -30,7 +32,7 @@ export async function GET() {
   const headers = ["id", "title", "description", "availability", "condition", "price", "link", "image_link", "brand"];
 
   const rows = products.map((p) => {
-    const availability = p.stock > 0 ? "in stock" : "out of stock";
+    const availability = stockDisponible(p) > 0 ? "in stock" : "out of stock";
     const price = `${Number(p.price).toFixed(2)} PEN`;
     const link = `${appUrl}/lentes/${p.slug}`;
     const imageLink = p.images[0] ?? "";

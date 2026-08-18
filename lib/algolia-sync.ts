@@ -1,4 +1,5 @@
 import { getAdminClient, INDEX_NAME } from "./algolia";
+import { stockDisponible } from "./stock";
 
 type SyncProduct = {
   id: string;
@@ -9,6 +10,7 @@ type SyncProduct = {
   price: unknown;
   images: string[];
   stockAlmacen: number;
+  stockTienda: number;
   active: boolean;
   category: { name: string; slug: string } | null;
 };
@@ -24,7 +26,7 @@ export async function indexProduct(p: SyncProduct) {
       description: p.description ?? "",
       price: Number(p.price),
       images: p.images,
-      stock: p.stockAlmacen,
+      stock: stockDisponible(p),
       active: p.active,
       category: p.category?.name ?? "",
       categorySlug: p.category?.slug ?? "",

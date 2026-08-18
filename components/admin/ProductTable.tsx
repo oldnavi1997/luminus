@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { ProductWithCategory } from "@/types";
 import { formatPEN } from "@/lib/utils";
+import { stockDisponible } from "@/lib/stock";
 import { Category } from "@/app/generated/prisma/client";
 import { getSearchClient, INDEX_NAME } from "@/lib/algolia";
 
@@ -243,10 +244,11 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
     if (filterCategory)
       result = result.filter((p) => p.categories.some((c) => c.id === filterCategory));
 
-    if (filterStock === "out") result = result.filter((p) => p.stockAlmacen === 0);
+    // Coherente con la web: lo vendible es almacén + tienda.
+    if (filterStock === "out") result = result.filter((p) => stockDisponible(p) === 0);
     else if (filterStock === "low")
-      result = result.filter((p) => p.stockAlmacen > 0 && p.stockAlmacen < 5);
-    else if (filterStock === "in") result = result.filter((p) => p.stockAlmacen >= 5);
+      result = result.filter((p) => stockDisponible(p) > 0 && stockDisponible(p) < 5);
+    else if (filterStock === "in") result = result.filter((p) => stockDisponible(p) >= 5);
 
     if (filterStatus === "active") result = result.filter((p) => p.active);
     else if (filterStatus === "inactive") result = result.filter((p) => !p.active);
@@ -608,7 +610,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
             )}
             {sortedRows.map((product) => {
               const isSelected = selectedIds.has(product.id);
-              const stock = stockStatus(product.stockAlmacen);
+              const stock = stockStatus(stockDisponible(product));
               const { fecha, hora } = formatDate(product.createdAt);
               const feat = isFeatured(product);
               return (

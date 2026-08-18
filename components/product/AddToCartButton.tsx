@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { LensDrawer } from "./LensDrawer";
 import { ProductWithCategory } from "@/types";
 import { useCartStore } from "@/stores/cart";
+import { stockDisponible } from "@/lib/stock";
 
 interface AddToCartButtonProps {
   product: ProductWithCategory;
@@ -15,7 +16,9 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
   const addItem = useCartStore((s) => s.addItem);
   const openDrawer = useCartStore((s) => s.openDrawer);
 
-  if (product.stockAlmacen === 0) {
+  const disponible = stockDisponible(product);
+
+  if (disponible === 0) {
     return (
       <div className="border border-[#111111]/10 px-6 py-3.5 text-center rounded-full">
         <span className="text-[10px] font-medium text-[#111111]/40 uppercase tracking-[0.2em]">
@@ -38,7 +41,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
             image: product.images?.[0],
             imageUrl: product.images?.[0],
             slug: product.slug,
-            stock: product.stockAlmacen,
+            stock: disponible,
             quantity: 1,
           });
           openDrawer();

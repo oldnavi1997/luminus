@@ -3,6 +3,7 @@ import { createHmac } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { paymentClient } from "@/lib/mercadopago";
 import { enviarPushNuevaVenta } from "@/lib/push";
+import { aprobarOrden } from "@/lib/fulfillment";
 
 function mapMpStatusToPaymentStatus(mpStatus: string) {
   switch (mpStatus) {
@@ -62,25 +63,32 @@ export async function POST(request: NextRequest) {
     const mpStatus = payment.status || "pending";
     const paymentStatus = mapMpStatusToPaymentStatus(mpStatus);
 
-    // Estado previo para detectar la transición a APROBADO (evita avisos duplicados)
-    const prev = await prisma.order.findUnique({
-      where: { id: payment.external_reference },
-      select: { paymentStatus: true },
-    });
-
-    const order = await prisma.order.update({
-      where: { id: payment.external_reference },
-      data: {
+    if (paymentStatus === "APPROVED") {
+      // Mercado Pago reintenta el webhook por diseño: `aprobarOrden` es idempotente
+      // (compare-and-swap sobre `stockDeducted`), así que el stock baja una sola vez.
+      const result = await aprobarOrden(payment.external_reference, {
         mpPaymentId: paymentId,
         mpStatus,
-        paymentStatus: paymentStatus as "PENDING" | "APPROVED" | "REJECTED" | "IN_PROCESS" | "CANCELLED",
-        orderStatus: paymentStatus === "APPROVED" ? "PAID" : undefined,
-      },
-    });
+        mpPaymentMethodId: payment.payment_method_id,
+      });
 
-    // Recién aprobado → avisar a los admins por push
-    if (paymentStatus === "APPROVED" && prev?.paymentStatus !== "APPROVED") {
-      await enviarPushNuevaVenta(order);
+      // Recién aprobado → avisar a los admins por push (una sola vez)
+      if (!result.yaProcesada) {
+        const order = await prisma.order.findUnique({
+          where: { id: payment.external_reference },
+          select: { id: true, orderNumber: true, total: true, shippingName: true },
+        });
+        if (order) await enviarPushNuevaVenta(order);
+      }
+    } else {
+      await prisma.order.update({
+        where: { id: payment.external_reference },
+        data: {
+          mpPaymentId: paymentId,
+          mpStatus,
+          paymentStatus: paymentStatus as "PENDING" | "REJECTED" | "IN_PROCESS" | "CANCELLED",
+        },
+      });
     }
 
     return NextResponse.json({ received: true });
