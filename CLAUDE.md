@@ -112,10 +112,32 @@ NextAuth 4 with JWT strategy. `lib/auth.ts` adds `id` and `role` to JWT token an
 Checkout API (no redirect) with `@mercadopago/sdk-react` CardPayment Brick:
 1. `POST /api/payments/create-order` → creates Order PENDING in DB, returns `{ orderId, total }`
 2. CardPayment Brick tokenizes card
-3. `POST /api/payments/process` → calls `paymentClient.create()`, updates Order status, returns result inline
+3. `POST /api/payments/process` → calls `paymentClient.create()`, then `aprobarOrden()` if approved, returns result inline
 4. Result shown inline on `/checkout` page (no redirect to success/failure pages)
 
 Pages `checkout/success`, `checkout/failure`, `checkout/pending` exist only for external deep links (e.g., from confirmation emails).
+
+## Critical: stock deduction happens only on payment approval
+
+**Never write a new path that sets `paymentStatus = APPROVED` with a raw `prisma.order.update`.** Every approval must go through `aprobarOrden()` in `lib/fulfillment.ts` — dev bypass, `payments/process`, `payments/webhook` and the admin `PUT /api/orders/[id]` all do. A raw update would leave stock untouched and emit no receipt, silently desyncing the DB from the POS.
+
+**Availability = `stockAlmacen + stockTienda`.** Use `stockDisponible()` from `lib/stock.ts`, never `stockAlmacen` alone — a product stocked only at the store is sellable online.
+
+What `aprobarOrden()` does, all inside one transaction:
+
+1. **Idempotency by CAS** — a single `updateMany` on `where: { id, stockDeducted: false }` decides who processes the order. Mercado Pago retries webhooks by design; the `count === 0` branch is the "already processed" path. Don't replace it with a read-then-write check.
+2. **Locks products** with `SELECT … FOR UPDATE` ordered by id (avoids deadlocks, serializes against POS sales, which update the same rows without an explicit lock).
+3. **Deducts in cascade** — warehouse first, store only for the remainder (`planDeduccion()`), never below 0. Also decrements the legacy `stock` total that the POS maintains. Writes a `VENTA_WEB` `StockMovimiento` and stores the per-line split in `OrderItem.qtyFromAlmacen` / `qtyFromTienda`.
+4. **Emits an internal receipt** for the POS: `NOTA_VENTA` on its own serie `NV002` (so the `FOR UPDATE` on the correlativo doesn't contend with the counter's `NV001`), `channel: "WEB"`, `location: "WEB"`, cashier `web@luminus.pe`. Both the serie and the cashier are upserted on demand — no seeding needed in production.
+5. **Attaches to the open cash session** if there is one, as an electronic payment (`TARJETA`, or `YAPE` when MP reports it). Never as cash: `luminus-puntoventa/lib/cash-flow.ts` only counts `EFECTIVO`/`MIXTO` at `TIENDA`/`ALMACEN`, so a web sale can't skew the physical cash count.
+
+Overselling (stock sold in-store while the customer paid) never rejects a charged payment: it deducts what's left and records the shortfall in `Order.stockIssue`, shown as a banner in `/admin/pedidos/[id]`.
+
+`revertirOrden()` is the mirror image, used when an order goes to `CANCELLED`/`REFUNDED`: returns stock to the exact locations it came from using the per-line snapshot, voids the receipt, and reverses the session totals — also CAS-guarded.
+
+Web sales are voided **only** from the ecommerce admin. `DELETE /api/ventas/[id]` in the POS returns 422 for `channel === "WEB"`, because its reversal doesn't know the per-origin split and would return everything to the store.
+
+Emails and push notifications stay **outside** the transaction — they do network I/O and the pool in `lib/prisma.ts` is only 5 connections.
 
 ## Currency & Locale
 
