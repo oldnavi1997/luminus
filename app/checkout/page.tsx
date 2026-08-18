@@ -7,6 +7,7 @@ import { CheckoutForm, CheckoutFormHandle } from "@/components/checkout/Checkout
 import { OrderSummary } from "@/components/checkout/OrderSummary";
 import { CustomCardForm } from "@/components/checkout/CardPaymentBrick";
 import { YapeForm } from "@/components/checkout/YapeForm";
+import { DevBypassForm } from "@/components/checkout/DevBypassForm";
 import { PaymentResult } from "@/components/checkout/PaymentResult";
 import { formatPEN } from "@/lib/utils";
 import { getShippingCost, getMpFee } from "@/lib/shipping";
@@ -29,7 +30,7 @@ export default function CheckoutPage() {
   const [paymentResult, setPaymentResult] = useState<PaymentResultData | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "yape">("card");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "yape" | "dev">("card");
   const [shippingBreakdown, setShippingBreakdown] = useState<{
     courier: "shalom" | "olva";
     courierName: string;
@@ -39,6 +40,11 @@ export default function CheckoutPage() {
 
   const itemList = items;
   const sub = subtotal();
+  const total = shippingBreakdown ? sub + shippingBreakdown.shippingCost + shippingBreakdown.mpFee : sub;
+
+  // NODE_ENV se inlinea en el bundle. Es sólo cosmético: `payments/process`
+  // vuelve a exigir development antes de aceptar el bypass.
+  const isDev = process.env.NODE_ENV === "development";
 
   function handleShippingUpdate({ courier, department }: { courier: "shalom" | "olva"; department: string }) {
     if (!department) return;
@@ -183,21 +189,40 @@ export default function CheckoutPage() {
                     >
                       Yape
                     </button>
+                    {isDev && (
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("dev")}
+                        className={`flex-1 py-2.5 text-xs font-medium tracking-wide transition-colors duration-150 border-l border-[#d5d5d5]/60 ${
+                          paymentMethod === "dev"
+                            ? "bg-[#d97706] text-white"
+                            : "bg-white text-[#111111]/50 hover:text-[#111111]"
+                        }`}
+                      >
+                        Dev
+                      </button>
+                    )}
                   </div>
 
                   {paymentMethod === "card" ? (
                     <CustomCardForm
-                      amount={shippingBreakdown ? sub + shippingBreakdown.shippingCost + shippingBreakdown.mpFee : sub}
+                      amount={total}
                       onCreateOrder={handleCreateOrder}
                       onPaymentResult={handlePaymentResult}
                     />
-                  ) : (
+                  ) : paymentMethod === "yape" ? (
                     <YapeForm
-                      amount={shippingBreakdown ? sub + shippingBreakdown.shippingCost + shippingBreakdown.mpFee : sub}
+                      amount={total}
                       onCreateOrder={handleCreateOrder}
                       onPaymentResult={handlePaymentResult}
                     />
-                  )}
+                  ) : isDev ? (
+                    <DevBypassForm
+                      amount={total}
+                      onCreateOrder={handleCreateOrder}
+                      onPaymentResult={handlePaymentResult}
+                    />
+                  ) : null}
                 </div>
               </>
             )}
@@ -213,11 +238,7 @@ export default function CheckoutPage() {
               >
                 <span>Resumen del pedido</span>
                 <span className="flex items-center gap-2">
-                  <span>
-                    {shippingBreakdown
-                      ? formatPEN(sub + shippingBreakdown.shippingCost + shippingBreakdown.mpFee)
-                      : formatPEN(sub)}
-                  </span>
+                  <span>{formatPEN(total)}</span>
                   <span className="text-xs">{summaryOpen ? "▲" : "▼"}</span>
                 </span>
               </button>

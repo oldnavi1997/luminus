@@ -117,6 +117,8 @@ Checkout API (no redirect) with `@mercadopago/sdk-react` CardPayment Brick:
 
 Pages `checkout/success`, `checkout/failure`, `checkout/pending` exist only for external deep links (e.g., from confirmation emails).
 
+**Testing without Mercado Pago:** in `npm run dev` the checkout shows a third payment tab, "Dev" (`components/checkout/DevBypassForm.tsx`), which approves the order without charging. It posts `{ orderId, devBypass: true }` to `payments/process` and goes through `aprobarOrden()` like any real payment — deducting stock and issuing the POS receipt — so it exercises the whole flow. The tab is gated on `NODE_ENV`, which Next inlines: it is dead-code-eliminated from production bundles, and `payments/process` re-checks `NODE_ENV === "development"` server-side regardless. It does not send the confirmation email.
+
 ## Critical: stock deduction happens only on payment approval
 
 **Never write a new path that sets `paymentStatus = APPROVED` with a raw `prisma.order.update`.** Every approval must go through `aprobarOrden()` in `lib/fulfillment.ts` — dev bypass, `payments/process`, `payments/webhook` and the admin `PUT /api/orders/[id]` all do. A raw update would leave stock untouched and emit no receipt, silently desyncing the DB from the POS.
