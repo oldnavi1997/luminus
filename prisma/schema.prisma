@@ -286,6 +286,9 @@ model SaleDocument {
   saldoMontoTarjeta   Decimal?           @db.Decimal(10, 2)
   saldoMontoYape      Decimal?           @db.Decimal(10, 2)
   buyerPhone          String?
+  // Datos del comprador ya asentados (resueltos por API o corregidos a mano):
+  // el lote de resolucion automatica del POS no vuelve a tocarlos.
+  buyerResolvedAt     DateTime?
   prescription        Json?
   status              DocumentStatus     @default(DRAFT)
   nubefactId          String?
