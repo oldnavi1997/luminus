@@ -42,9 +42,11 @@ enum DocumentStatus {
   DRAFT
   PENDING
   ACCEPTED
+  ACCEPTED_WITH_OBSERVATIONS
   REJECTED
   VOIDED
   VOID_PENDING
+  SEND_ERROR
   PARTIAL
 }
 
@@ -77,6 +79,7 @@ model User {
   retiros        CajaRetiro[]
   movimientosStock StockMovimiento[]
   pushTokens     PushToken[]
+  enviosSunat    SunatEnvio[]   @relation("SunatEnvioEmisor")
 }
 
 model Category {
@@ -305,6 +308,7 @@ model SaleDocument {
   lastRetryAt         DateTime?
   submittedAt         DateTime?
   items               SaleDocumentItem[]
+  sunatEnvios         SunatEnvio[]
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
 
@@ -363,6 +367,104 @@ model DocumentQueue {
   lastError   String?
   nextRetryAt DateTime @default(now())
   createdAt   DateTime @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Emision electronica propia (SEE - Del Contribuyente).
+//
+// Solo las usa el POS, pero viven aqui porque este es el schema canonico.
+// El XML firmado y el CDR se guardan como texto: pesan pocos KB cada uno y son
+// la prueba documental de la emision, asi que no pueden depender de un
+// filesystem efimero como el de Railway.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TipoEnvioSunat {
+  INDIVIDUAL
+  RESUMEN_DIARIO
+  COMUNICACION_BAJA
+}
+
+enum EstadoEnvioSunat {
+  PENDIENTE
+  GENERADO
+  ENVIADO
+  ACEPTADO
+  ACEPTADO_CON_OBSERVACIONES
+  RECHAZADO
+  ERROR_ENVIO
+}
+
+/// Un intento de envio a SUNAT. Se guarda uno por intento, no uno por
+/// documento: el historial de reintentos es lo que permite reconstruir que
+/// paso cuando un comprobante da problemas.
+model SunatEnvio {
+  id               String           @id @default(cuid())
+  documentId       String
+  document         SaleDocument     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  tipoEnvio        TipoEnvioSunat   @default(INDIVIDUAL)
+  estado           EstadoEnvioSunat @default(PENDIENTE)
+
+  /// Nombre base del envio: RUC-TIPO-SERIE-CORRELATIVO.
+  nombreArchivo    String
+  xmlFirmado       String           @db.Text
+  /// DigestValue de la firma, para cotejar contra el CDR.
+  hashXml          String?
+
+  /// Ticket de los envios asincronos (resumen diario, comunicacion de baja).
+  ticketId         String?
+  ticket           SunatTicket?     @relation(fields: [ticketId], references: [id])
+
+  cdrXml           String?          @db.Text
+  codigoRespuesta  String?
+  mensajeRespuesta String?
+  /// Notas 4000+ del CDR: el comprobante vale, pero SUNAT puso reparos.
+  observaciones    String[]
+
+  intentos         Int              @default(0)
+  ultimoError      String?
+
+  emitidoPorId     String?
+  emitidoPor       User?            @relation("SunatEnvioEmisor", fields: [emitidoPorId], references: [id])
+
+  enviadoAt        DateTime?
+  respondidoAt     DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([documentId])
+  @@index([estado])
+  @@index([createdAt])
+}
+
+/// Resumen diario (RC) y comunicacion de baja (RA). SUNAT los responde con un
+/// ticket que hay que consultar despues, asi que necesitan vida propia.
+model SunatTicket {
+  id               String           @id @default(cuid())
+  tipo             String
+  /// Dia al que se refiere el resumen o la baja.
+  fechaReferencia  DateTime         @db.Date
+  correlativo      Int
+  nombreArchivo    String
+  xmlFirmado       String           @db.Text
+
+  /// Lo devuelve SUNAT al aceptar el envio; con el se consulta el CDR.
+  ticket           String?          @unique
+  estado           EstadoEnvioSunat @default(PENDIENTE)
+
+  cdrXml           String?          @db.Text
+  codigoRespuesta  String?
+  mensajeRespuesta String?
+
+  intentos         Int              @default(0)
+  ultimoError      String?
+
+  envios           SunatEnvio[]
+
+  createdAt        DateTime         @default(now())
+  resueltoAt       DateTime?
+
+  @@unique([tipo, fechaReferencia, correlativo])
+  @@index([estado])
 }
 
 model LensCatalog {
