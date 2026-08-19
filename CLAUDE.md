@@ -46,7 +46,7 @@ The Postgres DB (`luminus` local on :5433, single Postgres service on Railway) i
 - **Workflow for schema changes:**
   1. Edit `prisma/schema.prisma` here, run `npx prisma migrate dev --name <descriptor>`, commit, push.
   2. In POS repo: `npm run sync:schema`, commit the updated `prisma/schema.prisma`, push.
-  3. Railway deploys ecommerce first (runs `prisma migrate deploy`); then POS deploys and only regenerates client.
+  3. **Apply the migration to production MANUALLY** (see "Applying migrations to production" below). No deployment pipeline does this for you.
 - **Never** run `prisma db push` from either project against this DB — it will drop tables from the other (this already happened once; data was recoverable only because Railway had a copy).
 
 ### Workflow for schema changes (add/modify/drop a table)
@@ -58,7 +58,7 @@ Follow these steps in order. Steps 1–3 always run in `D:\Cursor\luminus`; step
 3. **Verify ecommerce** — `npm run build` to catch type errors.
 4. **Sync POS** — `cd D:\Cursor\luminus-puntoventa && npm run sync:schema && npx prisma generate`. (Done automatically by POS `predev`/`prebuild` hooks too.)
 5. **Implement the feature** — in whichever repo uses the new table/column. Import the model from `@/app/generated/prisma/client` as usual.
-6. **Commit + push, ecommerce FIRST then POS.** Order matters on Railway: ecommerce deploy runs `prisma migrate deploy` (creates the table); POS deploy only regenerates client. Pushing POS first means its app starts querying a table that doesn't exist yet until the ecommerce deploy completes.
+6. **Apply the migration to production BEFORE deploying either app.** Nothing applies it automatically — see "Applying migrations to production" below. If the POS deploys first, it starts querying a table that does not exist and every affected request fails.
 
 **Special cases:**
 - *Rename column:* edit the generated SQL to use `ALTER TABLE ... RENAME COLUMN ...` — Prisma's default is drop+add (loses data).
@@ -151,17 +151,38 @@ Peru. Currency: PEN (Soles). Use `formatPEN()` from `lib/utils.ts`. `formatARS` 
 - Seed data uses Unsplash URLs for product images
 - Production uploads use Cloudinary (`CldUploadWidget` unsigned preset `luminus-products`)
 
-## Railway Deployment
+## Deployment
 
-See `railway.toml`. **Critical:** `prisma migrate deploy` runs in `startCommand`, NOT in `buildCommand`. The internal Railway Postgres network (`postgres.railway.internal`) is unavailable during the build phase.
+**This app deploys to Vercel.** Its build command is:
 
-```toml
-[build]
-buildCommand = "npm ci && npx prisma generate && npm run build"
-
-[deploy]
-startCommand = "npx prisma migrate deploy && npm start"
 ```
+prisma generate && next build
+```
+
+`prisma generate` only rebuilds the TypeScript client. **It does not touch the database.** No step of the Vercel build applies migrations.
+
+> `railway.toml` is still in the repo and declares `startCommand = "npx prisma migrate deploy && npm start"`. **It is dead weight — Vercel ignores it.** It is left over from when this app ran on Railway, and it is exactly what made this file (and more than one agent) claim that migrations were applied automatically. Do not trust it.
+
+The POS deploys separately to Railway (`npm start`, no schema operations).
+
+### Applying migrations to production
+
+Migrations are applied **by hand**, and always *before* deploying the app that needs them:
+
+```bash
+cd D:\Cursor\luminus
+export DATABASE_URL=$(grep '^DATABASE_URL_PROD=' .env.local | cut -d= -f2-)
+npx prisma migrate status    # confirm what is pending
+npx prisma migrate deploy    # apply — never resets, never prompts
+```
+
+`DATABASE_URL_PROD` lives in `.env.local` and points at the public Railway proxy
+(`*.proxy.rlwy.net`), reachable from a developer machine. The internal hostname
+(`postgres.railway.internal`) only resolves inside Railway's network — do not
+use it from here, and never paste it into a local `.env.local` as `DATABASE_URL`.
+
+Use `migrate deploy`, not `migrate dev`: `dev` can offer to reset the database,
+and this one is shared with the POS.
 
 Required environment variables: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `MP_ACCESS_TOKEN`, `NEXT_PUBLIC_MP_PUBLIC_KEY`, `NEXT_PUBLIC_APP_URL`. See `.env.example` for the full list.
 
