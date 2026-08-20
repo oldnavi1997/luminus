@@ -5,10 +5,13 @@ export function HeroSection() {
   return (
     <section className="relative text-white overflow-hidden min-h-[88vh] flex items-center">
       {/* Video background. f_auto lets Cloudinary pick the codec instead of
-          shipping mp4 to every browser; w_854 halves the bytes of the 1280px source. */}
+          shipping mp4 to every browser. w_1280 es el ancho nativo del original:
+          por debajo se veia borroso en un fondo a pantalla completa (0.64 MB en
+          vp9 contra 0.39 MB a w_854, que queda solo para movil). */}
       <LazyVideo
-        src="https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_854/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.mp4"
-        poster="https://res.cloudinary.com/sztba5xb/video/upload/so_0,f_auto,q_auto,c_limit,w_854/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.jpg"
+        src="https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_1280/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.mp4"
+        srcMobile="https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_854/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.mp4"
+        poster="https://res.cloudinary.com/sztba5xb/video/upload/so_0,f_auto,q_auto,c_limit,w_1280/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.jpg"
         className="absolute inset-0 w-full h-full object-cover"
       />
       <div className="absolute inset-0 bg-black/10" />

@@ -2,10 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { LazyVideo } from "@/components/ui/LazyVideo";
+import { LazyVideo, pickVideoSrc } from "@/components/ui/LazyVideo";
 
 // Shared between the <LazyVideo> and seekToColor so both point at the same rendition.
+// El original mide 1232x692. Es el video mas pesado del sitio: a ancho nativo pesa
+// 3.5 MB en vp9, asi que se sirve a w_960 (2.5 MB) — sigue siendo nitido a pantalla
+// completa y corta un tercio del peso. El ancho chico se reserva para movil.
 const COLORS_VIDEO_SRC =
+  "https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_960/8-colors-720_on4mcc.mp4";
+const COLORS_VIDEO_SRC_MOBILE =
   "https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_640/8-colors-720_on4mcc.mp4";
 
 const colors = [
@@ -52,7 +57,7 @@ export default function TransitionsGenS() {
     const video = colorsVideoRef.current;
     if (!video) return;
     // The video loads lazily, so a click can land before the observer assigned a src.
-    if (!video.src) video.src = COLORS_VIDEO_SRC;
+    if (!video.src) video.src = pickVideoSrc(COLORS_VIDEO_SRC, COLORS_VIDEO_SRC_MOBILE);
     video.currentTime = videoTime;
     void video.play().catch(() => {});
   };
@@ -484,9 +489,11 @@ export default function TransitionsGenS() {
         {/* LEFT: Hero */}
         <div className="tg-hero-section">
           <div className="tg-hero-bg">
+            {/* Ancho nativo del original (1280x720). Solo 0.38 MB en vp9. */}
             <LazyVideo
-              src="https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_640/gen-s-genstyle_bvpgyx.mp4"
-              poster="https://res.cloudinary.com/sztba5xb/video/upload/so_0,f_auto,q_auto,c_limit,w_640/gen-s-genstyle_bvpgyx.jpg"
+              src="https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_1280/gen-s-genstyle_bvpgyx.mp4"
+              srcMobile="https://res.cloudinary.com/sztba5xb/video/upload/f_auto,q_auto:good,vc_auto,c_limit,w_854/gen-s-genstyle_bvpgyx.mp4"
+              poster="https://res.cloudinary.com/sztba5xb/video/upload/so_0,f_auto,q_auto,c_limit,w_1280/gen-s-genstyle_bvpgyx.jpg"
             />
           </div>
           <div className="tg-nuevo-watermark">NUEVO</div>
@@ -587,9 +594,10 @@ export default function TransitionsGenS() {
         <LazyVideo
           videoRef={colorsVideoRef}
           src={COLORS_VIDEO_SRC}
+          srcMobile={COLORS_VIDEO_SRC_MOBILE}
           /* q_80, not q_auto: on this smooth colour gradient q_auto lands at 11 KB
              while a visually equal q_80 is 6 KB. */
-          poster="https://res.cloudinary.com/sztba5xb/video/upload/so_0,f_auto,q_80,c_limit,w_768/8-colors-720_on4mcc.jpg"
+          poster="https://res.cloudinary.com/sztba5xb/video/upload/so_0,f_auto,q_80,c_limit,w_1232/8-colors-720_on4mcc.jpg"
           className="tg-colors-fullwidth-video"
         />
         <div className="tg-colors-overlay" />
