@@ -8,21 +8,92 @@ import { CatalogToolbar } from "@/components/catalog/CatalogToolbar";
 import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { Prisma } from "@/app/generated/prisma/client";
 import { seededShuffle } from "@/lib/utils";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Catálogo de lentes | Luminus",
-  description: "Explora nuestra colección completa de lentes de sol y ópticos. Calidad, estilo y envíos a todo el Perú.",
-  openGraph: {
-    title: "Catálogo de lentes | Luminus",
-    description: "Explora nuestra colección completa de lentes. Envíos a todo el Perú.",
-    url: "/lentes",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Catálogo de lentes | Luminus",
-    description: "Explora nuestra colección completa de lentes. Envíos a todo el Perú.",
-  },
-};
+/**
+ * Las categorías viven en el querystring (`/lentes?category=x`), no en una ruta
+ * propia, así que la metadata tiene que salir de searchParams. Sin esto todo el
+ * catálogo filtrado se comparte con el mismo título genérico y la misma imagen.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}): Promise<Metadata> {
+  const params = await searchParams;
+  const pageSuffix = params.page && params.page !== "1" ? ` – página ${params.page}` : "";
+
+  if (params.search) {
+    return pageMetadata({
+      title: `Resultados para "${params.search}"`,
+      description: `Lentes que coinciden con "${params.search}" en el catálogo de Luminus.`,
+      path: `/lentes?search=${encodeURIComponent(params.search)}`,
+      index: false, // una página de resultados por búsqueda no aporta nada al índice
+    });
+  }
+
+  if (params.category) {
+    const category = await findCategory(params.category);
+    if (category) {
+      const path = `/lentes?category=${encodeURIComponent(category.slug)}${
+        pageSuffix ? `&page=${params.page}` : ""
+      }`;
+      return pageMetadata({
+        title: `${category.name}${pageSuffix}`,
+        description:
+          category.description ||
+          `Explora nuestra selección de ${category.name.toLowerCase()} en Luminus. Envíos a todo el Perú.`,
+        path,
+        image: category.image,
+      });
+    }
+  }
+
+  if (params.brand) {
+    return pageMetadata({
+      title: `${params.brand}${pageSuffix}`,
+      description: `Lentes ${params.brand} disponibles en Luminus. Envíos a todo el Perú.`,
+      path: `/lentes?brand=${encodeURIComponent(params.brand)}`,
+    });
+  }
+
+  return pageMetadata({
+    title: `Catálogo de lentes${pageSuffix}`,
+    description:
+      "Explora nuestra colección completa de lentes de sol y ópticos. Calidad, estilo y envíos a todo el Perú.",
+    path: "/lentes",
+  });
+}
+
+/**
+ * Nombre, descripción e imagen de la categoría para el preview. Si la categoría
+ * no tiene `imageUrl` cargada se cae a la foto del primer producto que tenga,
+ * que es mejor preview que el frame genérico del hero.
+ */
+async function findCategory(slug: string) {
+  try {
+    const category = await prisma.category.findUnique({
+      where: { slug },
+      select: { name: true, slug: true, description: true, imageUrl: true },
+    });
+    if (!category) return null;
+
+    let image = category.imageUrl;
+    if (!image) {
+      const product = await prisma.product.findFirst({
+        where: { active: true, images: { isEmpty: false }, categories: { some: { slug } } },
+        select: { images: true },
+        orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      });
+      image = product?.images[0] ?? null;
+    }
+
+    return { ...category, image };
+  } catch {
+    // DB caída: mejor el preview genérico que un 500 en el scraper.
+    return null;
+  }
+}
 
 interface SearchParams {
   category?: string;

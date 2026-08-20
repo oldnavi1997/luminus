@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import { pageMetadata, SITE_URL } from "@/lib/seo";
 import { ImageGallery } from "@/components/product/ImageGallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
 import { formatPEN, getPrimaryCategory } from "@/lib/utils";
@@ -25,29 +26,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description =
     product.description ||
     `${product.name} – ${primaryCat?.name ?? "Lentes premium"} | Luminus`;
-  const image = product.images?.[0] ?? null;
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/lentes/${slug}`;
 
-  return {
+  // La imagen cruda es cuadrada (el upload la limita a 1200x1200) y antes se
+  // declaraba como 1200x630: WhatsApp recortaba con esas medidas mentidas.
+  // pageMetadata la pasa por Cloudinary para que mida de verdad 1200x630.
+  return pageMetadata({
     title: product.name,
     description,
-    openGraph: {
-      title: product.name,
-      description,
-      url,
-      siteName: "Luminus",
-      type: "website",
-      ...(image && {
-        images: [{ url: image, width: 1200, height: 630, alt: product.name }],
-      }),
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: product.name,
-      description,
-      ...(image && { images: [image] }),
-    },
-  };
+    path: `/lentes/${slug}`,
+    image: product.images?.[0] ?? null,
+  });
 }
 
 const variantSelect = {
@@ -108,7 +96,7 @@ export default async function ProductPage({ params }: Props) {
       priceCurrency: "PEN",
       price: Number(product.price).toFixed(2),
       availability: "https://schema.org/InStock",
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/lentes/${product.slug}`,
+      url: `${SITE_URL}/lentes/${product.slug}`,
     },
   };
 

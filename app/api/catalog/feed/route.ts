@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { stockDisponible } from "@/lib/stock";
+import { SITE_URL } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,8 @@ export async function GET() {
     },
   });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  // Sin base absoluta el feed sale con links relativos y Meta/Google lo rechaza.
+  const appUrl = SITE_URL;
 
   const headers = ["id", "title", "description", "availability", "condition", "price", "link", "image_link", "brand"];
 

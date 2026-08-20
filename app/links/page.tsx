@@ -3,14 +3,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { Instagram, MessageCircle, ShoppingBag, Music2, Link as LinkIcon, ExternalLink } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
+// index:false a propósito — es la página de bio, no compite en buscadores; pero
+// se pega en TikTok/IG, así que el preview sí tiene que verse bien.
+export const metadata: Metadata = pageMetadata({
   title: "Links · Luminus Eyewear",
   description: "Todos los enlaces de Luminus Eyewear en un solo lugar.",
-  robots: { index: false, follow: false },
-};
+  path: "/links",
+  index: false,
+});
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   instagram: Instagram,

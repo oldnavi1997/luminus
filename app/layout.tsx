@@ -8,6 +8,7 @@ import { StoreChrome } from "@/components/layout/StoreChrome";
 import { WhatsAppButton } from "@/components/ui/WhatsAppButton";
 import { prisma } from "@/lib/prisma";
 import { AnalyticsProvider } from "@/components/layout/AnalyticsProvider";
+import { SITE_URL, SITE_NAME, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,16 +23,23 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Luminus – Lentes con estilo",
     template: "%s | Luminus",
   },
   description: "Tu destino de confianza para lentes de calidad en Perú.",
+  // Piso para cualquier ruta que no arme su propia metadata con pageMetadata().
+  // Next reemplaza este bloque entero cuando una página declara el suyo.
   openGraph: {
-    siteName: "Luminus",
+    siteName: SITE_NAME,
     locale: "es_PE",
     type: "website",
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: "Luminus" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [DEFAULT_OG_IMAGE],
   },
 };
 
