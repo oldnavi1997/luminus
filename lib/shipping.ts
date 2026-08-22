@@ -32,6 +32,22 @@ export function getShippingCost(courier: "shalom" | "olva", department: string):
   return OLVA_COSTS[department] ?? 15;
 }
 
+export type PaymentProvider = "mercadopago" | "izipay";
+
+const IGV = 1.18;
+
+/**
+ * Comisión de la pasarela que se traslada al comprador.
+ *
+ * - Mercado Pago: 3.29% + IGV, más S/1 + IGV fijo.
+ * - Izipay: 3.44% + IGV, más S/0.69 + IGV de comisión del canal virtual.
+ */
+export function getPaymentFee(provider: PaymentProvider, base: number): number {
+  if (provider === "izipay") return base * 0.0344 * IGV + 0.69 * IGV;
+  return base * 0.0329 * IGV + 1.18;
+}
+
+/** @deprecated usa `getPaymentFee("mercadopago", base)`. */
 export function getMpFee(base: number): number {
-  return base * 0.0329 * 1.18 + 1.18;
+  return getPaymentFee("mercadopago", base);
 }

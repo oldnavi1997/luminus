@@ -67,9 +67,10 @@ export async function POST(request: NextRequest) {
       // Mercado Pago reintenta el webhook por diseño: `aprobarOrden` es idempotente
       // (compare-and-swap sobre `stockDeducted`), así que el stock baja una sola vez.
       const result = await aprobarOrden(payment.external_reference, {
-        mpPaymentId: paymentId,
-        mpStatus,
-        mpPaymentMethodId: payment.payment_method_id,
+        provider: "mercadopago",
+        providerPaymentId: paymentId,
+        providerStatus: mpStatus,
+        paymentMethod: payment.payment_method_id === "yape" ? "YAPE" : "TARJETA",
       });
 
       // Recién aprobado → avisar a los admins por push (una sola vez)
