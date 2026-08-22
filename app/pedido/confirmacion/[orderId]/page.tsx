@@ -211,7 +211,7 @@ export default async function OrderConfirmationPage({ params }: Props) {
                 </span>
                 {Number(order.total) - Number(order.subtotal) - Number(order.shippingCost) > 0 && (
                   <span>
-                    Comisión MP{" "}
+                    Comisión de pago{" "}
                     <span className="text-[#1a1a2e]/70">
                       {formatPEN(Number(order.total) - Number(order.subtotal) - Number(order.shippingCost))}
                     </span>

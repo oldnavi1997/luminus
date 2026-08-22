@@ -43,10 +43,19 @@ export type ResultadoAprobacion = {
 };
 
 type OpcionesAprobacion = {
-  mpPaymentId?: string | null;
-  mpStatus?: string | null;
-  /** `payment_method_id` de Mercado Pago; "yape" mapea a YAPE, el resto a TARJETA. */
-  mpPaymentMethodId?: string | null;
+  /** Pasarela usada: "mercadopago" | "izipay". Sólo se guarda; no cambia el flujo. */
+  provider?: string | null;
+  /** Id del pago en la pasarela. Se persiste en `Order.mpPaymentId`. */
+  providerPaymentId?: string | null;
+  /** Estado crudo de la pasarela. Se persiste en `Order.mpStatus`. */
+  providerStatus?: string | null;
+  /** `transactionId` de Izipay, si aplica. */
+  providerTransactionId?: string | null;
+  /**
+   * Método de pago YA normalizado al enum del POS. Traducir en el llamador:
+   * fulfillment no conoce el vocabulario de ninguna pasarela. Default: TARJETA.
+   */
+  paymentMethod?: "TARJETA" | "YAPE";
 };
 
 /**
@@ -113,15 +122,19 @@ export async function aprobarOrden(
 ): Promise<ResultadoAprobacion> {
   const resultado = await prisma.$transaction(async (tx) => {
     // 1. Compare-and-swap atómico: un único UPDATE decide quién procesa la orden.
-    //    Protege contra los reintentos del webhook de MP y contra el doble submit.
+    //    Protege contra los reintentos de webhook/IPN y contra el doble submit.
     const { count } = await tx.order.updateMany({
       where: { id: orderId, stockDeducted: false },
       data: {
         stockDeducted: true,
         paymentStatus: "APPROVED",
         orderStatus: "PAID",
-        ...(opts.mpPaymentId ? { mpPaymentId: opts.mpPaymentId } : {}),
-        ...(opts.mpStatus ? { mpStatus: opts.mpStatus } : {}),
+        ...(opts.provider ? { paymentProvider: opts.provider } : {}),
+        ...(opts.providerPaymentId ? { mpPaymentId: opts.providerPaymentId } : {}),
+        ...(opts.providerStatus ? { mpStatus: opts.providerStatus } : {}),
+        ...(opts.providerTransactionId
+          ? { providerTransactionId: opts.providerTransactionId }
+          : {}),
       },
     });
     if (count === 0) return { yaProcesada: true } as ResultadoAprobacion;
@@ -222,7 +235,7 @@ export async function aprobarOrden(
     const total = Number(order.total);
     const { baseImponible, igv } = calcularIGV(total);
     const subtotalMercaderia = order.items.reduce((sum, i) => sum + Number(i.total), 0);
-    const paymentMethod = opts.mpPaymentMethodId === "yape" ? "YAPE" : "TARJETA";
+    const paymentMethod = opts.paymentMethod ?? "TARJETA";
     const recetaItem = order.items.find((i) => i.prescription);
 
     const detalleMontos = [
@@ -257,7 +270,7 @@ export async function aprobarOrden(
         discount: order.discount,
         paymentMethod,
         prescription: recetaItem?.prescription ?? Prisma.DbNull,
-        notes: `Venta web · Pedido ${order.orderNumber}${
+        notes: `Venta web · Pedido ${order.orderNumber} · ${order.paymentProvider}${
           order.shippingCourier ? ` · ${order.shippingCourier}` : ""
         } · ${detalleMontos}`,
         items: {

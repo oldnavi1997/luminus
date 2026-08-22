@@ -29,11 +29,11 @@ interface OrderSummaryProps {
   items: CartItem[];
   subtotal: number;
   shippingCost?: number;
-  mpFee?: number;
+  paymentFee?: number;
   courierName?: string;
 }
 
-export function OrderSummary({ items, subtotal, shippingCost, mpFee, courierName }: OrderSummaryProps) {
+export function OrderSummary({ items, subtotal, shippingCost, paymentFee, courierName }: OrderSummaryProps) {
   return (
     <div className="bg-white border border-[#d5d5d5]/60 p-6">
       <p className="text-[11px] font-medium text-[#1e293b] uppercase tracking-[0.2em] mb-5">
@@ -111,14 +111,14 @@ export function OrderSummary({ items, subtotal, shippingCost, mpFee, courierName
           <span>{shippingCost != null ? formatPEN(shippingCost) : "—"}</span>
         </div>
         <div className="flex justify-between text-xs text-[#111111]/60">
-          <span>Comisión MP</span>
-          <span>{mpFee != null ? formatPEN(mpFee) : "—"}</span>
+          <span>Comisión de pago</span>
+          <span>{paymentFee != null ? formatPEN(paymentFee) : "—"}</span>
         </div>
         <div className="flex justify-between font-bold text-[#111111] pt-2 border-t border-[#d5d5d5]/60">
           <span>Total</span>
           <span>
-            {shippingCost != null && mpFee != null
-              ? formatPEN(subtotal + shippingCost + mpFee)
+            {shippingCost != null && paymentFee != null
+              ? formatPEN(subtotal + shippingCost + paymentFee)
               : "—"}
           </span>
         </div>

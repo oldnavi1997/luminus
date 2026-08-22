@@ -54,7 +54,7 @@ export async function PUT(
 
   // Aprobar a mano descuenta stock y emite comprobante igual que un pago real.
   if (data.paymentStatus === "APPROVED" && actual.paymentStatus !== "APPROVED") {
-    const result = await aprobarOrden(id, { mpStatus: "approved_manual" });
+    const result = await aprobarOrden(id, { providerStatus: "approved_manual" });
     if (result.stockIssue) {
       return NextResponse.json({ ok: true, stockIssue: result.stockIssue, comprobante: result.fullNumber });
     }

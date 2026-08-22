@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { generateOrderNumber } from "@/lib/utils";
 import { Prisma } from "@/app/generated/prisma/client";
-import { getShippingCost, getMpFee } from "@/lib/shipping";
+import { getShippingCost, getPaymentFee } from "@/lib/shipping";
 import { stockDisponible } from "@/lib/stock";
 
 const createOrderSchema = z.object({
@@ -33,13 +33,46 @@ const createOrderSchema = z.object({
     documentType: z.enum(["DNI", "CE"]).optional(),
     documentNumber: z.string().optional(),
   }),
+  // La pasarela decide la comisión que se suma al total, así que hay que
+  // conocerla antes de crear la orden.
+  paymentProvider: z.enum(["mercadopago", "izipay"]).default("mercadopago"),
 });
+
+/** Reintenta si `orderNumber` choca con uno existente (violación de unicidad P2002). */
+async function crearConNumeroUnico(
+  datos: () => Prisma.OrderCreateInput | Prisma.OrderUncheckedCreateInput
+) {
+  for (let intento = 0; ; intento++) {
+    try {
+      return await prisma.order.create({ data: datos() });
+    } catch (error) {
+      const chocaElNumero =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002" &&
+        String(error.meta?.target).includes("orderNumber");
+      if (!chocaElNumero || intento >= 4) throw error;
+    }
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     const body = await request.json();
-    const { items, shipping } = createOrderSchema.parse(body);
+    const { items, shipping, paymentProvider } = createOrderSchema.parse(body);
+
+    // NextAuth usa estrategia JWT: no hay tabla de sesiones, así que una cookie
+    // vieja sigue siendo válida aunque el usuario ya no exista. Confiar en su
+    // `id` a ciegas hacía reventar el INSERT con P2003 y devolvía un 500 justo
+    // al ir a pagar. Si el usuario no está, la orden sale como invitado.
+    const userId = session?.user?.id
+      ? (
+          await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { id: true },
+          })
+        )?.id ?? null
+      : null;
 
     // Fetch real prices from DB
     const productIds = [...new Set(items.map((i) => i.id))];
@@ -91,14 +124,18 @@ export async function POST(request: NextRequest) {
 
     const subtotal = orderItems.reduce((sum, i) => sum + Number(i.total), 0);
     const shippingCost = getShippingCost(shipping.courier, shipping.province);
-    const mpFee = getMpFee(subtotal + shippingCost);
-    const total = subtotal + shippingCost + mpFee;
+    const paymentFee = getPaymentFee(paymentProvider, subtotal + shippingCost);
+    const total = subtotal + shippingCost + paymentFee;
 
-    const order = await prisma.order.create({
-      data: {
+    // `orderNumber` es único y aleatorio, y además es la clave con la que Izipay
+    // correlaciona su IPN. Una colisión es improbable pero no imposible: se
+    // reintenta con otro número en vez de devolverle un 500 a quien va a pagar.
+    const order = await crearConNumeroUnico(() => ({
         orderNumber: generateOrderNumber(),
-        userId: session?.user?.id || null,
-        guestEmail: session ? null : shipping.email,
+        userId,
+        // Se ata a si de verdad se enlazó un usuario, no a si había cookie: con
+        // una sesión huérfana la orden quedaría sin userId y sin email.
+        guestEmail: userId ? null : shipping.email,
         shippingName: shipping.name,
         shippingEmail: shipping.email,
         shippingPhone: shipping.phone,
@@ -114,15 +151,15 @@ export async function POST(request: NextRequest) {
         shippingCost: new Prisma.Decimal(shippingCost),
         discount: new Prisma.Decimal(0),
         total: new Prisma.Decimal(total),
+        paymentProvider,
         paymentStatus: "PENDING",
         orderStatus: "PENDING",
         items: {
           create: orderItems,
         },
-      },
-    });
+    }));
 
-    return NextResponse.json({ orderId: order.id, total, shippingCost, mpFee });
+    return NextResponse.json({ orderId: order.id, total, shippingCost, paymentFee });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.issues }, { status: 400 });

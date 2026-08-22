@@ -167,8 +167,14 @@ model Order {
   discount         Decimal       @db.Decimal(10, 2) @default(0)
   total            Decimal       @db.Decimal(10, 2)
   mpPreferenceId   String?
+  /// Id del pago en la pasarela. Se llama `mp*` por herencia de Mercado Pago,
+  /// pero lo escribe cualquier proveedor (ver `paymentProvider`).
   mpPaymentId      String?
+  /// Estado crudo devuelto por la pasarela, sin normalizar.
   mpStatus         String?
+  /// Pasarela con la que se cobró: "mercadopago" | "izipay".
+  paymentProvider  String        @default("mercadopago")
+
   paymentStatus    PaymentStatus @default(PENDING)
   orderStatus      OrderStatus   @default(PENDING)
   stockDeducted    Boolean       @default(false)

@@ -17,9 +17,21 @@ export function formatPEN(amount: number | string) {
   }).format(num);
 }
 
+/**
+ * Número de pedido visible para el cliente y, además, la clave con la que Izipay
+ * correlaciona su notificación (`orderId` de `kr-answer`) con la orden.
+ *
+ * `orderNumber` es `@unique`, así que una colisión revienta el INSERT de
+ * `create-order`. Los 8 hex dan ~4.300 millones de combinaciones por año, frente
+ * a los 10.000 de la versión anterior — con la que una tienda de unos pocos
+ * miles de pedidos ya chocaba por el problema del cumpleaños.
+ */
 export function generateOrderNumber(): string {
   const year = new Date().getFullYear();
-  const random = Math.floor(Math.random() * 9999).toString().padStart(4, "0");
+  const random = Math.floor(Math.random() * 0xffffffff)
+    .toString(16)
+    .toUpperCase()
+    .padStart(8, "0");
   return `LUM-${year}-${random}`;
 }
 

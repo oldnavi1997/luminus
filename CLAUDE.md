@@ -107,7 +107,32 @@ No `tailwind.config.ts`. Custom theme configured via `@theme {}` block in `app/g
 
 NextAuth 4 with JWT strategy. `lib/auth.ts` adds `id` and `role` to JWT token and session. Types augmented in `types/next-auth.d.ts`. Admin credential: `admin@luminus.pe / Admin123!`.
 
-## Payment Flow (Mercado Pago)
+## Payment Flow
+
+The checkout offers two gateways side by side. `app/checkout/page.tsx` is a thin
+Server Component that reads `izipayConfigured()` and hands the flag to
+`components/checkout/CheckoutClient.tsx`; the tab strip is **Izipay · Tarjeta ·
+Yape · [Dev]**, with Izipay first and selected by default whenever it is
+configured.
+
+**Every payment form implements the same three props** — `{ amount,
+onCreateOrder, onPaymentResult }` — so adding a gateway means one tab button and
+one branch, nothing else.
+
+**The gateway is chosen before the order exists,** because its commission is
+baked into `Order.total`. `POST /api/payments/create-order` takes
+`paymentProvider` and applies `getPaymentFee(provider, base)` from
+`lib/shipping.ts`:
+
+| | Comisión |
+|---|---|
+| Mercado Pago | 3.29% + IGV, más S/1 + IGV |
+| Izipay | 3.44% + IGV, más S/0.69 + IGV (canal virtual) |
+
+Switching tabs re-derives the fee client-side (a `useMemo`, not state), and the
+server recomputes it from scratch — the client's number is never trusted.
+
+### Mercado Pago
 
 Checkout API (no redirect) with `@mercadopago/sdk-react` CardPayment Brick:
 1. `POST /api/payments/create-order` → creates Order PENDING in DB, returns `{ orderId, total }`
@@ -117,21 +142,83 @@ Checkout API (no redirect) with `@mercadopago/sdk-react` CardPayment Brick:
 
 Pages `checkout/success`, `checkout/failure`, `checkout/pending` exist only for external deep links (e.g., from confirmation emails).
 
-**Testing without Mercado Pago:** in `npm run dev` the checkout shows a third payment tab, "Dev" (`components/checkout/DevBypassForm.tsx`), which approves the order without charging. It posts `{ orderId, devBypass: true }` to `payments/process` and goes through `aprobarOrden()` like any real payment — deducting stock and issuing the POS receipt — so it exercises the whole flow. The tab is gated on `NODE_ENV`, which Next inlines: it is dead-code-eliminated from production bundles, and `payments/process` re-checks `NODE_ENV === "development"` server-side regardless. It does not send the confirmation email.
+### Izipay
+
+**Which Izipay?** Izipay Perú sells two unrelated gateways under the same brand.
+This repo integrates the **Lyra/Krypton V4** one — REST host `api.micuentaweb.pe`,
+JS client `kr-payment-form.min.js`. It is *not* the Checkout SDK documented at
+`developers.izipay.pe/web-core` (`checkout.izipay.pe`, `Token/Generate`,
+`iziConfig`, `LoadForm`). If you find yourself reading those docs, you are in the
+wrong product: nothing there applies here.
+
+Unlike Mercado Pago, **our backend never executes the charge** — Izipay's own
+embedded form does. We only bracket it:
+
+1. `POST /api/payments/izipay/session` → `crearFormToken()` calls
+   `POST /api-payment/V4/Charge/CreatePayment` with Basic auth
+   (`IZIPAY_USERNAME:IZIPAY_PASSWORD`) and returns `{ formToken, publicKey, jsUrl, cssUrl, themeJsUrl }`.
+   The amount is read from the DB and sent in **minor units** (S/149.00 → `14900`,
+   via `aCentimos()`), so the browser cannot charge itself a different figure.
+2. `components/checkout/IzipayForm.tsx` loads the Krypton client with
+   `kr-public-key` set **as a script attribute before it executes**, then
+   `KR.setFormConfig({formToken})` → `KR.attachForm('#izipay-form')` → `KR.showForm()`.
+3. `KR.onSubmit` fires with `{ rawClientAnswer, hash }` → POSTed to
+   `POST /api/payments/izipay/confirm`. **The callback returns `false`** so Krypton
+   does not redirect and the result stays inline.
+4. Izipay independently POSTs the same result, **form-encoded**, to the
+   notification URL → `POST /api/payments/izipay/webhook`. This is the backstop
+   when the buyer closes the tab, and Izipay's docs call it the authoritative one.
+
+Both 3 and 4 go through `procesarResultadoIzipay()` in `lib/izipay-result.ts`,
+and `aprobarOrden()`'s CAS makes whichever arrives second a no-op.
+
+**Trust model — do not weaken it.**
+
+- **Two different keys sign the two channels.** The browser's `kr-hash` is
+  HMAC-SHA256 with `IZIPAY_HMAC_SHA256`; the IPN's is HMAC-SHA256 with
+  `IZIPAY_PASSWORD` (the REST password). The payload's `kr-hash-key` field says
+  which (`sha256_hmac` / `password`). Swapping them makes valid payments get
+  rejected. `/confirm` hardcodes `sha256_hmac` rather than trusting the client
+  to name its own key.
+- **Validate the string, then parse it.** The hash covers the exact `kr-answer`
+  bytes. Parsing first and re-serialising would change the JSON and break the
+  comparison — and would open the door to acting on a mutated object.
+- **Missing key means reject, never pass.** `verifyWebhookSignature()` in the
+  *Mercado Pago* webhook returns `true` when `MP_WEBHOOK_SECRET` is unset (and it
+  is unset). The Izipay routes deliberately do the opposite: no keys → 503.
+- **`orderId` is the correlation key.** Izipay echoes back `orderDetails.orderId`,
+  which is our `Order.orderNumber`. That is why `generateOrderNumber()` in
+  `lib/utils.ts` uses 8 hex chars rather than the original 4 digits, and why
+  `create-order` retries on a P2002 collision.
+
+Test and production are **separate credential pairs on the same host** — there is
+no sandbox hostname. Get them from the Back Office (test keys work against
+`api.micuentaweb.pe` directly). Without all four, `izipayConfigured()` is false,
+the tab does not render, and the routes return 503.
+
+`mapIzipayPayMethod()` folds Izipay's `paymentMethodType` into the POS enum:
+anything containing `YAPE` becomes `YAPE`, everything else `TARJETA`.
+
+**Register the notification URL** (`{NEXT_PUBLIC_APP_URL}/api/payments/izipay/webhook`)
+in the Back Office under *Reglas de notificaciones* → "URL de notificación al
+final del pago". Without it, an order is only approved when the buyer's browser
+completes the round trip.
+
+**Testing without Mercado Pago:** in `npm run dev` the checkout shows a "Dev" payment tab (`components/checkout/DevBypassForm.tsx`), which approves the order without charging. It posts `{ orderId, devBypass: true }` to `payments/process` and goes through `aprobarOrden()` like any real payment — deducting stock and issuing the POS receipt — so it exercises the whole flow. The tab is gated on `NODE_ENV`, which Next inlines: it is dead-code-eliminated from production bundles, and `payments/process` re-checks `NODE_ENV === "development"` server-side regardless. It does not send the confirmation email.
 
 ## Critical: stock deduction happens only on payment approval
 
-**Never write a new path that sets `paymentStatus = APPROVED` with a raw `prisma.order.update`.** Every approval must go through `aprobarOrden()` in `lib/fulfillment.ts` — dev bypass, `payments/process`, `payments/webhook` and the admin `PUT /api/orders/[id]` all do. A raw update would leave stock untouched and emit no receipt, silently desyncing the DB from the POS.
+**Never write a new path that sets `paymentStatus = APPROVED` with a raw `prisma.order.update`.** Every approval must go through `aprobarOrden()` in `lib/fulfillment.ts` — dev bypass, `payments/process`, `payments/webhook`, `payments/izipay/confirm`, `payments/izipay/webhook` and the admin `PUT /api/orders/[id]` all do. A raw update would leave stock untouched and emit no receipt, silently desyncing the DB from the POS.
 
 **Availability = `stockAlmacen + stockTienda`.** Use `stockDisponible()` from `lib/stock.ts`, never `stockAlmacen` alone — a product stocked only at the store is sellable online.
 
 What `aprobarOrden()` does, all inside one transaction:
 
-1. **Idempotency by CAS** — a single `updateMany` on `where: { id, stockDeducted: false }` decides who processes the order. Mercado Pago retries webhooks by design; the `count === 0` branch is the "already processed" path. Don't replace it with a read-then-write check.
+1. **Idempotency by CAS** — a single `updateMany` on `where: { id, stockDeducted: false }` decides who processes the order. Mercado Pago retries webhooks by design, and with Izipay the browser callback and the IPN race each other on every single sale; the `count === 0` branch is the "already processed" path. Don't replace it with a read-then-write check.
 2. **Locks products** with `SELECT … FOR UPDATE` ordered by id (avoids deadlocks, serializes against POS sales, which update the same rows without an explicit lock).
 3. **Deducts in cascade** — warehouse first, store only for the remainder (`planDeduccion()`), never below 0. Also decrements the legacy `stock` total that the POS maintains. Writes a `VENTA_WEB` `StockMovimiento` and stores the per-line split in `OrderItem.qtyFromAlmacen` / `qtyFromTienda`.
 4. **Emits an internal receipt** for the POS: `NOTA_VENTA` on its own serie `NV002` (so the `FOR UPDATE` on the correlativo doesn't contend with the counter's `NV001`), `channel: "WEB"`, `location: "WEB"`, cashier `web@luminus.pe`. Both the serie and the cashier are upserted on demand — no seeding needed in production.
-5. **Attaches to the open cash session** if there is one, as an electronic payment (`TARJETA`, or `YAPE` when MP reports it). Never as cash: `luminus-puntoventa/lib/cash-flow.ts` only counts `EFECTIVO`/`MIXTO` at `TIENDA`/`ALMACEN`, so a web sale can't skew the physical cash count.
+5. **Attaches to the open cash session** if there is one, as an electronic payment (`TARJETA`, or `YAPE`). Never as cash: `luminus-puntoventa/lib/cash-flow.ts` only counts `EFECTIVO`/`MIXTO` at `TIENDA`/`ALMACEN`, so a web sale can't skew the physical cash count.
 
 Overselling (stock sold in-store while the customer paid) never rejects a charged payment: it deducts what's left and records the shortfall in `Order.stockIssue`, shown as a banner in `/admin/pedidos/[id]`.
 
@@ -140,6 +227,21 @@ Overselling (stock sold in-store while the customer paid) never rejects a charge
 Web sales are voided **only** from the ecommerce admin. `DELETE /api/ventas/[id]` in the POS returns 422 for `channel === "WEB"`, because its reversal doesn't know the per-origin split and would return everything to the store.
 
 Emails and push notifications stay **outside** the transaction — they do network I/O and the pool in `lib/prisma.ts` is only 5 connections.
+
+**`aprobarOrden()` knows nothing about any gateway.** Its `paymentMethod` option
+is already normalised to the POS enum (`TARJETA` | `YAPE`, default `TARJETA`);
+translating a gateway's vocabulary is the caller's job — `payments/process` maps
+Mercado Pago's `payment_method_id`, `izipay/confirm` maps Izipay's `payMethod`.
+Do not reintroduce provider-specific strings into `lib/fulfillment.ts`.
+
+**Do not add values to the `PaymentMethod` enum for a new gateway.** The POS has
+three fixed cash-session columns (`totalEfectivo/totalTarjeta/totalYape`) and its
+arqueo UI renders exactly those three rows; a fourth value would fall into the
+dashboard's `mixto` bucket and have no row at closing. The gateway is recorded in
+`Order.paymentProvider` and echoed into `SaleDocument.notes` instead.
+
+`Order.mpPaymentId` / `mpStatus` keep their Mercado Pago names but hold **any**
+gateway's payment id and raw status; `paymentProvider` says which one wrote them.
 
 ## Currency & Locale
 
@@ -185,6 +287,8 @@ Use `migrate deploy`, not `migrate dev`: `dev` can offer to reset the database,
 and this one is shared with the POS.
 
 Required environment variables: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `MP_ACCESS_TOKEN`, `NEXT_PUBLIC_MP_PUBLIC_KEY`, `NEXT_PUBLIC_APP_URL`. See `.env.example` for the full list.
+
+Izipay is optional: `IZIPAY_USERNAME`, `IZIPAY_PASSWORD`, `IZIPAY_PUBLIC_KEY`, `IZIPAY_HMAC_SHA256` (plus `IZIPAY_API_URL`, which defaults to `https://api.micuentaweb.pe`). Set all four or none — with any missing, the Izipay tab simply does not render.
 
 ## Hydration Notes
 

@@ -17,6 +17,11 @@ const COURIER_LABELS: Record<string, string> = {
   olva: "Olva Courier",
 };
 
+const PROVIDER_LABELS: Record<string, string> = {
+  mercadopago: "Mercado Pago",
+  izipay: "Izipay",
+};
+
 
 /** El GET de /api/orders/[id] adjunta el comprobante emitido para el POS. */
 type OrderWithComprobante = OrderWithItems & {
@@ -196,18 +201,25 @@ export default function AdminOrderDetailPage({
           </div>
           {(order.mpPaymentId || order.mpStatus || order.mpPreferenceId || order.updatedAt) && (
             <dl className="mt-4 pt-4 border-t border-gray-100 text-sm space-y-1.5">
+              <div className="flex justify-between gap-3">
+                <dt className="text-gray-500">Pasarela</dt>
+                <dd className="font-medium">
+                  {PROVIDER_LABELS[order.paymentProvider] ?? order.paymentProvider}
+                </dd>
+              </div>
               {order.mpPaymentId && (
                 <div className="flex justify-between gap-3">
-                  <dt className="text-gray-500 whitespace-nowrap">ID pago MP</dt>
+                  <dt className="text-gray-500 whitespace-nowrap">ID de pago</dt>
                   <dd className="font-mono text-xs text-right break-all">{order.mpPaymentId}</dd>
                 </div>
               )}
               {order.mpStatus && (
                 <div className="flex justify-between gap-3">
-                  <dt className="text-gray-500">Estado MP</dt>
+                  <dt className="text-gray-500">Estado</dt>
                   <dd className="font-medium">{order.mpStatus}</dd>
                 </div>
               )}
+
               {order.mpPreferenceId && (
                 <div className="flex justify-between gap-3">
                   <dt className="text-gray-500 whitespace-nowrap">Preference ID</dt>
@@ -351,7 +363,7 @@ export default function AdminOrderDetailPage({
           )}
           {Number(order.total) - Number(order.subtotal) - Number(order.shippingCost) + Number(order.discount) > 0 && (
             <div className="flex justify-between text-gray-600">
-              <span>Comisión MP</span>
+              <span>Comisión de pago</span>
               <span className="tabular-nums">
                 {formatPEN(Number(order.total) - Number(order.subtotal) - Number(order.shippingCost) + Number(order.discount))}
               </span>

@@ -36,8 +36,8 @@ export async function POST(request: NextRequest) {
       if (!order) return NextResponse.json({ error: "Orden no encontrada" }, { status: 404 });
 
       const result = await aprobarOrden(order.id, {
-        mpPaymentId: `dev-bypass-${Date.now()}`,
-        mpStatus: "approved",
+        providerPaymentId: `dev-bypass-${Date.now()}`,
+        providerStatus: "approved",
       });
       if (result.yaProcesada) {
         return NextResponse.json({ error: "La orden ya fue procesada" }, { status: 400 });
@@ -90,9 +90,10 @@ export async function POST(request: NextRequest) {
     if (paymentStatus === "APPROVED") {
       // Descuenta stock y emite el comprobante en una sola transacción idempotente.
       const result = await aprobarOrden(order.id, {
-        mpPaymentId: String(payment.id),
-        mpStatus,
-        mpPaymentMethodId: data.paymentMethodId,
+        provider: "mercadopago",
+        providerPaymentId: String(payment.id),
+        providerStatus: mpStatus,
+        paymentMethod: data.paymentMethodId === "yape" ? "YAPE" : "TARJETA",
       });
       // El email va fuera de la transacción: hace red y se traga sus propios errores.
       if (!result.yaProcesada) sendOrderConfirmation(order.id).catch(console.error);
