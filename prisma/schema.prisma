@@ -124,6 +124,11 @@ model Product {
   storePrice        Decimal?              @db.Decimal(10, 2)
   trackInventory    Boolean               @default(true)
   featured          Boolean               @default(false)
+  /// Vende este producto sin costo de envío ni comisión de pasarela: el
+  /// comprador paga exactamente el precio. Pensado para pagos de prueba en
+  /// producción con importes mínimos. Sólo surte efecto si TODO el carrito lo
+  /// tiene, para que colarlo en una compra real no regale el envío.
+  skipCharges       Boolean               @default(false)
   active            Boolean               @default(true)
   primaryCategoryId String?
   categories        Category[]            @relation("ProductCategories")

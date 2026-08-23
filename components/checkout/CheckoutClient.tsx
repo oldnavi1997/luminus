@@ -53,14 +53,22 @@ export function CheckoutClient({ izipayEnabled }: { izipayEnabled: boolean }) {
   const itemList = items;
   const sub = subtotal();
 
+  // Mismo criterio que `create-order`: sólo si TODO el carrito va sin recargos.
+  // El servidor lo recalcula igual, esto es únicamente para que el resumen
+  // muestre el importe que de verdad se va a cobrar.
+  const sinRecargos = itemList.length > 0 && itemList.every((i) => i.skipCharges);
+
+  const shippingCost = sinRecargos ? 0 : envio?.shippingCost ?? null;
+
   // La comisión la cobra la pasarela, así que cambia al cambiar de pestaña —
   // no sólo al elegir courier. Por eso se deriva en vez de guardarse en estado.
-  const paymentFee = useMemo(
-    () =>
-      envio ? getPaymentFee(PROVIDER_BY_TAB[paymentMethod], sub + envio.shippingCost) : null,
-    [envio, paymentMethod, sub]
-  );
-  const total = envio && paymentFee != null ? sub + envio.shippingCost + paymentFee : sub;
+  const paymentFee = useMemo(() => {
+    if (sinRecargos) return 0;
+    return envio ? getPaymentFee(PROVIDER_BY_TAB[paymentMethod], sub + envio.shippingCost) : null;
+  }, [envio, paymentMethod, sub, sinRecargos]);
+
+  const total =
+    shippingCost != null && paymentFee != null ? sub + shippingCost + paymentFee : sub;
 
   // NODE_ENV se inlinea en el bundle. Es sólo cosmético: `payments/process`
   // vuelve a exigir development antes de aceptar el bypass.
@@ -287,7 +295,7 @@ export function CheckoutClient({ izipayEnabled }: { izipayEnabled: boolean }) {
                 <OrderSummary
                   items={itemList}
                   subtotal={sub}
-                  shippingCost={envio?.shippingCost}
+                  shippingCost={shippingCost ?? undefined}
                   paymentFee={paymentFee ?? undefined}
                   courierName={envio?.courierName}
                 />
@@ -298,7 +306,7 @@ export function CheckoutClient({ izipayEnabled }: { izipayEnabled: boolean }) {
               <OrderSummary
                 items={itemList}
                 subtotal={sub}
-                shippingCost={envio?.shippingCost}
+                shippingCost={shippingCost ?? undefined}
                 paymentFee={paymentFee ?? undefined}
                 courierName={envio?.courierName}
               />

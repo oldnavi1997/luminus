@@ -27,6 +27,7 @@ const productCreateSchema = z.object({
   dimBridgeWidth: z.string().optional(),
   dimTempleLength: z.string().optional(),
   featured: z.boolean().default(false),
+  skipCharges: z.boolean().default(false),
   active: z.boolean().default(true),
   categoryIds: z.array(z.string()).min(1),
   primaryCategoryId: z.string(),

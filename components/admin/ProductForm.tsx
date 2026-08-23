@@ -93,6 +93,7 @@ const productSchema = z.object({
   dimBridgeWidth: z.string().optional(),
   dimTempleLength: z.string().optional(),
   featured: z.boolean(),
+  skipCharges: z.boolean(),
   active: z.boolean(),
 });
 
@@ -158,9 +159,10 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           dimBridgeWidth: product.dimBridgeWidth || "",
           dimTempleLength: product.dimTempleLength || "",
           featured: product.featured,
+          skipCharges: product.skipCharges,
           active: product.active,
         }
-      : { active: true, featured: false, stockAlmacen: "0", stockTienda: "0" },
+      : { active: true, featured: false, skipCharges: false, stockAlmacen: "0", stockTienda: "0" },
   });
 
   const sensors = useSensors(useSensor(PointerSensor));
@@ -523,6 +525,27 @@ export function ProductForm({ categories, product }: ProductFormProps) {
             <span className="text-sm">Destacado</span>
           </label>
         </div>
+
+        <label className="mt-5 flex items-start gap-3 cursor-pointer border border-amber-300 bg-amber-50 p-4 rounded-lg">
+          <input
+            type="checkbox"
+            {...register("skipCharges")}
+            className="mt-0.5 accent-[#b45309]"
+          />
+          <span className="text-sm">
+            <span className="font-medium text-[#111111]">Vender sin envío ni comisión</span>
+            <span className="block mt-1 text-gray-600 leading-relaxed">
+              El comprador paga exactamente el precio del producto: sin costo de envío y sin
+              comisión de la pasarela. Pensado para hacer pagos de prueba reales con importes
+              mínimos.
+            </span>
+            <span className="block mt-1.5 text-amber-800 leading-relaxed">
+              Sólo se aplica si <strong>todo</strong> el carrito está marcado así. Recuerda que el
+              producto es visible en la tienda mientras esté activo: desactívalo cuando termines de
+              probar.
+            </span>
+          </span>
+        </label>
       </div>
 
       {/* Color variants — only shown when editing an existing product */}

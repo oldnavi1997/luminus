@@ -439,6 +439,7 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
         quantity: 1,
         slug: product.slug,
         stock: stockDisponible(product),
+        skipCharges: product.skipCharges,
         lensType: lt as CartItem["lensType"],
         lensSubType: st ?? undefined,
         lensVariant: va ?? undefined,

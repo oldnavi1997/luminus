@@ -28,6 +28,8 @@ export type CartItem = {
   quantity: number;
   slug: string;
   stock: number;
+  /** Producto sin costo de envío ni comisión (ver `Product.skipCharges`). */
+  skipCharges?: boolean;
   lensType?: "sin_medida" | "con_medida" | "solo_montura";
   lensSubType?: string;
   lensVariant?: string;

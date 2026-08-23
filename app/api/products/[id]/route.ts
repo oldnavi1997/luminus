@@ -65,6 +65,7 @@ const updateSchema = z.object({
   dimBridgeWidth: z.string().optional(),
   dimTempleLength: z.string().optional(),
   featured: z.boolean().optional(),
+  skipCharges: z.boolean().optional(),
   active: z.boolean().optional(),
   categoryIds: z.array(z.string()).optional(),
   primaryCategoryId: z.string().optional(),

@@ -42,6 +42,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
             imageUrl: product.images?.[0],
             slug: product.slug,
             stock: disponible,
+            skipCharges: product.skipCharges,
             quantity: 1,
           });
           openDrawer();
