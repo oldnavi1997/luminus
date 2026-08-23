@@ -123,8 +123,14 @@ export async function POST(request: NextRequest) {
     });
 
     const subtotal = orderItems.reduce((sum, i) => sum + Number(i.total), 0);
-    const shippingCost = getShippingCost(shipping.courier, shipping.province);
-    const paymentFee = getPaymentFee(paymentProvider, subtotal + shippingCost);
+
+    // Productos marcados como "sin recargos": el comprador paga sólo el precio.
+    // Se exige que TODOS lo estén — si no, colar uno en una compra normal
+    // regalaría el envío de todo el pedido.
+    const sinRecargos = products.length > 0 && products.every((p) => p.skipCharges);
+
+    const shippingCost = sinRecargos ? 0 : getShippingCost(shipping.courier, shipping.province);
+    const paymentFee = sinRecargos ? 0 : getPaymentFee(paymentProvider, subtotal + shippingCost);
     const total = subtotal + shippingCost + paymentFee;
 
     // `orderNumber` es único y aleatorio, y además es la clave con la que Izipay
