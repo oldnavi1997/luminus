@@ -7,7 +7,6 @@ import {
   X,
   Tag,
   ChevronDown,
-  Loader2,
   Star,
   ChevronsUpDown,
   ArrowUp,
@@ -20,7 +19,6 @@ import { ProductWithCategory } from "@/types";
 import { formatPEN } from "@/lib/utils";
 import { stockDisponible } from "@/lib/stock";
 import { Category } from "@/app/generated/prisma/client";
-import { getSearchClient, INDEX_NAME } from "@/lib/algolia";
 
 interface ProductTableProps {
   products: ProductWithCategory[];
@@ -48,6 +46,35 @@ function sortedCategories(cats: Category[]): { cat: Category; depth: number }[] 
   }
   walk(null, 0);
   return result;
+}
+
+/**
+ * Búsqueda del panel, en el cliente y contra la tabla entera que ya trae el
+ * servidor.
+ *
+ * Antes la resolvía Algolia, y filtrar el panel con el índice del BUSCADOR
+ * escondía productos: lo que el índice no tuviera —lo que crea el POS, lo que
+ * falló al indexar, lo que no tiene fotos— no aparecía aquí aunque estuviera en
+ * la base. El panel administra la base, así que busca contra la base.
+ */
+function normalizar(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
+function terminosDe(query: string): string[] {
+  return normalizar(query).split(/s+/).filter(Boolean);
+}
+
+/** Todos los términos tienen que aparecer; el orden da igual. */
+function coincide(p: ProductWithCategory, terminos: string[]): boolean {
+  const sku = p.sku ?? "";
+  const heno = normalizar(
+    [p.name, p.brand ?? "", sku, sku.replace(/^0+/, ""), ...p.categories.map((c) => c.name)].join(" ")
+  );
+  return terminos.every((t) => heno.includes(t));
 }
 
 function stockStatus(qty: number): { label: string; cls: string } {
@@ -85,35 +112,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
   const [bulkPrimaryId, setBulkPrimaryId] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
   const [featuredOverride, setFeaturedOverride] = useState<Map<string, boolean>>(new Map());
-  const [algoliaIds, setAlgoliaIds] = useState<Set<string> | null>(null);
-  const [algoliaLoading, setAlgoliaLoading] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
-
-  // Algolia search with debounce
-  useEffect(() => {
-    const trimmed = query.trim();
-    if (!trimmed) {
-      setAlgoliaIds(null);
-      setAlgoliaLoading(false);
-      return;
-    }
-    setAlgoliaLoading(true);
-    const timer = setTimeout(async () => {
-      try {
-        const client = getSearchClient();
-        const result = await client.searchSingleIndex({
-          indexName: INDEX_NAME,
-          searchParams: { query: trimmed, hitsPerPage: 200 },
-        });
-        setAlgoliaIds(new Set(result.hits.map((h) => h.objectID)));
-      } catch {
-        setAlgoliaIds(null);
-      } finally {
-        setAlgoliaLoading(false);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [query]);
 
   const isFeatured = (p: ProductWithCategory) =>
     featuredOverride.has(p.id) ? featuredOverride.get(p.id)! : p.featured;
@@ -228,18 +227,8 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
   }, []);
 
   const filtered = (() => {
-    let result =
-      algoliaIds !== null
-        ? products.filter((p) => algoliaIds.has(p.id))
-        : query.trim()
-        ? products.filter(
-            (p) =>
-              p.name.toLowerCase().includes(query.trim().toLowerCase()) ||
-              (p.brand ?? "").toLowerCase().includes(query.trim().toLowerCase()) ||
-              (p.sku ?? "").toLowerCase().includes(query.trim().toLowerCase()) ||
-              p.categories.some((c) => c.name.toLowerCase().includes(query.trim().toLowerCase()))
-          )
-        : products;
+    const terminos = terminosDe(query);
+    let result = terminos.length > 0 ? products.filter((p) => coincide(p, terminos)) : products;
 
     if (filterCategory)
       result = result.filter((p) => p.categories.some((c) => c.id === filterCategory));
@@ -445,22 +434,15 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
 
         {/* Search */}
         <div className="relative w-56 ml-auto">
-          {algoliaLoading ? (
-            <Loader2
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 animate-spin pointer-events-none"
-              aria-hidden="true"
-            />
-          ) : (
-            <Search
-              aria-hidden="true"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 pointer-events-none"
-            />
-          )}
+          <Search
+            aria-hidden="true"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#111111]/30 pointer-events-none"
+          />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar productos…"
+            placeholder="Buscar por nombre, marca, SKU o categoría…"
             aria-label="Buscar productos"
             className="w-full pl-8 pr-7 py-1.5 text-[11px] bg-[#f8f7f4] border border-[#111111]/8 text-[#111111] placeholder-[#111111]/30 focus:outline-none focus:border-[#111111]/25 transition-colors"
           />
