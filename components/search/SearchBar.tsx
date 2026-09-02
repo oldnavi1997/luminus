@@ -16,6 +16,7 @@ type Hit = {
   price: number;
   images: string[];
   category: string;
+  active?: boolean;
 };
 
 /* ─── shared search logic ───────────────────────────────────────────── */
@@ -32,9 +33,12 @@ function useSearch(onNavigate: () => void) {
     try {
       const res = await getSearchClient().searchSingleIndex<Hit>({
         indexName: INDEX_NAME,
-        searchParams: { query: q, hitsPerPage: 6 },
+        searchParams: { query: q, hitsPerPage: 8 },
       });
-      setResults(res.hits);
+      // El índice sólo debería contener lo publicable (ver lib/algolia-sync),
+      // pero un registro desactivado que se colara lleva a un 404: la ficha
+      // exige active. Cinturón y tirantes, cuesta cero.
+      setResults(res.hits.filter((h) => h.active !== false).slice(0, 6));
     } catch {
       setResults([]);
     } finally {

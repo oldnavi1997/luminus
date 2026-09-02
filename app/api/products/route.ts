@@ -4,7 +4,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/app/generated/prisma/client";
-import { indexProduct } from "@/lib/algolia-sync";
+import { sincronizarProducto } from "@/lib/algolia-sync";
 
 const productCreateSchema = z.object({
   name: z.string().min(2),
@@ -110,8 +110,7 @@ export async function POST(request: NextRequest) {
       include: { categories: true },
     });
 
-    const primaryCat = product.categories.find((c) => c.id === product.primaryCategoryId) ?? product.categories[0];
-    await indexProduct({ ...product, category: primaryCat ?? null }).catch(console.error);
+    await sincronizarProducto(product.id).catch(console.error);
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {

@@ -10,6 +10,11 @@ npm run build        # Production build
 npm run start        # Start production server
 npm run lint         # ESLint
 
+# Buscador (Algolia). Sin banderas sólo informa del desfase; ver la sección
+# "the search index is the only thing that does not read Postgres".
+npm run algolia:resync -- --prod             # comparar índice vs base de producción
+npm run algolia:resync -- --prod --aplicar   # cuadrarlo
+
 # Database
 npx prisma migrate dev --name <name>   # Create + apply migration (dev)
 npx prisma migrate deploy              # Apply migrations (prod)
@@ -242,6 +247,52 @@ dashboard's `mixto` bucket and have no row at closing. The gateway is recorded i
 
 `Order.mpPaymentId` / `mpStatus` keep their Mercado Pago names but hold **any**
 gateway's payment id and raw status; `paymentProvider` says which one wrote them.
+
+## Critical: the search index is the only thing that does not read Postgres
+
+The catalogue (`/lentes`), the product page and the home page all query Postgres
+live and filter `active: true, images: { isEmpty: false }`. **The search box does
+not**: `components/search/SearchBar.tsx` queries an Algolia index. So anything
+that changes a product without updating that index leaves the search offering
+things the site cannot sell.
+
+That is exactly what happened. The POS (`D:\Cursor\luminus-puntoventa`) writes to
+the same database — it creates products, edits prices, moves stock, sells and
+voids — and never touched the index. Measured against production on 2026-09-02:
+263 publishable products against 273 records in the index — 10 of them
+unsellable (5 deleted from the DB, which 404 when clicked, and 5 deactivated) —
+plus 187 whose name, price or stock had drifted from the row.
+
+**`sincronizarProductos(ids)` in `lib/algolia-sync.ts` is the only writer.** It
+works by **id**: it reads the DB and decides index-vs-delete, so the rule for
+what is publishable lives in one place and callers never decide. A product that
+was deleted, deactivated or left without images is removed from the index — the
+reason does not matter.
+
+Wired into every path that can change one:
+
+| Where | When |
+|---|---|
+| `POST/PUT/DELETE /api/products…` | admin panel edits |
+| `lib/fulfillment.ts` | `aprobarOrden` / `revertirOrden` — after the transaction commits |
+| `POST /api/internal/reindex` | the POS, by shared secret (`REINDEX_SECRET`) |
+
+**Sync after the transaction, never inside it.** The syncer reads the DB through
+its own connection; called inside the transaction it would read the pre-commit
+state and index the old numbers.
+
+`npm run algolia:resync` rebuilds the index from the DB and is the safety net for
+anything that failed or wrote to the DB out of band. It **does not write by
+default**: there is one index and the live site consumes it, so applying it from
+the local database would replace the catalogue with whatever is in development.
+Hence `--prod` to pick the database and `--aplicar` to actually write.
+
+**The admin panel does not use Algolia** (it used to). Filtering the admin table
+through the *search* index hid rows: whatever the index did not have — products
+created by the POS, products with no photos, anything that failed to index — did
+not show up even though it was in the database. The panel administers the
+database, so it searches the database: the page already ships every row and
+`ProductTable` filters them in the browser.
 
 ## Currency & Locale
 

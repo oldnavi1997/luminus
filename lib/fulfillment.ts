@@ -14,6 +14,7 @@ import { Prisma } from "@/app/generated/prisma/client";
 import { planDeduccion } from "@/lib/stock";
 import { calcularIGV, formatCorrelativo } from "@/lib/sunat";
 import { buildLensLabel } from "@/lib/lens-label";
+import { sincronizarEnSegundoPlano } from "@/lib/algolia-sync";
 
 /** Serie propia para la web: no compite por el correlativo con NV001 del mostrador. */
 const SERIE_WEB = "NV002";
@@ -120,6 +121,11 @@ export async function aprobarOrden(
   orderId: string,
   opts: OpcionesAprobacion = {}
 ): Promise<ResultadoAprobacion> {
+  // Los productos cuyo stock se mueve aquí: al salir de la transacción hay que
+  // ponerlos al día en el índice del buscador, que es el único sitio que no lee
+  // Postgres en vivo.
+  const tocados: string[] = [];
+
   const resultado = await prisma.$transaction(async (tx) => {
     // 1. Compare-and-swap atómico: un único UPDATE decide quién procesa la orden.
     //    Protege contra los reintentos de webhook/IPN y contra el doble submit.
@@ -147,6 +153,7 @@ export async function aprobarOrden(
 
     // 2. Descuento en cascada: almacén primero, tienda sólo si el almacén no alcanza.
     const productIds = [...new Set(order.items.map((i) => i.productId))];
+    tocados.push(...productIds);
     const bloqueados = await bloquearProductos(tx, productIds);
     const porProducto = new Map(bloqueados.map((p) => [p.id, p]));
 
@@ -317,6 +324,7 @@ export async function aprobarOrden(
     } as ResultadoAprobacion;
   }, TX_OPTS);
 
+  await sincronizarEnSegundoPlano(tocados);
   return resultado;
 }
 
@@ -334,7 +342,9 @@ export async function revertirOrden(
   orderId: string,
   motivo: string
 ): Promise<ResultadoReversion> {
-  return prisma.$transaction(async (tx) => {
+  const tocados: string[] = [];
+
+  const resultado = await prisma.$transaction(async (tx) => {
     // CAS inverso: sólo revierte quien logra apagar el flag.
     const { count } = await tx.order.updateMany({
       where: { id: orderId, stockDeducted: true },
@@ -349,6 +359,7 @@ export async function revertirOrden(
     if (!order) throw new Error(`revertirOrden: orden ${orderId} no encontrada`);
 
     const productIds = [...new Set(order.items.map((i) => i.productId))];
+    tocados.push(...productIds);
     const bloqueados = await bloquearProductos(tx, productIds);
     const porProducto = new Map(bloqueados.map((p) => [p.id, p]));
     const cajeroId = await getCajeroWeb(tx);
@@ -413,4 +424,7 @@ export async function revertirOrden(
 
     return { yaRevertida: false, fullNumber: doc?.fullNumber };
   }, TX_OPTS);
+
+  await sincronizarEnSegundoPlano(tocados);
+  return resultado;
 }
