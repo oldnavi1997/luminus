@@ -15,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/politica-de-devoluciones-y-reembolsos`, priority: 0.3, changeFrequency: "monthly" },
     { url: `${base}/condiciones-de-servicio`, priority: 0.3, changeFrequency: "monthly" },
     { url: `${base}/politica-de-cookies`, priority: 0.3, changeFrequency: "monthly" },
+    { url: `${base}/politica-de-privacidad`, priority: 0.3, changeFrequency: "monthly" },
     { url: `${base}/preguntas-frecuentes`, priority: 0.4, changeFrequency: "monthly" },
   ];
 
