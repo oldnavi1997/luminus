@@ -67,6 +67,11 @@ export function Footer() {
                   Política de cookies
                 </Link>
               </li>
+              <li>
+                <Link href="/politica-de-privacidad" className="hover:text-white/80 transition-colors">
+                  Política de privacidad
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

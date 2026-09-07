@@ -38,6 +38,9 @@ export function CookieBanner() {
             funcionamiento del sitio; otras nos ayudan a entender cómo lo usas.{" "}
             <Link href="/politica-de-cookies" className="text-[#d4af37] hover:underline whitespace-nowrap">
               Ver política de cookies
+            </Link>{" "}
+            <Link href="/politica-de-privacidad" className="text-[#d4af37] hover:underline whitespace-nowrap">
+              · Privacidad
             </Link>
           </p>
           <div className="flex gap-3 shrink-0">

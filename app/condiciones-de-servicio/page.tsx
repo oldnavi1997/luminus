@@ -268,7 +268,11 @@ export default function CondicionesServicioPage() {
 
         <Section number="Sección 9" title="Información personal">
           <P>
-            Su envío de información personal a través del Sitio se rige por nuestra Política de Privacidad.
+            Su envío de información personal a través del Sitio se rige por nuestra{" "}
+            <Link href="/politica-de-privacidad" className="text-[#d4af37] hover:underline">
+              Política de privacidad
+            </Link>
+            .
           </P>
         </Section>
 
