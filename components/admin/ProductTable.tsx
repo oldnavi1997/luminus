@@ -106,9 +106,9 @@ function formatDate(value: Date | string): { fecha: string; hora: string } {
  * pintarlo entero significaba una miniatura de Cloudinary por producto. Con 420
  * productos, un scroll completo eran 420 entregas, y el panel no aparece en la
  * analítica: es la fuente de impresiones que no cuadraba con las visitas.
- * Filtrar sigue viendo los 420; sólo se renderizan 50.
+ * Filtrar sigue viendo los 420; sólo se renderizan 20.
  */
-const FILAS_POR_PAGINA = 50;
+const FILAS_POR_PAGINA = 20;
 
 export function ProductTable({ products, categories = [] }: ProductTableProps) {
   const router = useRouter();
@@ -372,7 +372,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
           }}
           onChange={toggleAll}
           // Selecciona el filtro completo, no la página: las acciones masivas
-          // trabajan sobre lo que el filtro devuelve, aunque se vean 50 filas.
+          // trabajan sobre lo que el filtro devuelve, aunque se vean 20 filas.
           title={`Seleccionar los ${filtered.length} productos del filtro`}
           className="accent-[#111111]"
         />
