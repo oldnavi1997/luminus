@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
+import { miniatura } from "@/lib/media";
 import { pageMetadata, SITE_URL } from "@/lib/seo";
 import { ImageGallery } from "@/components/product/ImageGallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
@@ -89,7 +90,8 @@ export default async function ProductPage({ params }: Props) {
     "@type": "Product",
     name: product.name,
     ...(product.description && { description: product.description }),
-    ...(product.images?.[0] && { image: product.images[0] }),
+    // El JSON-LD de schema.org espera una imagen, no un video.
+    ...(product.images?.[0] && { image: miniatura(product.images[0], 1200) }),
     brand: { "@type": "Brand", name: product.brand ?? "Luminus" },
     offers: {
       "@type": "Offer",
