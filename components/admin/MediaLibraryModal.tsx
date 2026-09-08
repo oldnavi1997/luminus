@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { posterDeVideo } from "@/lib/media";
 
 interface MediaLibraryModalProps {
   open: boolean;
@@ -16,9 +17,16 @@ interface CloudinaryImage {
   resourceType: string;
 }
 
+type Filtro = "todo" | "image" | "video";
+
+const FILTROS: { valor: Filtro; etiqueta: string }[] = [
+  { valor: "todo", etiqueta: "Todo" },
+  { valor: "image", etiqueta: "Fotos" },
+  { valor: "video", etiqueta: "Videos" },
+];
+
 function getThumbnailUrl(url: string, resourceType: string): string {
-  if (resourceType !== "video") return url;
-  return url.replace("/video/upload/", "/video/upload/f_jpg,so_0/");
+  return resourceType === "video" ? posterDeVideo(url, 320) : url;
 }
 
 export function MediaLibraryModal({ open, onClose, currentImages, onConfirm }: MediaLibraryModalProps) {
@@ -28,12 +36,14 @@ export function MediaLibraryModal({ open, onClose, currentImages, onConfirm }: M
   const [hasMore, setHasMore] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState<Filtro>("todo");
 
-  const fetchImages = async (cursor?: string) => {
+  const fetchImages = async (cursor?: string, tipo: Filtro = filtro) => {
     setLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams({ max_results: "50" });
+      if (tipo !== "todo") params.set("tipo", tipo);
       if (cursor) params.set("next_cursor", cursor);
       const res = await fetch(`/api/admin/cloudinary/images?${params}`);
       if (!res.ok) throw new Error("Error al cargar imágenes");
@@ -41,8 +51,8 @@ export function MediaLibraryModal({ open, onClose, currentImages, onConfirm }: M
       setImages((prev) => (cursor ? [...prev, ...data.images] : data.images));
       setNextCursor(data.next_cursor);
       setHasMore(!!data.next_cursor);
-    } catch (err) {
-      setError("No se pudieron cargar las imágenes de Cloudinary.");
+    } catch {
+      setError("No se pudieron cargar los archivos de Cloudinary.");
     } finally {
       setLoading(false);
     }
@@ -55,9 +65,19 @@ export function MediaLibraryModal({ open, onClose, currentImages, onConfirm }: M
       setNextCursor(null);
       setHasMore(false);
       setError(null);
-      fetchImages();
+      setFiltro("todo");
+      fetchImages(undefined, "todo");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  const cambiarFiltro = (valor: Filtro) => {
+    setFiltro(valor);
+    setImages([]);
+    setNextCursor(null);
+    setHasMore(false);
+    fetchImages(undefined, valor);
+  };
 
   const toggleImage = (url: string) => {
     if (currentImages.includes(url)) return;
@@ -81,7 +101,7 @@ export function MediaLibraryModal({ open, onClose, currentImages, onConfirm }: M
       <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="font-semibold text-[#111111] text-lg">Galería de imágenes</h2>
+          <h2 className="font-semibold text-[#111111] text-lg">Galería de fotos y videos</h2>
           <button
             type="button"
             onClick={onClose}
@@ -91,6 +111,26 @@ export function MediaLibraryModal({ open, onClose, currentImages, onConfirm }: M
           </button>
         </div>
 
+        {/* Filtro por tipo: los videos son un puñado contra miles de fotos y,
+            ordenados por fecha, nunca aparecen en las primeras páginas. */}
+        <div className="flex gap-2 px-6 pt-4">
+          {FILTROS.map((f) => (
+            <button
+              key={f.valor}
+              type="button"
+              onClick={() => cambiarFiltro(f.valor)}
+              className={[
+                "px-3 py-1.5 text-sm rounded-lg border transition-colors",
+                filtro === f.valor
+                  ? "border-[#111111] text-[#111111] bg-[#f8f7f4]"
+                  : "border-gray-200 text-gray-500 hover:border-[#111111] hover:text-[#111111]",
+              ].join(" ")}
+            >
+              {f.etiqueta}
+            </button>
+          ))}
+        </div>
+
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-6">
           {error && (
@@ -98,7 +138,7 @@ export function MediaLibraryModal({ open, onClose, currentImages, onConfirm }: M
           )}
 
           {images.length === 0 && !loading && !error && (
-            <p className="text-gray-500 text-sm text-center py-8">No hay imágenes en Cloudinary.</p>
+            <p className="text-gray-500 text-sm text-center py-8">No hay archivos en Cloudinary.</p>
           )}
 
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">

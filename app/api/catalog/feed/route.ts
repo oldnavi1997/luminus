@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { miniatura } from "@/lib/media";
 import { NextResponse } from "next/server";
 import { stockDisponible } from "@/lib/stock";
 import { SITE_URL } from "@/lib/seo";
@@ -37,7 +38,9 @@ export async function GET() {
     const availability = stockDisponible(p) > 0 ? "in stock" : "out of stock";
     const price = `${Number(p.price).toFixed(2)} PEN`;
     const link = `${appUrl}/lentes/${p.slug}`;
-    const imageLink = p.images[0] ?? "";
+    // Google Merchant rechaza un image_link que no sea imagen: si la principal
+    // resulta ser un video va el frame 0.
+    const imageLink = p.images[0] ? miniatura(p.images[0], 1200) : "";
     const brand = p.brand ?? "Luminus";
     const description = p.description ?? "Sin descripción";
 

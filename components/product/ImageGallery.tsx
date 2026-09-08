@@ -3,11 +3,37 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ZoomIn, Play } from "lucide-react";
+import { esVideo, posterDeVideo } from "@/lib/media";
 
 interface ImageGalleryProps {
   images: string[];
   name: string;
+}
+
+/**
+ * Un video de la galería.
+ *
+ * `preload="none"` es deliberado y no debería relajarse: la cuenta de Cloudinary
+ * es la gratuita y cada reproducción descarga el archivo entero contra la cuota
+ * de ancho de banda. Con el poster puesto y sin autoplay, un video sólo cuesta
+ * bytes cuando alguien le da play a propósito — y en escritorio las miniaturas
+ * se seleccionan al pasar el mouse, así que un autoplay descargaría el video de
+ * cada visitante que barre la tira con el cursor.
+ */
+function VideoItem({ src, name, className }: { src: string; name: string; className?: string }) {
+  return (
+    <video
+      src={src}
+      poster={posterDeVideo(src, 1000)}
+      controls
+      playsInline
+      loop
+      preload="none"
+      aria-label={`${name} — video`}
+      className={className}
+    />
+  );
 }
 
 export function ImageGallery({ images, name }: ImageGalleryProps) {
@@ -71,6 +97,8 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
     );
   }
 
+  const seleccionEsVideo = esVideo(images[selectedIdx]);
+
   return (
     <div>
       {/* Desktop layout: thumbnails left + main image right */}
@@ -96,65 +124,97 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                   className="object-cover"
                   sizes="68px"
                 />
+                {esVideo(img) && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <Play className="h-4 w-4 text-white fill-white" />
+                  </span>
+                )}
               </button>
             ))}
           </div>
         )}
-        <button
-          type="button"
-          onClick={() => setLightboxOpen(true)}
-          aria-label="Ampliar imagen"
-          className="flex-1 relative aspect-square bg-white overflow-hidden cursor-zoom-in"
-        >
-          {images.map((img, idx) => (
-            <Image
-              key={idx}
-              src={img}
-              alt={name}
-              fill
-              className={`object-contain ${
-                idx === selectedIdx ? "opacity-100" : "opacity-0"
-              }`}
-              sizes="(max-width: 1024px) 45vw, 500px"
-              priority={idx === 0}
-              loading={idx === 0 ? undefined : "eager"}
+        {seleccionEsVideo ? (
+          <div className="flex-1 relative aspect-square bg-black overflow-hidden">
+            <VideoItem
+              key={images[selectedIdx]}
+              src={images[selectedIdx]}
+              name={name}
+              className="absolute inset-0 w-full h-full object-contain"
             />
-          ))}
-        </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(true)}
+            aria-label="Ampliar imagen"
+            className="flex-1 relative aspect-square bg-white overflow-hidden cursor-zoom-in"
+          >
+            {images.map((img, idx) =>
+              // Los videos no entran en la pila: sólo las fotos se apilan con
+              // opacidad para que cambiar de miniatura sea instantáneo.
+              esVideo(img) ? null : (
+                <Image
+                  key={idx}
+                  src={img}
+                  alt={name}
+                  fill
+                  className={`object-contain ${
+                    idx === selectedIdx ? "opacity-100" : "opacity-0"
+                  }`}
+                  sizes="(max-width: 1024px) 45vw, 500px"
+                  priority={idx === 0}
+                  loading={idx === 0 ? undefined : "eager"}
+                />
+              )
+            )}
+          </button>
+        )}
       </div>
 
       {/* Mobile layout: free-scroll carousel with peek (Embla) */}
       <div className="relative sm:hidden">
         <div ref={emblaRef} className="overflow-hidden">
           <div className="flex gap-0.5">
-            {images.map((img, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => openLightbox(idx)}
-                className="w-[80%] flex-shrink-0 relative aspect-square bg-[#f5f5f5]"
-              >
-                <Image
-                  src={img}
-                  alt={`${name} ${idx + 1}`}
-                  fill
-                  className="object-contain"
-                  sizes="80vw"
-                  priority={idx === 0}
-                />
-              </button>
-            ))}
+            {images.map((img, idx) =>
+              esVideo(img) ? (
+                <div key={idx} className="w-[80%] flex-shrink-0 relative aspect-square bg-black">
+                  <VideoItem
+                    src={img}
+                    name={name}
+                    className="absolute inset-0 w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => openLightbox(idx)}
+                  className="w-[80%] flex-shrink-0 relative aspect-square bg-[#f5f5f5]"
+                >
+                  <Image
+                    src={img}
+                    alt={`${name} ${idx + 1}`}
+                    fill
+                    className="object-contain"
+                    sizes="80vw"
+                    priority={idx === 0}
+                  />
+                </button>
+              )
+            )}
           </div>
         </div>
-        {/* Botón de lupa (zoom) */}
-        <button
-          type="button"
-          onClick={() => setLightboxOpen(true)}
-          aria-label="Ampliar imagen"
-          className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center text-[#1c1c1c] active:scale-95 transition-transform"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </button>
+        {/* Botón de lupa (zoom) — sobre un video no aplica */}
+        {!seleccionEsVideo && (
+          <button
+            type="button"
+            onClick={() => setLightboxOpen(true)}
+            aria-label="Ampliar imagen"
+            className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-md flex items-center justify-center text-[#1c1c1c] active:scale-95 transition-transform"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Lightbox / zoom overlay */}
@@ -168,14 +228,27 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
         >
           <div className="relative w-full h-full max-w-5xl max-h-[85vh] mx-auto px-6 sm:px-16">
             <div className="relative w-full h-full">
-              <Image
-                src={images[selectedIdx]}
-                alt={`${name} ${selectedIdx + 1}`}
-                fill
-                className="object-contain"
-                sizes="90vw"
-                priority
-              />
+              {seleccionEsVideo ? (
+                // El click se detiene acá: los controles nativos del video
+                // viven dentro del overlay y el overlay cierra al click.
+                <div className="absolute inset-0" onClick={(e) => e.stopPropagation()}>
+                  <VideoItem
+                    key={images[selectedIdx]}
+                    src={images[selectedIdx]}
+                    name={name}
+                    className="absolute inset-0 w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <Image
+                  src={images[selectedIdx]}
+                  alt={`${name} ${selectedIdx + 1}`}
+                  fill
+                  className="object-contain"
+                  sizes="90vw"
+                  priority
+                />
+              )}
             </div>
           </div>
 

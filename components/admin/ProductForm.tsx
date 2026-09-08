@@ -30,6 +30,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { CldUploadWidget } from "next-cloudinary";
 import { MediaLibraryModal } from "@/components/admin/MediaLibraryModal";
+import { esVideo } from "@/lib/media";
 
 function SortableImage({
   url,
@@ -57,6 +58,11 @@ function SortableImage({
         className="absolute inset-0 cursor-grab active:cursor-grabbing z-10"
       />
       <Image src={url} alt={`Imagen ${index + 1}`} fill className="object-cover" sizes="96px" />
+      {esVideo(url) && (
+        <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1 py-0.5 rounded z-20 pointer-events-none">
+          ▶ Video
+        </span>
+      )}
       {index === 0 && (
         <span className="absolute top-1 left-1 bg-[#111111] text-white text-[9px] px-1.5 py-0.5 rounded z-20 pointer-events-none">
           Principal
@@ -456,9 +462,15 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
-        <h2 className="font-semibold text-[#111111]">Imágenes</h2>
+        <h2 className="font-semibold text-[#111111]">Imágenes y videos</h2>
         <p className="text-sm text-gray-500">
-          La primera imagen es la principal. Arrastrá para reordenar.
+          La primera imagen es la principal. Arrastrá para reordenar. Conviene
+          dejar una foto en primer lugar: en las tarjetas y en el feed de Google
+          un video se muestra como su primer frame.
+        </p>
+        <p className="text-sm text-gray-500">
+          Videos: 720p, hasta 15 s y 15 MB. No arrancan solos, el visitante les
+          da play — cada reproducción gasta cuota de Cloudinary.
         </p>
 
         {images.length > 0 && (
@@ -480,7 +492,20 @@ export function ProductForm({ categories, product }: ProductFormProps) {
 
         <CldUploadWidget
           uploadPreset="luminus-products"
-          options={{ multiple: true }}
+          options={{
+            multiple: true,
+            // "auto" enruta el archivo al endpoint de video cuando toca.
+            resourceType: "auto",
+            clientAllowedFormats: ["png", "jpg", "jpeg", "webp", "avif", "mp4", "webm", "mov"],
+            maxImageFileSize: 10_000_000,
+            // La cuenta admite hasta 100 MB, pero el tope real no es ese: en el
+            // plan gratuito cada reproducción descarga el archivo entero contra
+            // la cuota de ancho de banda, así que 1 GiB = 410 reproducciones de
+            // un archivo de 2,5 MB y sólo 70 de uno de 15. 15 MB son ~60 s a
+            // 720p, de sobra para un producto, y evita que un clip de 100 MB
+            // se coma la cuota del mes en cien visitas.
+            maxVideoFileSize: 15_000_000,
+          }}
           onSuccess={(result) => {
             const info = result.info as { secure_url: string };
             if (info?.secure_url) setImages((prev) => [...prev, info.secure_url]);
@@ -492,7 +517,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
               onClick={() => open()}
               className="flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-[#111111] hover:text-[#111111] transition-colors"
             >
-              + Subir imagen
+              + Subir imagen o video
             </button>
           )}
         </CldUploadWidget>
