@@ -9,6 +9,8 @@ import {
   ChevronDown,
   Star,
   ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
   ArrowUp,
   ArrowDown,
 } from "lucide-react";
@@ -96,6 +98,18 @@ function formatDate(value: Date | string): { fecha: string; hora: string } {
   return { fecha, hora };
 }
 
+/**
+ * Filas que se pintan a la vez.
+ *
+ * El panel recibe el catálogo entero para poder filtrarlo en el navegador —esa
+ * es la decisión de 1f7c7ea, buscar contra la base y no contra Algolia— pero
+ * pintarlo entero significaba una miniatura de Cloudinary por producto. Con 420
+ * productos, un scroll completo eran 420 entregas, y el panel no aparece en la
+ * analítica: es la fuente de impresiones que no cuadraba con las visitas.
+ * Filtrar sigue viendo los 420; sólo se renderizan 50.
+ */
+const FILAS_POR_PAGINA = 50;
+
 export function ProductTable({ products, categories = [] }: ProductTableProps) {
   const router = useRouter();
   const orderedCategories = sortedCategories(categories);
@@ -112,7 +126,19 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
   const [bulkPrimaryId, setBulkPrimaryId] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
   const [featuredOverride, setFeaturedOverride] = useState<Map<string, boolean>>(new Map());
+  const [pagina, setPagina] = useState(1);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // Volver a la página 1 cuando cambia el filtro. Se ajusta en el render y no en
+  // un efecto a propósito: un setState dentro de useEffect encadena un render de
+  // más y lo prohíbe react-hooks/set-state-in-effect. Este es el patrón que
+  // React documenta para corregir estado cuando cambia una entrada.
+  const filtroActual = `${query}|${filterCategory}|${filterStock}|${filterStatus}`;
+  const [filtroPrevio, setFiltroPrevio] = useState(filtroActual);
+  if (filtroPrevio !== filtroActual) {
+    setFiltroPrevio(filtroActual);
+    setPagina(1);
+  }
 
   const isFeatured = (p: ProductWithCategory) =>
     featuredOverride.has(p.id) ? featuredOverride.get(p.id)! : p.featured;
@@ -271,6 +297,13 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
     return 0;
   });
 
+  // El clamp cubre el caso que el reseteo por filtro no ve: reordenar o cambiar
+  // de página y que la lista encoja por debajo de la página actual.
+  const totalPaginas = Math.max(1, Math.ceil(sortedRows.length / FILAS_POR_PAGINA));
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const desde = (paginaActual - 1) * FILAS_POR_PAGINA;
+  const filasVisibles = sortedRows.slice(desde, desde + FILAS_POR_PAGINA);
+
   if (products.length === 0) {
     return (
       <div className="text-center py-16 text-[#111111]/30">
@@ -338,6 +371,9 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
             if (el) el.indeterminate = someSelected;
           }}
           onChange={toggleAll}
+          // Selecciona el filtro completo, no la página: las acciones masivas
+          // trabajan sobre lo que el filtro devuelve, aunque se vean 50 filas.
+          title={`Seleccionar los ${filtered.length} productos del filtro`}
           className="accent-[#111111]"
         />
       </th>
@@ -590,7 +626,7 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
                 </td>
               </tr>
             )}
-            {sortedRows.map((product) => {
+            {filasVisibles.map((product) => {
               const isSelected = selectedIds.has(product.id);
               const stock = stockStatus(stockDisponible(product));
               const { fecha, hora } = formatDate(product.createdAt);
@@ -727,9 +763,68 @@ export function ProductTable({ products, categories = [] }: ProductTableProps) {
           </tfoot>
         </table>
       </div>
+
+      {sortedRows.length > 0 && (
+        <div className="flex items-center justify-between gap-4 pt-4 text-[11px] text-[#111111]/50">
+          <span>
+            {desde + 1}–{Math.min(desde + FILAS_POR_PAGINA, sortedRows.length)} de{" "}
+            {sortedRows.length}
+            {sortedRows.length !== products.length && ` (${products.length} en total)`}
+          </span>
+
+          {totalPaginas > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setPagina(1)}
+                disabled={paginaActual === 1}
+                className={PAGINA_BTN}
+                aria-label="Primera página"
+              >
+                «
+              </button>
+              <button
+                type="button"
+                onClick={() => setPagina(paginaActual - 1)}
+                disabled={paginaActual === 1}
+                className={PAGINA_BTN}
+                aria-label="Página anterior"
+              >
+                <ChevronLeft aria-hidden="true" className="h-3.5 w-3.5" />
+              </button>
+              <span className="px-2 tabular-nums">
+                {paginaActual} / {totalPaginas}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPagina(paginaActual + 1)}
+                disabled={paginaActual === totalPaginas}
+                className={PAGINA_BTN}
+                aria-label="Página siguiente"
+              >
+                <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setPagina(totalPaginas)}
+                disabled={paginaActual === totalPaginas}
+                className={PAGINA_BTN}
+                aria-label="Última página"
+              >
+                »
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+
+const PAGINA_BTN =
+  "h-7 min-w-7 px-1.5 flex items-center justify-center border border-[#111111]/10 " +
+  "hover:border-[#111111]/40 hover:text-[#111111] transition-colors " +
+  "disabled:opacity-30 disabled:pointer-events-none";
 
 function cn(...classes: (string | undefined | false)[]) {
   return classes.filter(Boolean).join(" ");
