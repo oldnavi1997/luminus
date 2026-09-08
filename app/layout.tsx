@@ -35,10 +35,10 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     locale: "es_PE",
     type: "website",
-    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: "Luminus" }],
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 1200, alt: "Luminus" }],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     images: [DEFAULT_OG_IMAGE],
   },
 };
