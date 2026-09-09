@@ -28,9 +28,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     product.description ||
     `${product.name} – ${primaryCat?.name ?? "Lentes premium"} | Luminus`;
 
-  // La imagen cruda es cuadrada (el upload la limita a 1200x1200) y antes se
-  // declaraba como 1200x630: WhatsApp recortaba con esas medidas mentidas.
-  // pageMetadata la pasa por Cloudinary para que mida de verdad 1200x630.
+  // La imagen cruda ya es cuadrada (el upload la limita a 1200x1200), que es
+  // justo la proporción que pageMetadata declara: entra sin recorte ni barras.
   return pageMetadata({
     title: product.name,
     description,

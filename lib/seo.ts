@@ -36,15 +36,19 @@ export const SITE_URL =
 
 export const SITE_NAME = "Luminus";
 
+// Cuadrado, no 1200x630. Las fotos de producto ya se suben a 1200x1200, así que
+// en 1:1 entran enteras sin barras y llenan el preview; a 1.91:1 quedaba más
+// relleno que montura. Es además la proporción que WhatsApp, Instagram y
+// Facebook muestran completa en el feed móvil, que es por donde se comparte esto.
 const OG_WIDTH = 1200;
-const OG_HEIGHT = 630;
+const OG_HEIGHT = 1200;
 
 /** Frame 0 del video del hero — la única imagen de marca que ya vive en Cloudinary. */
 export const DEFAULT_OG_IMAGE =
-  "https://res.cloudinary.com/sztba5xb/video/upload/so_0,c_pad,b_auto,w_1200,h_630,f_jpg,q_auto/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.jpg";
+  "https://res.cloudinary.com/sztba5xb/video/upload/so_0,c_pad,b_auto,w_1200,h_1200,f_jpg,q_auto/74d85eab4e586c4fb79b1b6671112eab_1_gj9w4m.jpg";
 
 /**
- * Normaliza cualquier imagen a un JPG de 1200x630.
+ * Normaliza cualquier imagen a un JPG cuadrado de 1200x1200.
  *
  * WhatsApp descarta el preview si la imagen es muy pesada y no muestra WebP de
  * forma confiable, así que se fuerza `f_jpg` + `q_auto` (queda en 15–25 KB).
@@ -105,7 +109,9 @@ export function pageMetadata({
       images: [{ url: ogImage, width: OG_WIDTH, height: OG_HEIGHT, alt: title }],
     },
     twitter: {
-      card: "summary_large_image",
+      // "summary" y no "summary_large_image": la card grande recorta a 1.91:1 y
+      // se comería el alto de una imagen cuadrada.
+      card: "summary",
       title,
       description,
       images: [ogImage],
