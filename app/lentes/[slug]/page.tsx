@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { prisma } from "@/lib/prisma";
 import { miniatura } from "@/lib/media";
+import { ocultarVideosSinProcesar } from "@/lib/bunny";
 import { pageMetadata, SITE_URL } from "@/lib/seo";
 import { ImageGallery } from "@/components/product/ImageGallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
@@ -59,6 +60,11 @@ export default async function ProductPage({ params }: Props) {
   });
 
   if (!product) notFound();
+
+  // Un video de Bunny recién subido pasa 15–25 min en cola: hasta que se puede
+  // reproducir no entra en la galería. La primera posición es siempre una foto,
+  // así que la tarjeta, el JSON-LD y el preview no se ven afectados.
+  const galeria = await ocultarVideosSinProcesar(product.images);
 
   const primaryCategory = getPrimaryCategory(product);
   const seen = new Set<string>();
@@ -119,7 +125,7 @@ export default async function ProductPage({ params }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-16">
         {/* Gallery */}
         <div className="-mx-5 sm:mx-0">
-          <ImageGallery images={product.images} name={product.name} />
+          <ImageGallery images={galeria} name={product.name} />
         </div>
 
         {/* Details */}

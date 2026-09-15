@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { ColorVariantProduct } from "@/types";
 import { flattenCategoryHierarchy } from "@/lib/categories";
+import { bunnyConfigured } from "@/lib/bunny";
 
 export const metadata = { title: "Editar producto | Admin" };
 
@@ -53,7 +54,11 @@ export default async function EditProductPage({
   return (
     <div>
       <h1 className="text-2xl font-bold text-[#111111] mb-6">Editar producto</h1>
-      <ProductForm categories={orderedCategories} product={product} />
+      <ProductForm
+        categories={orderedCategories}
+        product={product}
+        bunnyHabilitado={bunnyConfigured()}
+      />
     </div>
   );
 }

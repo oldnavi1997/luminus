@@ -304,6 +304,51 @@ Peru. Currency: PEN (Soles). Use `formatPEN()` from `lib/utils.ts`. `formatARS` 
 - Seed data uses Unsplash URLs for product images
 - Production uploads use Cloudinary (`CldUploadWidget` unsigned preset `luminus-products`)
 
+### Product videos: Bunny Stream
+
+Product **videos** go to Bunny Stream; **photos and the three background videos**
+(hero, `/transitions`) stay on Cloudinary. The reason is cost, not quality:
+Cloudinary's free plan bills every second of encoded video as transformations
+and every playback against bandwidth, while Bunny encodes for free — so videos
+are uploaded at original quality.
+
+- **Stored in `Product.images`** as `https://{BUNNY_STREAM_HOST}/{guid}/playlist.m3u8`,
+  mixed with photos. No schema change. `lib/media.ts` recognises both origins:
+  `esVideo()` matches `.m3u8`, `posterDeVideo()` maps it to `{guid}/thumbnail.jpg`.
+  The one pre-Bunny product video still lives on Cloudinary and keeps working.
+- **Upload never touches Vercel.** `POST /api/admin/bunny/videos` creates the video
+  and returns a TUS signature (`SHA256(libraryId + apiKey + expira + guid)`); the
+  browser uploads straight to `video.bunnycdn.com/tusupload` with `tus-js-client`.
+  The library API key stays server-side.
+- **Standard encoding is queued: 15–25 minutes** for a few-second clip (measured
+  Sept 2026; only paid Premium Encoding is instant). So the form lets you save as
+  soon as the *upload* finishes, and `app/lentes/[slug]/page.tsx` passes the
+  gallery through `ocultarVideosSinProcesar()`, which hides any Bunny video whose
+  API `status` is not 4 (or that 404s). Finished GUIDs are memoised per server
+  instance; if the API times out the video is shown (fail open).
+  The API's `status` enum (4 = finished, 5 = error, 6 = upload failed) is **not**
+  the webhook's (where 3 = finished) — see `ESTADO_VIDEO` in `lib/bunny.ts`.
+- **Allowed referrers match host *and port*.** The library's Security list must
+  contain `luminuseyewear.com` and `localhost:3000` — plain `localhost` still
+  returns 403 to `http://localhost:3000`. Vercel preview domains are blocked
+  unless added.
+- **Playback** (`VideoItem` in `ImageGallery.tsx`): `hls.js` everywhere it runs —
+  classic MediaSource, or ManagedMediaSource on iPhone (iOS 17.1+, which requires
+  `disableRemotePlayback`, i.e. no AirPlay). Native HLS is only the fallback for
+  older iOS. Do not prefer native just because `canPlayType` says yes: Chrome and
+  Safari's native players start at the master's *first* variant, and Bunny lists
+  360p first. `startLevel` is set to the tallest level (the master is unordered).
+- **Nothing connects before the click.** An attached hls.js makes Chrome draw a
+  loading spinner over the poster, and a source-less `<video>` shows disabled
+  controls — so a custom play button covers the poster until the first play. The
+  module is prefetched on mount and `attachMedia` + `play()` run synchronously in
+  the click, because iOS only allows unmuted playback from inside the gesture.
+- **The first entry of `images` must be a photo.** The POS, `SearchBar` and the
+  colour-variant chips render `images[0]` in a raw `<img>`, where a video breaks.
+  Enforced by `primeraEsFoto()` in the form and in the products API (zod refine).
+- Without all three `BUNNY_STREAM_*` vars, `bunnyConfigured()` is false and the
+  admin falls back to uploading videos to Cloudinary as before.
+
 ## Deployment
 
 **This app deploys to Vercel.** Its build command is:
@@ -338,6 +383,8 @@ Use `migrate deploy`, not `migrate dev`: `dev` can offer to reset the database,
 and this one is shared with the POS.
 
 Required environment variables: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `MP_ACCESS_TOKEN`, `NEXT_PUBLIC_MP_PUBLIC_KEY`, `NEXT_PUBLIC_APP_URL`. See `.env.example` for the full list.
+
+Bunny Stream is optional: `BUNNY_STREAM_LIBRARY_ID`, `BUNNY_STREAM_API_KEY` (the library's key, not the account's), `BUNNY_STREAM_HOST` (e.g. `vz-xxxx.b-cdn.net`). Set all three or none.
 
 Izipay is optional: `IZIPAY_USERNAME`, `IZIPAY_PASSWORD`, `IZIPAY_PUBLIC_KEY`, `IZIPAY_HMAC_SHA256` (plus `IZIPAY_API_URL`, which defaults to `https://api.micuentaweb.pe`). Set all four or none — with any missing, the Izipay tab simply does not render.
 

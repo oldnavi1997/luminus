@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        // Miniaturas de Bunny Stream (BUNNY_STREAM_HOST). Si la biblioteca usa
+        // un dominio propio en vez del vz-xxxx.b-cdn.net, agregarlo acá.
+        protocol: "https",
+        hostname: "*.b-cdn.net",
+      },
     ],
   },
   serverExternalPackages: ["@prisma/client", "@prisma/adapter-pg", "bcryptjs", "mercadopago"],

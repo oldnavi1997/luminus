@@ -30,7 +30,25 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { CldUploadWidget } from "next-cloudinary";
 import { MediaLibraryModal } from "@/components/admin/MediaLibraryModal";
-import { esVideo } from "@/lib/media";
+import { esVideo, primeraEsFoto, MENSAJE_PRIMERA_FOTO } from "@/lib/media";
+
+/** Bunny no cobra por codificar; el tope es sólo para no subir por error un archivo crudo de cámara. */
+const MAX_VIDEO_BUNNY = 1_000_000_000;
+const TUS_ENDPOINT = "https://video.bunnycdn.com/tusupload";
+
+interface SubidaVideo {
+  id: string;
+  nombre: string;
+  fase: "subiendo" | "error";
+  progreso: number;
+  mensaje?: string;
+}
+
+function mensajeDeError(err: unknown): string {
+  if (typeof err === "string") return err;
+  if (Array.isArray(err) && typeof err[0]?.message === "string") return err[0].message;
+  return "Error al guardar";
+}
 
 function SortableImage({
   url,
@@ -43,6 +61,8 @@ function SortableImage({
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: url });
+  // Un video de Bunny recién subido no tiene miniatura hasta que sale de la cola.
+  const [sinMiniatura, setSinMiniatura] = useState(false);
 
   return (
     <div
@@ -57,7 +77,20 @@ function SortableImage({
         {...listeners}
         className="absolute inset-0 cursor-grab active:cursor-grabbing z-10"
       />
-      <Image src={url} alt={`Imagen ${index + 1}`} fill className="object-cover" sizes="96px" />
+      {sinMiniatura ? (
+        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-center text-[10px] leading-tight text-gray-500 px-1">
+          {esVideo(url) ? "Procesando en Bunny" : "Sin vista previa"}
+        </div>
+      ) : (
+        <Image
+          src={url}
+          alt={`Imagen ${index + 1}`}
+          fill
+          className="object-cover"
+          sizes="96px"
+          onError={() => setSinMiniatura(true)}
+        />
+      )}
       {esVideo(url) && (
         <span className="absolute bottom-1 left-1 bg-black/60 text-white text-[9px] px-1 py-0.5 rounded z-20 pointer-events-none">
           ▶ Video
@@ -110,13 +143,86 @@ type ProductWithVariants = ProductWithCategory & { variants?: ColorVariantProduc
 interface ProductFormProps {
   categories: Category[];
   product?: ProductWithVariants;
+  /** Con Bunny configurado los videos van ahí; sin él, a Cloudinary como antes. */
+  bunnyHabilitado?: boolean;
 }
 
-export function ProductForm({ categories, product }: ProductFormProps) {
+export function ProductForm({ categories, product, bunnyHabilitado = false }: ProductFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<string[]>(product?.images || []);
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+  const [subidas, setSubidas] = useState<SubidaVideo[]>([]);
+  const inputVideoRef = useRef<HTMLInputElement>(null);
+
+  const videosPendientes = subidas.some((s) => s.fase === "subiendo");
+
+  const actualizarSubida = (id: string, cambios: Partial<SubidaVideo>) =>
+    setSubidas((prev) => prev.map((s) => (s.id === id ? { ...s, ...cambios } : s)));
+
+  const subirVideoBunny = async (file: File) => {
+    const id = `${file.name}-${file.size}-${Date.now()}`;
+    if (file.size > MAX_VIDEO_BUNNY) {
+      toast.error(`${file.name}: supera 1 GB`);
+      return;
+    }
+    setSubidas((prev) => [...prev, { id, nombre: file.name, fase: "subiendo", progreso: 0 }]);
+
+    let guid: string | null = null;
+    try {
+      const res = await fetch("/api/admin/bunny/videos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titulo: product?.name ? `${product.name} — ${file.name}` : file.name }),
+      });
+      const datos = await res.json();
+      if (!res.ok) throw new Error(datos.error || "No se pudo crear el video");
+      guid = datos.guid as string;
+      const { url, libraryId, firma, expira } = datos as {
+        url: string;
+        libraryId: string;
+        firma: string;
+        expira: number;
+      };
+
+      const { Upload } = await import("tus-js-client");
+      const upload = new Upload(file, {
+        endpoint: TUS_ENDPOINT,
+        retryDelays: [0, 3000, 5000, 10000, 20000],
+        headers: {
+          AuthorizationSignature: firma,
+          AuthorizationExpire: String(expira),
+          VideoId: guid,
+          LibraryId: String(libraryId),
+        },
+        metadata: { filetype: file.type, title: file.name },
+        onProgress: (enviados, total) =>
+          actualizarSubida(id, { progreso: Math.round((enviados / total) * 100) }),
+        onError: (err) => {
+          console.error("Subida a Bunny:", err);
+          actualizarSubida(id, { fase: "error", mensaje: "Falló la subida" });
+          if (guid) void fetch(`/api/admin/bunny/videos?guid=${guid}`, { method: "DELETE" });
+        },
+        // Se agrega apenas termina la subida. Bunny lo codifica en cola (15–25
+        // min) y mientras tanto la ficha del producto lo oculta sola, así que
+        // no hace falta dejar la pestaña abierta esperando.
+        onSuccess: () => {
+          setImages((prev) => (prev.includes(url) ? prev : [...prev, url]));
+          setSubidas((prev) => prev.filter((s) => s.id !== id));
+          toast.success(
+            `${file.name} subido. Bunny lo está procesando: aparece en la tienda en unos minutos. Ya puedes guardar.`
+          );
+        },
+      });
+      upload.start();
+    } catch (err) {
+      actualizarSubida(id, {
+        fase: "error",
+        mensaje: err instanceof Error ? err.message : "Error al subir",
+      });
+      if (guid) void fetch(`/api/admin/bunny/videos?guid=${guid}`, { method: "DELETE" });
+    }
+  };
 
   // M2M category state
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(
@@ -276,6 +382,14 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       setCategoryError("Selecciona al menos una categoría");
       return;
     }
+    if (videosPendientes) {
+      toast.error("Espera a que terminen de subirse los videos");
+      return;
+    }
+    if (!primeraEsFoto(images)) {
+      toast.error(MENSAJE_PRIMERA_FOTO);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -302,7 +416,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
 
       if (!res.ok) {
         const err = await res.json();
-        toast.error(err.error || "Error al guardar");
+        toast.error(mensajeDeError(err.error));
         return;
       }
 
@@ -464,14 +578,19 @@ export function ProductForm({ categories, product }: ProductFormProps) {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
         <h2 className="font-semibold text-[#111111]">Imágenes y videos</h2>
         <p className="text-sm text-gray-500">
-          La primera imagen es la principal. Arrastrá para reordenar. Conviene
-          dejar una foto en primer lugar: en las tarjetas y en el feed de Google
-          un video se muestra como su primer frame.
+          La primera imagen es la principal y tiene que ser una foto: el POS, el
+          buscador y las variantes la muestran tal cual. Arrastrá para reordenar.
         </p>
         <p className="text-sm text-gray-500">
-          Videos: 720p, hasta 15 s y 15 MB. No arrancan solos, el visitante les
-          da play — cada reproducción gasta cuota de Cloudinary.
+          {bunnyHabilitado
+            ? "Videos: se suben a Bunny Stream en su calidad original. Puedes guardar apenas termina la subida; Bunny los procesa en cola (15–25 min) y hasta entonces no aparecen en la tienda. No arrancan solos, el visitante les da play."
+            : "Videos: 720p, hasta 15 s y 15 MB. No arrancan solos, el visitante les da play — cada reproducción gasta cuota de Cloudinary."}
         </p>
+        {!primeraEsFoto(images) && (
+          <p className="text-sm text-red-600">
+            {MENSAJE_PRIMERA_FOTO}. Arrastrá una foto al primer lugar.
+          </p>
+        )}
 
         {images.length > 0 && (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -490,13 +609,72 @@ export function ProductForm({ categories, product }: ProductFormProps) {
           </DndContext>
         )}
 
+        {subidas.length > 0 && (
+          <ul className="space-y-2">
+            {subidas.map((s) => (
+              <li key={s.id} className="border border-gray-200 rounded-lg px-3 py-2 text-sm">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="truncate text-gray-700">{s.nombre}</span>
+                  {s.fase === "error" ? (
+                    <button
+                      type="button"
+                      onClick={() => setSubidas((prev) => prev.filter((x) => x.id !== s.id))}
+                      className="text-xs text-gray-400 hover:text-[#111111] shrink-0"
+                    >
+                      Descartar
+                    </button>
+                  ) : (
+                    <span className="text-xs text-gray-500 shrink-0">Subiendo {s.progreso}%</span>
+                  )}
+                </div>
+                {s.fase === "error" ? (
+                  <p className="text-xs text-red-600 mt-1">{s.mensaje}</p>
+                ) : (
+                  <div className="mt-1.5 h-1 bg-gray-100 rounded overflow-hidden">
+                    <div
+                      className="h-full bg-[#111111] transition-all"
+                      style={{ width: `${s.progreso}%` }}
+                    />
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {bunnyHabilitado && (
+          <>
+            <input
+              ref={inputVideoRef}
+              type="file"
+              accept="video/*"
+              multiple
+              hidden
+              onChange={(e) => {
+                Array.from(e.target.files ?? []).forEach((f) => void subirVideoBunny(f));
+                e.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => inputVideoRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-[#111111] hover:text-[#111111] transition-colors"
+            >
+              + Subir video
+            </button>
+          </>
+        )}
+
         <CldUploadWidget
           uploadPreset="luminus-products"
           options={{
             multiple: true,
-            // "auto" enruta el archivo al endpoint de video cuando toca.
-            resourceType: "auto",
-            clientAllowedFormats: ["png", "jpg", "jpeg", "webp", "avif", "mp4", "webm", "mov"],
+            // Con Bunny los videos van por su propio botón y Cloudinary queda
+            // sólo para fotos. Sin Bunny, "auto" enruta el video a Cloudinary.
+            resourceType: bunnyHabilitado ? "image" : "auto",
+            clientAllowedFormats: bunnyHabilitado
+              ? ["png", "jpg", "jpeg", "webp", "avif"]
+              : ["png", "jpg", "jpeg", "webp", "avif", "mp4", "webm", "mov"],
             maxImageFileSize: 10_000_000,
             // La cuenta admite hasta 100 MB, pero el tope real no es ese: en el
             // plan gratuito cada reproducción descarga el archivo entero contra
@@ -517,7 +695,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
               onClick={() => open()}
               className="flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-[#111111] hover:text-[#111111] transition-colors"
             >
-              + Subir imagen o video
+              {bunnyHabilitado ? "+ Subir imagen" : "+ Subir imagen o video"}
             </button>
           )}
         </CldUploadWidget>
@@ -676,7 +854,7 @@ export function ProductForm({ categories, product }: ProductFormProps) {
         <Button type="button" variant="ghost" onClick={() => router.back()}>
           Cancelar
         </Button>
-        <Button type="submit" loading={loading}>
+        <Button type="submit" loading={loading} disabled={videosPendientes}>
           {product ? "Actualizar producto" : "Crear producto"}
         </Button>
       </div>

@@ -1,38 +1,148 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, X, ZoomIn, Play } from "lucide-react";
-import { esVideo, posterDeVideo } from "@/lib/media";
+import type Hls from "hls.js";
+import { esVideo, esHls, posterDeVideo } from "@/lib/media";
 
 interface ImageGalleryProps {
   images: string[];
   name: string;
 }
 
+/** MediaSource clásico o ManagedMediaSource (iPhone con iOS 17.1+): con cualquiera, hls.js. */
+function hayMediaSource(): boolean {
+  return typeof window.MediaSource !== "undefined" || "ManagedMediaSource" in window;
+}
+
 /**
  * Un video de la galería.
  *
- * `preload="none"` es deliberado y no debería relajarse: la cuenta de Cloudinary
- * es la gratuita y cada reproducción descarga el archivo entero contra la cuota
- * de ancho de banda. Con el poster puesto y sin autoplay, un video sólo cuesta
- * bytes cuando alguien le da play a propósito — y en escritorio las miniaturas
- * se seleccionan al pasar el mouse, así que un autoplay descargaría el video de
- * cada visitante que barre la tira con el cursor.
+ * `preload="none"` es deliberado y no debería relajarse: en escritorio las
+ * miniaturas se seleccionan al pasar el mouse, así que un autoplay descargaría
+ * el video de cada visitante que barre la tira con el cursor. Con el poster
+ * puesto, un video sólo cuesta bytes cuando alguien le da play a propósito.
+ *
+ * Los de Bunny Stream son HLS (`playlist.m3u8`) y **no se conectan hasta el
+ * play**: con hls.js enganchado el `<video>` queda "cargando" y Chrome pinta el
+ * spinner encima del poster, mientras que uno de Cloudinary con
+ * `preload="none"` muestra el botón de play. Y un `<video>` sin fuente muestra
+ * los controles deshabilitados, así que hasta el primer play se usa un botón
+ * propio sobre el poster; después quedan los controles nativos.
+ *
+ * Al montar sólo se trae el módulo de hls.js (JS propio, nada de Bunny), para
+ * que el play no espere esa descarga. Arranca en la resolución más alta — el ABR
+ * baja solo si la conexión no da — porque un clip de producto no puede verse
+ * peor que la foto de al lado.
  */
 function VideoItem({ src, name, className }: { src: string; name: string; className?: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const hls = esHls(src);
+  const [activo, setActivo] = useState(!hls);
+  const instanciaRef = useRef<Hls | null>(null);
+  const moduloRef = useRef<typeof Hls | null>(null);
+
+  useEffect(() => {
+    if (!hls || !hayMediaSource()) return;
+    let desmontado = false;
+    void import("hls.js").then(({ default: HlsJs }) => {
+      if (!desmontado) moduloRef.current = HlsJs;
+    });
+    return () => {
+      desmontado = true;
+      instanciaRef.current?.destroy();
+      instanciaRef.current = null;
+    };
+  }, [hls]);
+
+  /**
+   * Todo sincrónico dentro del click: Safari de iPhone sólo deja reproducir con
+   * sonido si `play()` sale del gesto del usuario, y esperar al playlist lo
+   * rompería. `attachMedia` asigna el `src` del MediaSource en el acto, así que
+   * el `play()` queda pendiente hasta que llegan los segmentos.
+   */
+  const conectar = (HlsJs: typeof Hls, video: HTMLVideoElement): boolean => {
+    if (!HlsJs.isSupported()) return false;
+    // iPhone no tiene MediaSource clásico, sólo ManagedMediaSource (iOS 17.1+),
+    // y Safari no lo abre si el video admite AirPlay sin una fuente alternativa.
+    if (typeof window.MediaSource === "undefined") video.disableRemotePlayback = true;
+    const instancia = new HlsJs({
+      autoStartLoad: false,
+      // MSE clásico donde exista; ManagedMediaSource sólo donde es lo único (iPhone).
+      preferManagedMediaSource: false,
+      // Sin una medición todavía, hls.js supone 500 kbps y bajaría la variante
+      // alta en el primer segmento. 5 Mbps sostiene 1080p de Bunny.
+      abrEwmaDefaultEstimate: 5_000_000,
+    });
+    instanciaRef.current = instancia;
+    // Se busca la más alta en vez de tomar la última: el master de Bunny no
+    // viene ordenado (360p, 480p, 720p, 240p).
+    instancia.on(HlsJs.Events.MANIFEST_PARSED, (_evento, datos) => {
+      let mejor = 0;
+      datos.levels.forEach((nivel, i) => {
+        if (nivel.height > datos.levels[mejor].height) mejor = i;
+      });
+      instancia.startLevel = mejor;
+      instancia.startLoad();
+    });
+    instancia.loadSource(src);
+    instancia.attachMedia(video);
+    void video.play().catch(() => {});
+    return true;
+  };
+
+  const reproducir = async () => {
+    const video = ref.current;
+    if (!video || activo) return;
+    setActivo(true);
+
+    // hls.js tiene prioridad sobre el HLS nativo aunque el navegador diga que lo
+    // reproduce: Chrome y Safari arrancan en la primera variante del master —
+    // en Bunny es 360p — y recién después suben. El nativo queda para donde no
+    // hay ningún MediaSource (iPhone con iOS anterior a 17.1).
+    if (hayMediaSource()) {
+      if (moduloRef.current) {
+        if (conectar(moduloRef.current, video)) return;
+      } else {
+        // Click antes de que terminara de bajar el módulo. En iPhone este play
+        // puede quedar bloqueado; los controles ya están visibles para reintentar.
+        const { default: HlsJs } = await import("hls.js");
+        if (conectar(HlsJs, video)) return;
+      }
+    }
+
+    video.src = src;
+    void video.play().catch(() => {});
+  };
+
   return (
-    <video
-      src={src}
-      poster={posterDeVideo(src, 1000)}
-      controls
-      playsInline
-      loop
-      preload="none"
-      aria-label={`${name} — video`}
-      className={className}
-    />
+    <>
+      <video
+        ref={ref}
+        src={hls ? undefined : src}
+        poster={posterDeVideo(src, 1000)}
+        controls={activo}
+        playsInline
+        loop
+        preload="none"
+        aria-label={`${name} — video`}
+        className={className}
+      />
+      {!activo && (
+        <button
+          type="button"
+          onClick={() => void reproducir()}
+          aria-label={`Reproducir video de ${name}`}
+          className="absolute inset-0 flex items-center justify-center group"
+        >
+          <span className="w-14 h-14 rounded-full bg-black/55 group-hover:bg-black/70 transition-colors flex items-center justify-center">
+            <Play className="h-6 w-6 text-white fill-white translate-x-0.5" />
+          </span>
+        </button>
+      )}
+    </>
   );
 }
 
