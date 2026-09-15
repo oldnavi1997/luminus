@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/app/generated/prisma/client";
 import { sincronizarProducto } from "@/lib/algolia-sync";
+import { primeraEsFoto, MENSAJE_PRIMERA_FOTO } from "@/lib/media";
 
 const productCreateSchema = z.object({
   name: z.string().min(2),
@@ -14,7 +15,7 @@ const productCreateSchema = z.object({
   comparePrice: z.number().positive().optional().nullable(),
   stockAlmacen: z.number().int().min(0).default(0),
   stockTienda: z.number().int().min(0).default(0),
-  images: z.array(z.string()).default([]),
+  images: z.array(z.string()).refine(primeraEsFoto, MENSAJE_PRIMERA_FOTO).default([]),
   brand: z.string().optional(),
   frameType: z.string().optional(),
   frameMaterial: z.string().optional(),

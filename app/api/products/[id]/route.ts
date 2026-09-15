@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/app/generated/prisma/client";
 import { sincronizarProducto } from "@/lib/algolia-sync";
+import { primeraEsFoto, MENSAJE_PRIMERA_FOTO } from "@/lib/media";
 
 const variantSelect = {
   id: true,
@@ -52,7 +53,7 @@ const updateSchema = z.object({
   comparePrice: z.number().positive().optional().nullable(),
   stockAlmacen: z.number().int().min(0).optional(),
   stockTienda: z.number().int().min(0).optional(),
-  images: z.array(z.string()).optional(),
+  images: z.array(z.string()).refine(primeraEsFoto, MENSAJE_PRIMERA_FOTO).optional(),
   brand: z.string().optional(),
   frameType: z.string().optional(),
   frameMaterial: z.string().optional(),
