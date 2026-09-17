@@ -118,6 +118,7 @@ const productSchema = z.object({
   description: z.string().optional(),
   price: z.string().min(1, "Precio requerido"),
   comparePrice: z.string().optional(),
+  sku: z.string().optional(),
   stockAlmacen: z.string(),
   stockTienda: z.string(),
   brand: z.string().optional(),
@@ -247,6 +248,8 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
     register,
     handleSubmit,
     setValue,
+    watch,
+    getValues,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -257,6 +260,7 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
           description: product.description || "",
           price: product.price.toString(),
           comparePrice: product.comparePrice?.toString() || "",
+          sku: product.sku || "",
           stockAlmacen: product.stockAlmacen.toString(),
           stockTienda: product.stockTienda.toString(),
           brand: product.brand || "",
@@ -274,8 +278,39 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
           skipCharges: product.skipCharges,
           active: product.active,
         }
-      : { active: true, featured: false, skipCharges: false, stockAlmacen: "0", stockTienda: "0" },
+      : {
+          active: true,
+          featured: false,
+          skipCharges: false,
+          sku: "",
+          stockAlmacen: "0",
+          stockTienda: "0",
+        },
   });
+
+  // El SKU es correlativo, así que en el alta se propone el que sigue al más
+  // alto del catálogo (el mismo que propondría el POS). Queda editable, y sólo
+  // se escribe si el campo sigue vacío: si ya se tipeó algo mientras llegaba la
+  // respuesta, manda lo tipeado.
+  const [skuSugerido, setSkuSugerido] = useState("");
+  const skuActual = watch("sku");
+
+  useEffect(() => {
+    if (product) return; // editando: el SKU ya es suyo
+    let vigente = true;
+    fetch("/api/products/next-sku")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!vigente || !d?.sku) return;
+        setSkuSugerido(d.sku);
+        if (!getValues("sku")) setValue("sku", d.sku, { shouldDirty: false });
+      })
+      .catch(() => {});
+    return () => {
+      vigente = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product]);
 
   const sensors = useSensors(useSensor(PointerSensor));
 
@@ -397,6 +432,7 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
         ...data,
         price: parseFloat(data.price),
         comparePrice: data.comparePrice ? parseFloat(data.comparePrice) : null,
+        sku: data.sku?.trim() || null,
         stockAlmacen: parseInt(data.stockAlmacen),
         stockTienda: parseInt(data.stockTienda),
         images,
@@ -446,6 +482,29 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
             error={errors.slug?.message}
             {...register("slug")}
           />
+          <div>
+            <Input
+              label="SKU / Código"
+              className="font-mono"
+              placeholder={skuSugerido || "—"}
+              error={errors.sku?.message}
+              {...register("sku")}
+            />
+            {skuSugerido && (
+              <p className="mt-1 text-[11px] text-[#111111]/40">
+                Sugerido: <span className="font-mono">{skuSugerido}</span>
+                {skuActual !== skuSugerido && (
+                  <button
+                    type="button"
+                    onClick={() => setValue("sku", skuSugerido, { shouldDirty: true })}
+                    className="ml-1.5 text-[#d4af37] hover:underline"
+                  >
+                    usar
+                  </button>
+                )}
+              </p>
+            )}
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>

@@ -15,6 +15,8 @@ const productCreateSchema = z.object({
   comparePrice: z.number().positive().optional().nullable(),
   stockAlmacen: z.number().int().min(0).default(0),
   stockTienda: z.number().int().min(0).default(0),
+  // El vacío es "sin SKU", no la cadena vacía: el POS guarda null y busca por null.
+  sku: z.string().trim().transform((s) => s || null).nullable().optional(),
   images: z.array(z.string()).refine(primeraEsFoto, MENSAJE_PRIMERA_FOTO).default([]),
   brand: z.string().optional(),
   frameType: z.string().optional(),
@@ -99,6 +101,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { categoryIds, primaryCategoryId, ...rest } = productCreateSchema.parse(body);
+
+    // La columna no es única (hay catálogo viejo sin SKU), así que el duplicado
+    // se rechaza acá, igual que en el POS.
+    if (rest.sku) {
+      const dup = await prisma.product.findFirst({ where: { sku: rest.sku } });
+      if (dup) {
+        return NextResponse.json(
+          { error: `Ya existe un producto con el SKU ${rest.sku}` },
+          { status: 409 }
+        );
+      }
+    }
 
     const product = await prisma.product.create({
       data: {
