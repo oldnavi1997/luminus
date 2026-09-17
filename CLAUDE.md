@@ -304,6 +304,43 @@ Peru. Currency: PEN (Soles). Use `formatPEN()` from `lib/utils.ts`. `formatARS` 
 - Seed data uses Unsplash URLs for product images
 - Production uploads use Cloudinary (`CldUploadWidget` unsigned preset `luminus-products`)
 
+### The quality of a photo is decided on upload, and only once
+
+Cloudinary stores the **result** of the preset's incoming transformation and
+throws the uploaded file away — the account has no backup and resources carry no
+previous versions. Whatever that transformation removes is gone for good: fixing
+it means re-uploading every photo by hand.
+
+It was set to `1200x1200 c_limit` + `q_auto`, which left masters of ~29 KB —
+0.19 bits per pixel, five times below a reasonable web photo. Measured Sept 2026
+on the live catalogue: 2408 of 3043 assets capped at 1200, median 0.187 bpp, and
+the engraving on a Hermès rim was simply not there at any size.
+
+**Both places that upload must agree** — the unsigned preset `luminus-products`
+(the admin widget) and `uploadProductImage()` in `lib/cloudinary.ts` (the
+`/api/upload` route). Both are now `4000x4000 c_limit` + `quality: 88`.
+
+- **4000 is the camera's real square.** The catalogue is shot on a Sony A6400
+  (6000×4000), so a square crop tops out at 4000. The editing step exports at
+  6662–7280 px — those extra pixels are interpolated, and they cost compression.
+- **The Free plan caps a transformation at 50 MP, source plus target.** A 6662 px
+  master already sits at 48. Storing the native size would leave the biggest
+  photos unable to derive anything.
+- **Storage was never the reason for the 1200.** The whole catalogue at 4000 px
+  is 0.44 GB ≈ 0.35 credits/month, against the 14.4 that transformations already
+  cost.
+
+**Delivery is not where quality is lost.** `lib/cloudinary-loader.ts` asks for
+`w_<ancho>,q_auto,c_limit,f_auto`; recompressing the master that way measures
+PSNR 51 dB — invisible. Raising it to `q_auto:best` changes nothing. Don't go
+looking there.
+
+The largest width the site can ever request is **1920** (the top of `deviceSizes`
+in `next.config.ts`), and the lightbox draws at most 896 CSS px anyway
+(`max-w-5xl` minus padding, `ImageGallery.tsx`), so 1920 covers a 2× screen. A
+bigger master buys nothing on screen today — it buys the option of a full-screen
+lightbox or a real zoom later without re-uploading the catalogue.
+
 ### Product videos: Bunny Stream
 
 Product **videos** go to Bunny Stream; **photos and the three background videos**
