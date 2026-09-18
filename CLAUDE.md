@@ -317,29 +317,35 @@ on the live catalogue: 2408 of 3043 assets capped at 1200, median 0.187 bpp, and
 the engraving on a Hermès rim was simply not there at any size.
 
 **Both places that upload must agree** — the unsigned preset `luminus-products`
-(the admin widget) and `uploadProductImage()` in `lib/cloudinary.ts` (the
-`/api/upload` route). Both are now `4000x4000 c_limit` + `quality: 88`.
+(the admin widget, which uploads straight to Cloudinary and never touches this
+app) and `uploadProductImage()` in `lib/cloudinary.ts` (the `/api/upload` route,
+currently called by nothing). Both are `5000x5000 c_limit` + `quality: 88`.
 
-- **4000 is the camera's real square.** The catalogue is shot on a Sony A6400
-  (6000×4000), so a square crop tops out at 4000. The editing step exports at
-  6662–7280 px — those extra pixels are interpolated, and they cost compression.
-- **The Free plan caps a transformation at 50 MP, source plus target.** A 6662 px
-  master already sits at 48. Storing the native size would leave the biggest
-  photos unable to derive anything.
-- **Storage was never the reason for the 1200.** The whole catalogue at 4000 px
-  is 0.44 GB ≈ 0.35 credits/month, against the 14.4 that transformations already
-  cost.
+- **5000 is the plan's ceiling per image** (25 MP on Free), taken deliberately as
+  headroom, not as detail. It does not buy quality: measured, a 5000 master and a
+  4000 one hand the customer the same picture — 49.3 dB PSNR, 4 KB apart.
+- **The camera's real square is 4000.** The catalogue is shot on a Sony A6400
+  (6000×4000). The editing step exports at 6662–7280 px, so everything above 4000
+  is interpolated by that software, not captured.
+- **3840 is the floor, and it is a real constraint.** That is what the lightbox's
+  zoom layer requests (`ANCHO_ZOOM` in `components/product/ImageGallery.tsx`).
+  Below it the customer gets less than the screen asks for.
+- **Storage was never the reason for the 1200.** The whole catalogue at 5000 px is
+  0.57 GB ≈ 0.57 credits/month, against the 14.4 that transformations cost.
+- **The Free plan caps a transformation at 50 MP, source plus target**, so the
+  native 6662–7280 px export could not be stored as-is: at 6662 a single derived
+  version already sits at 48.
 
 **Delivery is not where quality is lost.** `lib/cloudinary-loader.ts` asks for
 `w_<ancho>,q_auto,c_limit,f_auto`; recompressing the master that way measures
 PSNR 51 dB — invisible. Raising it to `q_auto:best` changes nothing. Don't go
 looking there.
 
-The largest width the site can ever request is **1920** (the top of `deviceSizes`
-in `next.config.ts`), and the lightbox draws at most 896 CSS px anyway
-(`max-w-5xl` minus padding, `ImageGallery.tsx`), so 1920 covers a 2× screen. A
-bigger master buys nothing on screen today — it buys the option of a full-screen
-lightbox or a real zoom later without re-uploading the catalogue.
+Through the `srcset` the site never asks for more than **1920** (the top of
+`deviceSizes` in `next.config.ts`), and that is enough: the lightbox draws at most
+896 CSS px (`max-w-5xl` minus padding), ~342 on a phone. The one exception is the
+zoom layer, which asks the loader for `w_3840` directly rather than adding that
+width to `deviceSizes`, where every `vw`-sized view would inherit it.
 
 ### Product videos: Bunny Stream
 
