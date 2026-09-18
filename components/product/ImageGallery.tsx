@@ -151,14 +151,19 @@ const ZOOM_MAX = 4;
 /** Zoom de un doble toque/clic: suficiente para leer un grabado sin perder el encuadre. */
 const ZOOM_DOBLE = 2.5;
 /**
- * Ancho que se pide para la capa ampliada. No sale de `deviceSizes`: si el
- * lightbox pidiera este ancho por el `srcset`, Cloudinary generaría el derivado
- * grande en cada apertura aunque nadie acerque. Pidiéndoselo al loader a mano,
- * el derivado sólo existe para las fotos que alguien amplió de verdad.
+ * Ancho de la capa nítida. Se pide al loader a mano en vez de agregarlo a
+ * `deviceSizes`: por el `srcset` lo heredaría toda vista que use anchos en `vw`
+ * —la ficha, el carrusel—, y acá sólo lo necesita el lightbox.
+ *
+ * Cuesta: una versión derivada por foto que alguien abra ampliada, y sus bytes
+ * en cada apertura. Es una decisión tomada a sabiendas, priorizando que el zoom
+ * sea instantáneo; si el plan de Cloudinary aprieta, lo primero que hay que
+ * mirar es el desglose de `GET /usage`, no bajar la calidad servida.
  *
  * Los masters se guardan a 4000 px (ver `lib/cloudinary.ts`), así que 3840 es
- * casi todo lo que hay. En las fotos viejas, que quedaron en 1200, `c_limit`
- * devuelve 1200 y no pasa nada: no hay ampliación, sólo menos detalle.
+ * casi todo lo que hay, y cubre el zoom máximo (4x sobre una caja de ~342 px en
+ * un teléfono a 3x son ~4100 px). En las fotos viejas, que quedaron en 1200,
+ * `c_limit` devuelve 1200 y no pasa nada: no hay ampliación, sólo menos detalle.
  */
 const ANCHO_ZOOM = 3840;
 
@@ -196,19 +201,6 @@ function FotoConZoom({
    */
   const [vista, setVista] = useState({ escala: 1, x: 0, y: 0 });
   const { escala } = vista;
-  /**
-   * La capa nítida se empieza a bajar con la *intención* de acercar — el segundo
-   * dedo apoyado, el doble toque, la rueda —, no cuando el zoom ya terminó.
-   *
-   * Un pellizco tarda entre 200 y 500 ms en completarse; arrancar la descarga al
-   * apoyar el segundo dedo la adelanta esa ventana entera. Si esperara a
-   * `ampliada`, el cliente ve la foto borrosa durante un segundo y concluye que
-   * esa es la calidad de la foto — no tiene cómo saber que viene una mejor.
-   *
-   * Un toque suelto (cerrar) no la dispara: sería medio megabyte por cada vez
-   * que alguien abre y cierra la foto.
-   */
-  const [quiereHiRes, setQuiereHiRes] = useState(false);
   const [hiResLista, setHiResLista] = useState(false);
   const cajaRef = useRef<HTMLDivElement>(null);
   const punteros = useRef(new Map<number, { x: number; y: number }>());
@@ -280,7 +272,6 @@ function FotoConZoom({
     }
 
     if (punteros.current.size === 2) {
-      setQuiereHiRes(true); // dos dedos = va a acercar; la descarga arranca ya
       const [a, b] = [...punteros.current.values()];
       pellizco.current = {
         dist: Math.hypot(a.x - b.x, a.y - b.y),
@@ -327,7 +318,6 @@ function FotoConZoom({
     const esDoble = ahora - ultimoTap.current < 300;
     ultimoTap.current = ahora;
     if (esDoble && !arr?.movido) {
-      setQuiereHiRes(true);
       acercarA(ampliada ? 1 : ZOOM_DOBLE, respectoAlCentro(e));
       return;
     }
@@ -340,7 +330,6 @@ function FotoConZoom({
 
   const onWheel = (e: React.WheelEvent) => {
     e.stopPropagation();
-    setQuiereHiRes(true);
     acercarA(escala * Math.exp(-e.deltaY / 400), respectoAlCentro(e));
   };
 
@@ -380,17 +369,26 @@ function FotoConZoom({
         }}
       >
         <Image src={src} alt={alt} fill className="object-contain" sizes="90vw" priority />
-        {/* Una vez pedida se queda montada aunque se vuelva a escala 1: soltar el
-            zoom y repetirlo es lo normal, y desmontarla obligaría a decodificar
-            de nuevo. Se revela al terminar de cargar, no antes, para no tapar la
-            foto ajustada con un hueco en blanco. */}
-        {quiereHiRes && (
+        {/* La capa nítida se pide al abrir el lightbox, no al acercar: es la
+            única forma de que el zoom sea instantáneo. Esperar al gesto dejaba
+            la foto borrosa casi un segundo, y el cliente no tiene cómo saber que
+            viene una versión mejor — ve eso y concluye que la foto es así.
+            Se revela al terminar de cargar, no antes, para no tapar la foto
+            ajustada con un hueco en blanco. */}
+        {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={cloudinaryLoader({ src, width: ANCHO_ZOOM })}
             alt=""
             aria-hidden
             fetchPriority="high"
+            // El `complete` cubre el caso de que la imagen ya estuviera en
+            // caché y su `load` se haya disparado antes de que React montara el
+            // handler: sin esto la capa nítida quedaría cargada pero invisible
+            // para siempre, y el zoom se vería borroso sin motivo aparente.
+            ref={(el) => {
+              if (el?.complete && el.naturalWidth > 0) setHiResLista(true);
+            }}
             onLoad={() => setHiResLista(true)}
             // Si no carga, la foto ajustada se queda y el aviso se va: peor es
             // dejar girando un indicador de algo que no va a llegar.
@@ -399,7 +397,7 @@ function FotoConZoom({
               hiResLista ? "opacity-100" : "opacity-0"
             }`}
           />
-        )}
+        }
       </div>
 
       {/* Un aviso por vez, en el mismo lugar: primero cómo acercar, y una vez
