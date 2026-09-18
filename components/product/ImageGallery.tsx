@@ -6,6 +6,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, X, ZoomIn, Play } from "lucide-react";
 import type Hls from "hls.js";
 import { esVideo, esHls, posterDeVideo } from "@/lib/media";
+import cloudinaryLoader from "@/lib/cloudinary-loader";
 
 interface ImageGalleryProps {
   images: string[];
@@ -143,6 +144,251 @@ function VideoItem({ src, name, className }: { src: string; name: string; classN
         </button>
       )}
     </>
+  );
+}
+
+const ZOOM_MAX = 4;
+/** Zoom de un doble toque/clic: suficiente para leer un grabado sin perder el encuadre. */
+const ZOOM_DOBLE = 2.5;
+/**
+ * Ancho que se pide para la capa ampliada. No sale de `deviceSizes`: si el
+ * lightbox pidiera este ancho por el `srcset`, Cloudinary generaría el derivado
+ * grande en cada apertura aunque nadie acerque. Pidiéndoselo al loader a mano,
+ * el derivado sólo existe para las fotos que alguien amplió de verdad.
+ *
+ * Los masters se guardan a 4000 px (ver `lib/cloudinary.ts`), así que 3840 es
+ * casi todo lo que hay. En las fotos viejas, que quedaron en 1200, `c_limit`
+ * devuelve 1200 y no pasa nada: no hay ampliación, sólo menos detalle.
+ */
+const ANCHO_ZOOM = 3840;
+
+/**
+ * La foto del lightbox, con zoom.
+ *
+ * En el teléfono la foto se dibuja a ~342 px de CSS, así que ni con el master a
+ * 4000 px se ve el detalle: el límite es la pantalla, no el archivo. El zoom es
+ * lo único que convierte esos píxeles en algo que el cliente pueda mirar.
+ *
+ * Todo pasa por Pointer Events, que unifican dedo y mouse: dos punteros pellizcan,
+ * uno arrastra. El `touch-action: none` es imprescindible — sin él el navegador
+ * se queda el gesto para hacer scroll o su propio zoom de página.
+ *
+ * El acercamiento conserva el punto que el usuario tiene bajo el dedo. Si `c` es
+ * ese punto en coordenadas del contenido, `c * escala + desplazamiento` es dónde
+ * cae en pantalla; mantenerlo fijo al pasar de `s0` a `s1` da
+ * `d1 = d0 + (p - d0) * (1 - s1/s0)`.
+ */
+function FotoConZoom({
+  src,
+  alt,
+  onTap,
+}: {
+  src: string;
+  alt: string;
+  /** Un toque limpio, sin arrastre ni zoom: el overlay lo usa para cerrarse. */
+  onTap: () => void;
+}) {
+  /**
+   * Escala y desplazamiento viajan juntos: acercar mueve los dos a la vez, y
+   * separarlos obligaría a que el updater de uno tocara el otro — un efecto
+   * secundario dentro de un updater, que React 19 invoca dos veces en
+   * desarrollo. Un solo estado deja los updaters puros.
+   */
+  const [vista, setVista] = useState({ escala: 1, x: 0, y: 0 });
+  const { escala } = vista;
+  const [hiResLista, setHiResLista] = useState(false);
+  const cajaRef = useRef<HTMLDivElement>(null);
+  const punteros = useRef(new Map<number, { x: number; y: number }>());
+  const pellizco = useRef<{ dist: number; escala: number; centro: { x: number; y: number } } | null>(null);
+  const arrastre = useRef<{ x: number; y: number; desp: { x: number; y: number }; movido: boolean } | null>(null);
+  const ultimoTap = useRef(0);
+  /**
+   * El cierre por toque simple espera a ver si viene un segundo toque.
+   *
+   * Sin esta espera el doble toque no existe: el primer toque cierra el
+   * lightbox, el componente se desmonta y el segundo cae sobre el carrusel de
+   * abajo, que lo vuelve a abrir. Se ve como si el zoom no hiciera nada.
+   */
+  const cierrePendiente = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Hay un dedo/botón apoyado: mientras dure, la transformación sigue al dedo sin transición. */
+  const [gesto, setGesto] = useState(false);
+
+  const ampliada = escala > 1.01;
+
+  /** Impide que la foto se despegue de su caja: a escala `s` sobra `(s-1)/2` por lado. */
+  const limitar = useCallback((v: { escala: number; x: number; y: number }) => {
+    const caja = cajaRef.current;
+    if (!caja) return v;
+    const maxX = (caja.clientWidth * (v.escala - 1)) / 2;
+    const maxY = (caja.clientHeight * (v.escala - 1)) / 2;
+    return {
+      escala: v.escala,
+      x: Math.max(-maxX, Math.min(maxX, v.x)),
+      y: Math.max(-maxY, Math.min(maxY, v.y)),
+    };
+  }, []);
+
+  /** Lleva la escala a `s1` dejando quieto el punto `p` (relativo al centro de la caja). */
+  const acercarA = useCallback(
+    (s1: number, p: { x: number; y: number }) => {
+      setVista((v) => {
+        const s = Math.max(1, Math.min(ZOOM_MAX, s1));
+        if (s === 1) return { escala: 1, x: 0, y: 0 };
+        const factor = 1 - s / v.escala;
+        return limitar({ escala: s, x: v.x + (p.x - v.x) * factor, y: v.y + (p.y - v.y) * factor });
+      });
+    },
+    [limitar]
+  );
+
+  /** Coordenadas de un evento respecto del centro de la caja. */
+  const respectoAlCentro = (e: { clientX: number; clientY: number }) => {
+    const r = cajaRef.current?.getBoundingClientRect();
+    if (!r) return { x: 0, y: 0 };
+    return { x: e.clientX - (r.left + r.width / 2), y: e.clientY - (r.top + r.height / 2) };
+  };
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    // Con la captura, arrastrar más allá del borde de la foto sigue mandando
+    // eventos acá. Va en try: capturar un puntero que el navegador ya no
+    // considera activo lanza NotFoundError, y perder la captura no es motivo
+    // para romper el gesto.
+    try {
+      (e.target as Element).setPointerCapture?.(e.pointerId);
+    } catch {
+      /* sin captura, el gesto sigue funcionando mientras el dedo no se salga */
+    }
+    punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    setGesto(true);
+    if (cierrePendiente.current) {
+      clearTimeout(cierrePendiente.current);
+      cierrePendiente.current = null;
+    }
+
+    if (punteros.current.size === 2) {
+      const [a, b] = [...punteros.current.values()];
+      pellizco.current = {
+        dist: Math.hypot(a.x - b.x, a.y - b.y),
+        escala,
+        centro: respectoAlCentro({ clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 }),
+      };
+      arrastre.current = null;
+    } else if (punteros.current.size === 1) {
+      arrastre.current = { x: e.clientX, y: e.clientY, desp: { x: vista.x, y: vista.y }, movido: false };
+    }
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!punteros.current.has(e.pointerId)) return;
+    punteros.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (punteros.current.size >= 2 && pellizco.current) {
+      const [a, b] = [...punteros.current.values()];
+      const dist = Math.hypot(a.x - b.x, a.y - b.y);
+      acercarA((pellizco.current.escala * dist) / pellizco.current.dist, pellizco.current.centro);
+      return;
+    }
+
+    const arr = arrastre.current;
+    if (!arr || !ampliada) return;
+    const dx = e.clientX - arr.x;
+    const dy = e.clientY - arr.y;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) arr.movido = true;
+    setVista((v) => limitar({ escala: v.escala, x: arr.desp.x + dx, y: arr.desp.y + dy }));
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    punteros.current.delete(e.pointerId);
+    if (punteros.current.size < 2) pellizco.current = null;
+
+    const arr = arrastre.current;
+    arrastre.current = null;
+    if (punteros.current.size > 0) return;
+    setGesto(false);
+
+    // Doble toque: alterna entre ajustada y ampliada sobre el punto tocado.
+    const ahora = Date.now();
+    const esDoble = ahora - ultimoTap.current < 300;
+    ultimoTap.current = ahora;
+    if (esDoble && !arr?.movido) {
+      acercarA(ampliada ? 1 : ZOOM_DOBLE, respectoAlCentro(e));
+      return;
+    }
+    // Un toque sin más, con la foto ajustada, cierra. Ampliada no: ahí el
+    // usuario está mirando, y para salir están la X y el doble toque.
+    if (!arr?.movido && !ampliada) {
+      cierrePendiente.current = setTimeout(onTap, 280);
+    }
+  };
+
+  const onWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    acercarA(escala * Math.exp(-e.deltaY / 400), respectoAlCentro(e));
+  };
+
+  // Cada foto entra ajustada porque el lightbox monta esto con `key={src}`: al
+  // cambiar de imagen es un componente nuevo, sin escala ni desplazamiento que
+  // arrastrar.
+
+  // El zoom no se ve: sin un empujón nadie prueba a pellizcar una foto que ya
+  // está entera en pantalla. La pista se va sola y no vuelve.
+  const [pista, setPista] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setPista(false), 3500);
+    return () => {
+      clearTimeout(t);
+      if (cierrePendiente.current) clearTimeout(cierrePendiente.current);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={cajaRef}
+      className="absolute inset-0 touch-none select-none"
+      style={{ cursor: ampliada ? "grab" : "zoom-in" }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      onWheel={onWheel}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div
+        className="absolute inset-0"
+        style={{
+          transform: `translate(${vista.x}px, ${vista.y}px) scale(${escala})`,
+          // Sin transición durante el gesto: seguir el dedo con retraso se siente roto.
+          transition: gesto ? "none" : "transform 0.15s ease-out",
+        }}
+      >
+        <Image src={src} alt={alt} fill className="object-contain" sizes="90vw" priority />
+        {/* La capa nítida se pide sólo al ampliar, y se revela cuando terminó de
+            cargar para que no haya un parpadeo en blanco sobre la foto ajustada. */}
+        {ampliada && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={cloudinaryLoader({ src, width: ANCHO_ZOOM })}
+            alt=""
+            aria-hidden
+            onLoad={() => setHiResLista(true)}
+            className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-200 ${
+              hiResLista ? "opacity-100" : "opacity-0"
+            }`}
+          />
+        )}
+      </div>
+
+      <div
+        className={`pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3.5 py-1.5 text-[11px] tracking-wide text-[#1c1c1c] shadow-sm transition-opacity duration-500 ${
+          pista && !ampliada ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <span className="sm:hidden">Pellizca para acercar</span>
+        <span className="hidden sm:inline">Rueda o doble clic para acercar</span>
+      </div>
+    </div>
   );
 }
 
@@ -350,21 +596,19 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                   />
                 </div>
               ) : (
-                <Image
+                <FotoConZoom
+                  key={images[selectedIdx]}
                   src={images[selectedIdx]}
                   alt={`${name} ${selectedIdx + 1}`}
-                  fill
-                  className="object-contain"
-                  sizes="90vw"
-                  priority
+                  onTap={() => setLightboxOpen(false)}
                 />
               )}
             </div>
           </div>
 
-          {/* Controls */}
+          {/* Controls — por encima de la foto, que al ampliarse desborda su caja */}
           <div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3"
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3"
             onClick={(e) => e.stopPropagation()}
           >
             {images.length > 1 && (
