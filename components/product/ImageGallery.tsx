@@ -160,10 +160,12 @@ const ZOOM_DOBLE = 2.5;
  * sea instantáneo; si el plan de Cloudinary aprieta, lo primero que hay que
  * mirar es el desglose de `GET /usage`, no bajar la calidad servida.
  *
- * Los masters se guardan a 4000 px (ver `lib/cloudinary.ts`), así que 3840 es
- * casi todo lo que hay, y cubre el zoom máximo (4x sobre una caja de ~342 px en
- * un teléfono a 3x son ~4100 px). En las fotos viejas, que quedaron en 1200,
- * `c_limit` devuelve 1200 y no pasa nada: no hay ampliación, sólo menos detalle.
+ * Cubre el zoom máximo: 4x sobre una caja de ~342 px en un teléfono a 3x son
+ * ~4100 px, y el cuadrado real de la cámara del catálogo es 4000. Es además el
+ * piso del master en `lib/cloudinary.ts` — guardarlo por debajo de 3840 sería
+ * entregarle al cliente menos de lo que su pantalla pide. En las fotos viejas,
+ * que quedaron en 1200, `c_limit` devuelve 1200 y no pasa nada: no hay
+ * ampliación, sólo menos detalle.
  */
 const ANCHO_ZOOM = 3840;
 

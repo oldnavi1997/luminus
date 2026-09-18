@@ -7,7 +7,7 @@ cloudinary.config({
 });
 
 /**
- * El master se guarda a 4000 px y calidad fija, no `q_auto`.
+ * El master se guarda a 5000 px y calidad fija, no `q_auto`.
  *
  * Cloudinary guarda el RESULTADO de esta transformación y descarta el archivo
  * original (la cuenta no tiene backup), así que lo que se recorte acá no se
@@ -15,12 +15,17 @@ cloudinary.config({
  * con `q_auto`, que dejaba masters de ~29 KB — 0.19 bits por píxel, cinco veces
  * por debajo de lo razonable — y borraba el grabado de los aros.
  *
- * 4000 es el cuadrado real de la cámara con la que se fotografía el catálogo
- * (Sony A6400, 6000x4000): más arriba serían píxeles interpolados, y el plan
- * Free topa las transformaciones en 50 MP sumando origen y destino, que a
- * 6662 px ya queda en 48. Lo que se sirve al cliente no depende de esto —
- * `lib/cloudinary-loader.ts` pide el ancho de cada vista, y el mayor que existe
- * es 1920.
+ * 5000 es el máximo que admite el plan Free por imagen (25 MP), elegido a
+ * propósito como margen: el master es lo único que no se puede rehacer sin
+ * volver a subir el catálogo entero, mientras que todo lo que se entrega se
+ * cambia en un commit. No compra detalle — medido, un master de 5000 contra uno
+ * de 4000 entrega al cliente la misma imagen (49.3 dB de PSNR, 4 KB de
+ * diferencia), porque el cuadrado real de la cámara del catálogo es 4000x4000
+ * (Sony A6400, 6000x4000) y de ahí para arriba son píxeles interpolados.
+ *
+ * El número que no se puede bajar es 3840: es lo que pide la capa de zoom del
+ * lightbox (`ANCHO_ZOOM` en `components/product/ImageGallery.tsx`). Por debajo
+ * de eso el cliente empieza a recibir menos de lo que pide.
  *
  * Los mismos valores están en el preset sin firmar `luminus-products`, que es
  * por donde sube el widget del admin. Si cambias uno, cambia el otro.
@@ -31,7 +36,7 @@ export async function uploadProductImage(
 ): Promise<{ publicId: string; url: string }> {
   const result = await cloudinary.uploader.upload(file, {
     folder,
-    transformation: [{ width: 4000, height: 4000, crop: "limit" }, { quality: 88 }],
+    transformation: [{ width: 5000, height: 5000, crop: "limit" }, { quality: 88 }],
   });
   return { publicId: result.public_id, url: result.secure_url };
 }
