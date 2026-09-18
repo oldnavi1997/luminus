@@ -196,6 +196,19 @@ function FotoConZoom({
    */
   const [vista, setVista] = useState({ escala: 1, x: 0, y: 0 });
   const { escala } = vista;
+  /**
+   * La capa nítida se empieza a bajar con la *intención* de acercar — el segundo
+   * dedo apoyado, el doble toque, la rueda —, no cuando el zoom ya terminó.
+   *
+   * Un pellizco tarda entre 200 y 500 ms en completarse; arrancar la descarga al
+   * apoyar el segundo dedo la adelanta esa ventana entera. Si esperara a
+   * `ampliada`, el cliente ve la foto borrosa durante un segundo y concluye que
+   * esa es la calidad de la foto — no tiene cómo saber que viene una mejor.
+   *
+   * Un toque suelto (cerrar) no la dispara: sería medio megabyte por cada vez
+   * que alguien abre y cierra la foto.
+   */
+  const [quiereHiRes, setQuiereHiRes] = useState(false);
   const [hiResLista, setHiResLista] = useState(false);
   const cajaRef = useRef<HTMLDivElement>(null);
   const punteros = useRef(new Map<number, { x: number; y: number }>());
@@ -267,6 +280,7 @@ function FotoConZoom({
     }
 
     if (punteros.current.size === 2) {
+      setQuiereHiRes(true); // dos dedos = va a acercar; la descarga arranca ya
       const [a, b] = [...punteros.current.values()];
       pellizco.current = {
         dist: Math.hypot(a.x - b.x, a.y - b.y),
@@ -313,6 +327,7 @@ function FotoConZoom({
     const esDoble = ahora - ultimoTap.current < 300;
     ultimoTap.current = ahora;
     if (esDoble && !arr?.movido) {
+      setQuiereHiRes(true);
       acercarA(ampliada ? 1 : ZOOM_DOBLE, respectoAlCentro(e));
       return;
     }
@@ -325,6 +340,7 @@ function FotoConZoom({
 
   const onWheel = (e: React.WheelEvent) => {
     e.stopPropagation();
+    setQuiereHiRes(true);
     acercarA(escala * Math.exp(-e.deltaY / 400), respectoAlCentro(e));
   };
 
@@ -364,15 +380,21 @@ function FotoConZoom({
         }}
       >
         <Image src={src} alt={alt} fill className="object-contain" sizes="90vw" priority />
-        {/* La capa nítida se pide sólo al ampliar, y se revela cuando terminó de
-            cargar para que no haya un parpadeo en blanco sobre la foto ajustada. */}
-        {ampliada && (
+        {/* Una vez pedida se queda montada aunque se vuelva a escala 1: soltar el
+            zoom y repetirlo es lo normal, y desmontarla obligaría a decodificar
+            de nuevo. Se revela al terminar de cargar, no antes, para no tapar la
+            foto ajustada con un hueco en blanco. */}
+        {quiereHiRes && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={cloudinaryLoader({ src, width: ANCHO_ZOOM })}
             alt=""
             aria-hidden
+            fetchPriority="high"
             onLoad={() => setHiResLista(true)}
+            // Si no carga, la foto ajustada se queda y el aviso se va: peor es
+            // dejar girando un indicador de algo que no va a llegar.
+            onError={() => setHiResLista(true)}
             className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-200 ${
               hiResLista ? "opacity-100" : "opacity-0"
             }`}
@@ -380,13 +402,25 @@ function FotoConZoom({
         )}
       </div>
 
+      {/* Un aviso por vez, en el mismo lugar: primero cómo acercar, y una vez
+          acercado, que lo borroso es momentáneo. Sin esto el cliente ve la foto
+          sin definición y da por hecho que la foto es así. */}
       <div
         className={`pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3.5 py-1.5 text-[11px] tracking-wide text-[#1c1c1c] shadow-sm transition-opacity duration-500 ${
-          pista && !ampliada ? "opacity-100" : "opacity-0"
+          ampliada && !hiResLista ? "opacity-100" : pista && !ampliada ? "opacity-100" : "opacity-0"
         }`}
       >
-        <span className="sm:hidden">Pellizca para acercar</span>
-        <span className="hidden sm:inline">Rueda o doble clic para acercar</span>
+        {ampliada ? (
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-2.5 w-2.5 animate-spin rounded-full border border-[#1c1c1c]/25 border-t-[#1c1c1c]/70" />
+            Afinando detalle…
+          </span>
+        ) : (
+          <>
+            <span className="sm:hidden">Pellizca para acercar</span>
+            <span className="hidden sm:inline">Rueda o doble clic para acercar</span>
+          </>
+        )}
       </div>
     </div>
   );
