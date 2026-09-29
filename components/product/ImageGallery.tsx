@@ -22,9 +22,13 @@ function hayMediaSource(): boolean {
  * Un video de la galería.
  *
  * `preload="none"` es deliberado y no debería relajarse: en escritorio las
- * miniaturas se seleccionan al pasar el mouse, así que un autoplay descargaría
- * el video de cada visitante que barre la tira con el cursor. Con el poster
- * puesto, un video sólo cuesta bytes cuando alguien le da play a propósito.
+ * miniaturas se seleccionan al pasar el mouse, así que precargar traería el
+ * video de cada visitante que barre la tira con el cursor. Con el poster puesto,
+ * un video sólo cuesta bytes cuando la galería decide reproducirlo.
+ *
+ * Esa decisión es `autoReproducir`, y siempre nace de un gesto con intención:
+ * un clic en la miniatura, el carrusel del teléfono deteniéndose sobre el video,
+ * o el lightbox abierto en él. Pasar el mouse por encima no cuenta.
  *
  * Los de Bunny Stream son HLS (`playlist.m3u8`) y **no se conectan hasta el
  * play**: con hls.js enganchado el `<video>` queda "cargando" y Chrome pinta el
@@ -38,12 +42,29 @@ function hayMediaSource(): boolean {
  * baja solo si la conexión no da — porque un clip de producto no puede verse
  * peor que la foto de al lado.
  */
-function VideoItem({ src, name, className }: { src: string; name: string; className?: string }) {
+function VideoItem({
+  src,
+  name,
+  className,
+  autoReproducir = false,
+}: {
+  src: string;
+  name: string;
+  className?: string;
+  /** La galería se detuvo sobre este video: arranca solo y sin sonido. */
+  autoReproducir?: boolean;
+}) {
   const ref = useRef<HTMLVideoElement>(null);
   const hls = esHls(src);
   const [activo, setActivo] = useState(!hls);
   const instanciaRef = useRef<Hls | null>(null);
   const moduloRef = useRef<typeof Hls | null>(null);
+  /**
+   * Ya tiene fuente: el próximo play sólo reanuda. Es un ref y no `activo`
+   * porque `reproducir` corre dentro del gesto del usuario y no puede esperar
+   * al render que refrescaría el estado.
+   */
+  const conectadoRef = useRef(!hls);
 
   useEffect(() => {
     if (!hls || !hayMediaSource()) return;
@@ -64,7 +85,7 @@ function VideoItem({ src, name, className }: { src: string; name: string; classN
    * rompería. `attachMedia` asigna el `src` del MediaSource en el acto, así que
    * el `play()` queda pendiente hasta que llegan los segmentos.
    */
-  const conectar = (HlsJs: typeof Hls, video: HTMLVideoElement): boolean => {
+  const conectar = useCallback((HlsJs: typeof Hls, video: HTMLVideoElement): boolean => {
     if (!HlsJs.isSupported()) return false;
     // iPhone no tiene MediaSource clásico, sólo ManagedMediaSource (iOS 17.1+),
     // y Safari no lo abre si el video admite AirPlay sin una fuente alternativa.
@@ -92,11 +113,18 @@ function VideoItem({ src, name, className }: { src: string; name: string; classN
     instancia.attachMedia(video);
     void video.play().catch(() => {});
     return true;
-  };
+  }, [src]);
 
-  const reproducir = async () => {
+  const reproducir = useCallback(async () => {
     const video = ref.current;
-    if (!video || activo) return;
+    if (!video) return;
+    // Ya enganchado —volver al video en el carrusel, o un segundo autoplay—:
+    // no hay que rehacer nada, sólo reanudar.
+    if (conectadoRef.current) {
+      void video.play().catch(() => {});
+      return;
+    }
+    conectadoRef.current = true;
     setActivo(true);
 
     // hls.js tiene prioridad sobre el HLS nativo aunque el navegador diga que lo
@@ -116,7 +144,27 @@ function VideoItem({ src, name, className }: { src: string; name: string; classN
 
     video.src = src;
     void video.play().catch(() => {});
-  };
+  }, [conectar, src]);
+
+  /**
+   * Arranca cuando la galería se detiene sobre el video y pausa al salir.
+   *
+   * **Siempre sin sonido.** Un play que no nace de un gesto del usuario sólo es
+   * legal muteado: con audio, Chrome y Safari lo rechazan con `NotAllowedError`
+   * y el cliente se queda mirando el póster. Los videos del catálogo son mudos,
+   * así que no se pierde nada — si algún día se sube uno con audio, hay que
+   * decidir acá, no en el navegador.
+   */
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    if (!autoReproducir) {
+      video.pause();
+      return;
+    }
+    video.muted = true;
+    void reproducir();
+  }, [autoReproducir, reproducir]);
 
   return (
     <>
@@ -428,6 +476,20 @@ function FotoConZoom({
 
 export function ImageGallery({ images, name }: ImageGalleryProps) {
   const [selectedIdx, setSelectedIdx] = useState(0);
+  /**
+   * Qué video puede arrancar solo, uno por capa.
+   *
+   * Son dos estados y no uno porque las dos capas están montadas a la vez —la de
+   * escritorio con `hidden sm:flex`, el carrusel con `sm:hidden`— y un índice
+   * compartido haría reproducir también al que está en `display:none`, gastando
+   * ancho de banda de Bunny para nadie.
+   *
+   * En escritorio tampoco alcanza con `selectedIdx`: las miniaturas se
+   * seleccionan al pasar el mouse, y barrer la tira no puede disparar la
+   * descarga de un video.
+   */
+  const [autoEscritorio, setAutoEscritorio] = useState<number | null>(null);
+  const [autoCarrusel, setAutoCarrusel] = useState<number | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [emblaRef, emblaApi] = useEmblaCarousel({
     dragFree: true,
@@ -438,11 +500,20 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
   // Sincronizar el índice con la imagen visible del carrusel móvil
   useEffect(() => {
     if (!emblaApi) return;
-    const onSelect = () => setSelectedIdx(emblaApi.selectedScrollSnap());
+    const onSelect = () => {
+      setSelectedIdx(emblaApi.selectedScrollSnap());
+      // El carrusel ya apunta a otra foto: el video que queda atrás se pausa.
+      setAutoCarrusel(null);
+    };
+    // `settle` y no `select`: el video arranca cuando el carrusel se queda
+    // quieto sobre él, no al pasarle por encima de largo.
+    const onSettle = () => setAutoCarrusel(emblaApi.selectedScrollSnap());
     emblaApi.on("select", onSelect);
+    emblaApi.on("settle", onSettle);
     onSelect();
     return () => {
       emblaApi.off("select", onSelect);
+      emblaApi.off("settle", onSettle);
     };
   }, [emblaApi]);
 
@@ -498,9 +569,18 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
             {images.map((img, idx) => (
               <button
                 key={idx}
-                onClick={() => setSelectedIdx(idx)}
-                onMouseEnter={() => setSelectedIdx(idx)}
-                onFocus={() => setSelectedIdx(idx)}
+                onClick={() => {
+                  setSelectedIdx(idx);
+                  setAutoEscritorio(idx);
+                }}
+                onMouseEnter={() => {
+                  setSelectedIdx(idx);
+                  setAutoEscritorio((a) => (a === idx ? a : null));
+                }}
+                onFocus={() => {
+                  setSelectedIdx(idx);
+                  setAutoEscritorio((a) => (a === idx ? a : null));
+                }}
                 className={`relative w-full aspect-square border overflow-hidden cursor-pointer transition-colors duration-150 ${
                   idx === selectedIdx
                     ? "border-[#1c1c1c]"
@@ -529,6 +609,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
               key={images[selectedIdx]}
               src={images[selectedIdx]}
               name={name}
+              autoReproducir={autoEscritorio === selectedIdx}
               className="absolute inset-0 w-full h-full object-contain"
             />
           </div>
@@ -571,6 +652,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                   <VideoItem
                     src={img}
                     name={name}
+                    autoReproducir={autoCarrusel === idx}
                     className="absolute inset-0 w-full h-full object-contain"
                   />
                 </div>
@@ -626,6 +708,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                     key={images[selectedIdx]}
                     src={images[selectedIdx]}
                     name={name}
+                    autoReproducir
                     className="absolute inset-0 w-full h-full object-contain"
                   />
                 </div>

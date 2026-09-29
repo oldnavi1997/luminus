@@ -381,11 +381,27 @@ are uploaded at original quality.
   older iOS. Do not prefer native just because `canPlayType` says yes: Chrome and
   Safari's native players start at the master's *first* variant, and Bunny lists
   360p first. `startLevel` is set to the tallest level (the master is unordered).
-- **Nothing connects before the click.** An attached hls.js makes Chrome draw a
-  loading spinner over the poster, and a source-less `<video>` shows disabled
-  controls — so a custom play button covers the poster until the first play. The
-  module is prefetched on mount and `attachMedia` + `play()` run synchronously in
-  the click, because iOS only allows unmuted playback from inside the gesture.
+- **Nothing connects until the gallery asks for it.** An attached hls.js makes
+  Chrome draw a loading spinner over the poster, and a source-less `<video>` shows
+  disabled controls — so a custom play button covers the poster until the first
+  play. The module is prefetched on mount and `attachMedia` + `play()` run
+  synchronously in the click, because iOS only allows unmuted playback from
+  inside the gesture.
+- **What starts playback** is the `autoReproducir` prop of `VideoItem`, and it is
+  always an act of intent: a click on the desktop thumbnail, the phone's carousel
+  coming to rest on the video (Embla's `settle`, not `select` — passing by does
+  not count), the lightbox opened on it, or the play button itself. **Hovering the
+  thumbnail strip deliberately does not**, even though hovering is what selects
+  the media on desktop: sweeping the strip with the cursor would fetch a video
+  from Bunny for every visitor.
+- **Autoplay is always muted** (`video.muted = true` before `play()`). A play that
+  does not come from a gesture is only legal muted; the catalogue's clips have no
+  audio, so nothing is lost. If one ever ships with sound, that decision belongs
+  in `VideoItem`, not to the browser.
+- **The two layouts keep separate autoplay state** (`autoEscritorio` /
+  `autoCarrusel` in `ImageGallery`). Both are mounted at once — one under
+  `hidden sm:flex`, the other under `sm:hidden` — so a single shared index would
+  also play the copy sitting in `display:none`.
 - **The first entry of `images` must be a photo.** The POS, `SearchBar` and the
   colour-variant chips render `images[0]` in a raw `<img>`, where a video breaks.
   Enforced by `primeraEsFoto()` in the form and in the products API (zod refine).
