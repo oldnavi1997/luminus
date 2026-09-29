@@ -195,6 +195,22 @@ function VideoItem({
   );
 }
 
+/**
+ * Cuánto del slide tiene que estar a la vista para que su video arranque, y
+ * cuánto tiene que quedarse ahí.
+ *
+ * El carrusel del teléfono es `dragFree`: no encaja en ningún lado, se detiene
+ * donde la inercia lo deje. Por eso el disparo no puede ser el `settle` de
+ * Embla —medido en un Pixel emulado, la inercia tarda entre dos y tres segundos
+ * en apagarse, y el índice que reporta es dónde *quedó*, no qué se ve— sino la
+ * visibilidad real del slide.
+ *
+ * La espera es lo que separa llegar al video de pasarle por encima: un barrido
+ * rápido lo cruza en menos de eso y no le cuesta un video a Bunny.
+ */
+const UMBRAL_VISTA = 0.7;
+const ESPERA_VISTA = 200;
+
 const ZOOM_MAX = 4;
 /** Zoom de un doble toque/clic: suficiente para leer un grabado sin perder el encuadre. */
 const ZOOM_DOBLE = 2.5;
@@ -500,22 +516,54 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
   // Sincronizar el índice con la imagen visible del carrusel móvil
   useEffect(() => {
     if (!emblaApi) return;
-    const onSelect = () => {
-      setSelectedIdx(emblaApi.selectedScrollSnap());
-      // El carrusel ya apunta a otra foto: el video que queda atrás se pausa.
-      setAutoCarrusel(null);
-    };
-    // `settle` y no `select`: el video arranca cuando el carrusel se queda
-    // quieto sobre él, no al pasarle por encima de largo.
-    const onSettle = () => setAutoCarrusel(emblaApi.selectedScrollSnap());
+    const onSelect = () => setSelectedIdx(emblaApi.selectedScrollSnap());
     emblaApi.on("select", onSelect);
-    emblaApi.on("settle", onSettle);
     onSelect();
     return () => {
       emblaApi.off("select", onSelect);
-      emblaApi.off("settle", onSettle);
     };
   }, [emblaApi]);
+
+  /**
+   * En el teléfono, el video arranca cuando el carrusel lo trae a la vista.
+   *
+   * Lo decide un IntersectionObserver contra la ventana del carrusel y no un
+   * evento de Embla: el navegador mide el cruce del umbral por su cuenta, avisa
+   * mientras el dedo todavía arrastra y vuelve a avisar cuando la inercia deja
+   * el slide a medias. Los eventos de Embla o llegan tarde (`settle`) o dicen
+   * otra cosa (`select` es a qué snap apunta, no qué se ve).
+   *
+   * En escritorio esta capa está en `display:none`, así que el observador no ve
+   * nada y no hay nada que apagar.
+   */
+  useEffect(() => {
+    if (!emblaApi) return;
+    const slides = emblaApi.slideNodes();
+    const conVideo = images.map((img, i) => (esVideo(img) ? i : -1)).filter((i) => i >= 0);
+    if (!conVideo.length) return;
+
+    let pendiente: ReturnType<typeof setTimeout> | undefined;
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        entradas.forEach((entrada) => {
+          const idx = slides.indexOf(entrada.target as HTMLElement);
+          clearTimeout(pendiente);
+          if (entrada.intersectionRatio >= UMBRAL_VISTA) {
+            pendiente = setTimeout(() => setAutoCarrusel(idx), ESPERA_VISTA);
+          } else {
+            // Salir de la vista pausa en el acto: la espera es sólo para entrar.
+            setAutoCarrusel((a) => (a === idx ? null : a));
+          }
+        });
+      },
+      { root: emblaApi.rootNode(), threshold: [0, UMBRAL_VISTA] }
+    );
+    conVideo.forEach((i) => observador.observe(slides[i]));
+    return () => {
+      clearTimeout(pendiente);
+      observador.disconnect();
+    };
+  }, [emblaApi, images]);
 
   const openLightbox = (idx: number) => {
     setSelectedIdx(idx);

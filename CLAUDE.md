@@ -389,11 +389,19 @@ are uploaded at original quality.
   inside the gesture.
 - **What starts playback** is the `autoReproducir` prop of `VideoItem`, and it is
   always an act of intent: a click on the desktop thumbnail, the phone's carousel
-  coming to rest on the video (Embla's `settle`, not `select` — passing by does
-  not count), the lightbox opened on it, or the play button itself. **Hovering the
-  thumbnail strip deliberately does not**, even though hovering is what selects
-  the media on desktop: sweeping the strip with the cursor would fetch a video
-  from Bunny for every visitor.
+  bringing the video into view, the lightbox opened on it, or the play button
+  itself. **Hovering the thumbnail strip deliberately does not**, even though
+  hovering is what selects the media on desktop: sweeping the strip with the
+  cursor would fetch a video from Bunny for every visitor.
+- **On the phone the trigger is an IntersectionObserver, not an Embla event.** The
+  carousel is `dragFree`: it snaps to nothing and stops wherever the inertia
+  leaves it. Measured on an emulated Pixel, `settle` arrives **two to three
+  seconds** after the finger lifts — long enough to read as "it does not work" —
+  and the index it reports is where the carousel landed, not what is on screen;
+  `select` is the snap it aims at, which is not that either. So the video plays
+  when its slide is `UMBRAL_VISTA` (70%) visible inside the carousel's viewport
+  and stays there `ESPERA_VISTA` (200 ms), and pauses the moment it leaves. A
+  flick straight past it never reaches the wait, so it costs nothing.
 - **Autoplay is always muted** (`video.muted = true` before `play()`). A play that
   does not come from a gesture is only legal muted; the catalogue's clips have no
   audio, so nothing is lost. If one ever ships with sound, that decision belongs
