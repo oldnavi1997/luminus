@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { formatPEN } from "@/lib/utils";
 import { ImageGallery } from "./ImageGallery";
+import { IconosBlueLight } from "./IconosBlueLight";
 import { resolvePricing } from "./LensDrawer";
 
 // ─── Opciones rápidas ──────────────────────────────────────────────────────────
@@ -152,7 +153,7 @@ export function ProductPrice({ price, comparePrice, discount }: ProductPriceProp
 
 /**
  * La galería de la ficha, con el GIF fotocromático al frente mientras esa luna
- * está elegida. Se remonta al cambiar (`key`) para que la selección vuelva a la
+ * está elegida, o los íconos de Blue Light sobre las fotos con esa otra. Se remonta al cambiar (`key`) para que la selección vuelva a la
  * primera posición en escritorio y en el carrusel sin manejar Embla desde afuera.
  */
 export function LensGallery({
@@ -172,6 +173,7 @@ export function LensGallery({
       key={conGif ? "foto" : "base"}
       images={conGif ? [gif, ...images] : images}
       name={name}
+      superpuesto={choice === "blue" ? <IconosBlueLight /> : undefined}
     />
   );
 }
