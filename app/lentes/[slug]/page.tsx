@@ -255,7 +255,19 @@ export default async function ProductPage({ params, searchParams }: Props) {
           <div className="border-t border-[#111111]/8" />
 
           {/* Add to cart */}
-          <AddToCartButton product={product} />
+          <AddToCartButton
+            product={{
+              id: product.id,
+              name: product.name,
+              slug: product.slug,
+              images: product.images,
+              skipCharges: product.skipCharges,
+              stockAlmacen: product.stockAlmacen,
+              stockTienda: product.stockTienda,
+              price: Number(product.price),
+              needsLens,
+            }}
+          />
 
           {/* Divider */}
           <div className="border-t border-[#111111]/8" />

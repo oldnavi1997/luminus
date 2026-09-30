@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X, ArrowLeft, ChevronRight, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore } from "@/stores/cart";
-import { ProductWithCategory, PrescriptionData } from "@/types";
+import { ProductoAlCarrito, PrescriptionData } from "@/types";
 import { formatPEN } from "@/lib/utils";
 import { stockDisponible } from "@/lib/stock";
 import { PRECIO_FOTOCROMATICO } from "@/lib/fotocromatico";
@@ -361,7 +361,7 @@ const SELECT_CLASS =
 // ─── Main component ────────────────────────────────────────────────────────────
 
 interface LensDrawerProps {
-  product: ProductWithCategory;
+  product: ProductoAlCarrito;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -435,7 +435,7 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
         id: product.id,
         cartKey,
         name: product.name,
-        price: Number(product.price),
+        price: product.price,
         image: product.images[0],
         imageUrl: product.images[0],
         quantity: 1,
@@ -836,7 +836,7 @@ export function LensDrawer({ product, isOpen, onClose }: LensDrawerProps) {
                   );
                   const showCalc = d.hasValues;
                   const calcTotal = pickLensTotal(d, subType);
-                  const monturaCost = Number(product.price);
+                  const monturaCost = product.price;
                   const lensCost = showCalc ? calcTotal : previewPrice;
                   const totalCost = monturaCost + lensCost;
                   return (

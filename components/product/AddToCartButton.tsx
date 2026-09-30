@@ -5,12 +5,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { LensDrawer } from "./LensDrawer";
 import { QUICK_LENSES, useLensChoice } from "./LensChoice";
-import { ProductWithCategory } from "@/types";
+import { ProductoAlCarrito } from "@/types";
 import { useCartStore } from "@/stores/cart";
 import { stockDisponible } from "@/lib/stock";
 
 interface AddToCartButtonProps {
-  product: ProductWithCategory;
+  product: ProductoAlCarrito;
 }
 
 export function AddToCartButton({ product }: AddToCartButtonProps) {
@@ -31,16 +31,14 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
     );
   }
 
-  const needsLens = product.categories.some((c) => c.requiresLensSelection);
-
-  if (!needsLens) {
+  if (!product.needsLens) {
     return (
       <Button
         onClick={() => {
           addItem({
             id: product.id,
             name: product.name,
-            price: Number(product.price),
+            price: product.price,
             image: product.images?.[0],
             imageUrl: product.images?.[0],
             slug: product.slug,
@@ -69,7 +67,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
       id: product.id,
       cartKey: `${product.id}_${lensType}_${subType ?? ""}_${esPromo ? "promo" : ""}`,
       name: product.name,
-      price: Number(product.price),
+      price: product.price,
       image: product.images[0],
       imageUrl: product.images[0],
       quantity: 1,
