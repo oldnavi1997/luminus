@@ -6,14 +6,21 @@ import { prisma } from "@/lib/prisma";
 import { miniatura } from "@/lib/media";
 import { ocultarVideosSinProcesar } from "@/lib/bunny";
 import { pageMetadata, SITE_URL } from "@/lib/seo";
-import { ImageGallery } from "@/components/product/ImageGallery";
 import { AddToCartButton } from "@/components/product/AddToCartButton";
-import { formatPEN, getPrimaryCategory } from "@/lib/utils";
+import {
+  LensChoiceProvider,
+  LensGallery,
+  LensQuickSelect,
+  ProductPrice,
+} from "@/components/product/LensChoice";
+import { getPrimaryCategory } from "@/lib/utils";
+import { PARAM_LUNA_FOTO } from "@/lib/fotocromatico";
 import { ColorVariantProduct } from "@/types";
 import AccordionItem from "@/components/product/AccordionItem";
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ luna?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -48,8 +55,9 @@ const variantSelect = {
   active: true,
 } as const;
 
-export default async function ProductPage({ params }: Props) {
+export default async function ProductPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { luna } = await searchParams;
   const product = await prisma.product.findUnique({
     where: { slug, active: true, images: { isEmpty: false } },
     include: {
@@ -81,6 +89,15 @@ export default async function ProductPage({ params }: Props) {
   const discount = hasDiscount
     ? Math.round((1 - Number(product.price) / Number(product.comparePrice)) * 100)
     : 0;
+
+  const needsLens = product.categories.some((c) => c.requiresLensSelection);
+  // Precio del Fotocromático propio del modelo; null = el de LENS_TREE.
+  const precioFoto =
+    product.photochromicPrice !== null ? Number(product.photochromicPrice) : null;
+  // `?luna=foto` viene de una categoría con `showsPhotochromic`: la ficha abre con la luna
+  // que la tarjeta mostró. Sólo si la ofrece (selector de lunas + GIF).
+  const conFoto = needsLens && !!product.photochromicGif;
+  const lunaInicial = conFoto && luna === PARAM_LUNA_FOTO ? "foto" : "regular";
 
   const specs = [
     { label: "Tipo de armazón", value: product.frameType },
@@ -122,10 +139,17 @@ export default async function ProductPage({ params }: Props) {
         <span className="text-[#111111]/55">{primaryCategory?.name}</span>
       </nav>
 
+      {/* El provider envuelve galería y detalles: la luna elegida cambia el
+          precio y, con Fotocromático, pone su GIF al frente de la galería. */}
+      <LensChoiceProvider precioFoto={precioFoto} inicial={lunaInicial}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-16">
         {/* Gallery */}
         <div className="-mx-5 sm:mx-0">
-          <ImageGallery images={galeria} name={product.name} />
+          <LensGallery
+            images={galeria}
+            gif={needsLens ? product.photochromicGif : null}
+            name={product.name}
+          />
         </div>
 
         {/* Details */}
@@ -142,22 +166,12 @@ export default async function ProductPage({ params }: Props) {
             )}
           </div>
 
-          {/* Price */}
-          <div className="flex items-baseline gap-4">
-            <span className="text-xl font-normal text-[#111111]">
-              {formatPEN(Number(product.price))}
-            </span>
-            {hasDiscount && (
-              <>
-                <span className="text-base text-[#111111]/25 line-through">
-                  {formatPEN(Number(product.comparePrice))}
-                </span>
-                <span className="bg-[#111111] text-white text-[9px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded-full">
-                  -{discount}%
-                </span>
-              </>
-            )}
-          </div>
+          {/* Price — suma la luna elegida en LensQuickSelect */}
+          <ProductPrice
+            price={Number(product.price)}
+            comparePrice={hasDiscount ? Number(product.comparePrice) : undefined}
+            discount={discount}
+          />
 
           {/* Color variants */}
           {variants.length > 0 && (
@@ -211,8 +225,10 @@ export default async function ProductPage({ params }: Props) {
             </div>
           )}
 
-          {/* Lens type tag */}
-          {product.lensType && (
+          {/* Lens: selector rápido en ópticos, etiqueta en el resto */}
+          {needsLens ? (
+            <LensQuickSelect conFoto={conFoto} />
+          ) : product.lensType && (
             <div className="flex items-center gap-3">
               <span className="text-xs text-[#111111]/50">Lente:</span>
               <span className="border border-[#111111]/20 text-xs text-[#111111]/70 px-3 py-1 rounded-full">
@@ -320,6 +336,7 @@ export default async function ProductPage({ params }: Props) {
           <div className="border-t border-[#dadadd]" />
         </div>
       </div>
+      </LensChoiceProvider>
     </div>
   );
 }

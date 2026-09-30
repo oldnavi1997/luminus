@@ -20,6 +20,7 @@ export default async function EditCategoryPage({
         description: true,
         parentId: true,
         requiresLensSelection: true,
+        showsPhotochromic: true,
       },
     }),
     prisma.category.findMany({

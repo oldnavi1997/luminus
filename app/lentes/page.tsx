@@ -110,10 +110,18 @@ interface SearchParams {
   mview?: string;
 }
 
-async function getProducts(params: SearchParams) {
+async function getProducts(params: SearchParams, conLunaFoto: boolean) {
   const where: Prisma.ProductWhereInput = { active: true, images: { isEmpty: false } };
 
   if (params.category) where.categories = { some: { slug: params.category } };
+  // Una categoría con `showsPhotochromic` lista cada modelo con esa luna puesta,
+  // así que sólo entran los que la ficha puede vender así: con GIF (sin él no
+  // ofrece la opción) y en una categoría con selección de lunas (sin ella no
+  // hay selector).
+  if (conLunaFoto) {
+    where.photochromicGif = { not: null };
+    where.AND = [{ categories: { some: { requiresLensSelection: true } } }];
+  }
   if (params.brand) where.brand = params.brand;
   if (params.frameType) where.frameType = params.frameType;
   if (params.gender) where.gender = params.gender;
@@ -192,7 +200,13 @@ export default async function LentesPage({
   const params = await searchParams;
   const view = params.view ?? "dense";
   const mview = params.mview ?? "2";
-  const { products, total, pages, page } = await getProducts(params);
+  const conLunaFoto = params.category
+    ? (await prisma.category.findUnique({
+        where: { slug: params.category },
+        select: { showsPhotochromic: true },
+      }))?.showsPhotochromic ?? false
+    : false;
+  const { products, total, pages, page } = await getProducts(params, conLunaFoto);
 
   return (
     <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10">
@@ -200,7 +214,12 @@ export default async function LentesPage({
         <CatalogToolbar total={total} />
       </Suspense>
 
-      <ProductGrid products={products} view={view} mview={mview} />
+      <ProductGrid
+        products={products}
+        view={view}
+        mview={mview}
+        conLunaFoto={conLunaFoto}
+      />
 
       <CatalogPagination page={page} pages={pages} params={params as Record<string, string | undefined>} />
     </div>
