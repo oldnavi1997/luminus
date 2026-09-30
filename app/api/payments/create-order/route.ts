@@ -7,12 +7,13 @@ import { generateOrderNumber } from "@/lib/utils";
 import { Prisma } from "@/app/generated/prisma/client";
 import { getShippingCost, getPaymentFee } from "@/lib/shipping";
 import { stockDisponible } from "@/lib/stock";
+import { precioDeLuna } from "@/lib/lunas";
 
 const createOrderSchema = z.object({
   items: z.array(z.object({
     id: z.string(),
     quantity: z.number().int().positive(),
-    lensType: z.string().optional(),
+    lensType: z.enum(["sin_medida", "con_medida", "solo_montura"]).optional(),
     lensSubType: z.string().optional(),
     lensVariant: z.string().optional(),
     lensPrice: z.number().nonnegative().optional(),
@@ -37,6 +38,44 @@ const createOrderSchema = z.object({
   // conocerla antes de crear la orden.
   paymentProvider: z.enum(["mercadopago", "izipay"]).default("mercadopago"),
 });
+
+/**
+ * El precio de la luna lo decide el servidor, no el carrito. Vale el del árbol
+ * de lunas (o el de la receta, para las graduadas con rango) y, para las dos
+ * lunas del selector rápido de la ficha, el precio propio del modelo si lo
+ * tiene: el mismo par Fotocromático/Blue Light puede estar en el carrito a los
+ * dos precios, porque el drawer cobra el normal (ver AddToCartButton).
+ *
+ * Devuelve null si lo que manda el navegador no es ninguno de esos: un carrito
+ * guardado antes de un cambio de precio, o uno manipulado.
+ */
+function lunaDelServidor(
+  item: z.infer<typeof createOrderSchema>["items"][number],
+  product: { photochromicPrice: Prisma.Decimal | null; blueLightPrice: Prisma.Decimal | null }
+): { lensPrice: number; lensPriceRange: string | null } | null {
+  if (!item.lensType) {
+    return (item.lensPrice ?? 0) === 0 ? { lensPrice: 0, lensPriceRange: null } : null;
+  }
+  const sub = item.lensSubType ?? null;
+  const { lensPrice, lensPriceRange } = precioDeLuna(
+    item.lensType,
+    sub,
+    item.lensVariant ?? null,
+    item.prescription
+  );
+  const validos = [lensPrice];
+  if (item.lensType === "sin_medida" && !item.lensVariant) {
+    const propio =
+      sub === "fotocromatico" ? product.photochromicPrice
+      : sub === "descanso" ? product.blueLightPrice
+      : null;
+    if (propio !== null) validos.push(Number(propio));
+  }
+  const pedido = item.lensPrice ?? 0;
+  const elegido = validos.find((v) => Math.abs(v - pedido) < 0.005);
+  if (elegido === undefined) return null;
+  return { lensPrice: elegido, lensPriceRange: elegido === 0 ? lensPriceRange ?? null : null };
+}
 
 /** Reintenta si `orderNumber` choca con uno existente (violación de unicidad P2002). */
 async function crearConNumeroUnico(
@@ -101,11 +140,27 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // El precio de cada luna, recalculado. Si alguno no cuadra se rechaza la
+    // orden entera en vez de cobrar otro monto del que el cliente ve.
+    const lunas = items.map((item) =>
+      lunaDelServidor(item, products.find((p) => p.id === item.id)!)
+    );
+    const desfasada = lunas.findIndex((l) => l === null);
+    if (desfasada !== -1) {
+      const nombre = products.find((p) => p.id === items[desfasada].id)?.name;
+      return NextResponse.json(
+        {
+          error: `El precio de la luna de ${nombre} cambió. Quítalo del carrito y vuelve a agregarlo.`,
+        },
+        { status: 409 }
+      );
+    }
+
     // Calculate totals (each cart item kept separate — different lens options)
-    const orderItems = items.map((item) => {
+    const orderItems = items.map((item, i) => {
       const product = products.find((p) => p.id === item.id)!;
       const unitPrice = Number(product.price);
-      const lensPrice = item.lensPrice ?? 0;
+      const { lensPrice, lensPriceRange } = lunas[i]!;
       const total = (unitPrice + lensPrice) * item.quantity;
       return {
         productId: item.id,
@@ -116,7 +171,7 @@ export async function POST(request: NextRequest) {
         lensType: item.lensType ?? null,
         lensSubType: item.lensSubType ?? null,
         lensVariant: item.lensVariant ?? null,
-        lensPriceRange: item.lensPriceRange ?? null,
+        lensPriceRange,
         prescriptionUrl: item.prescriptionUrl || null,
         prescription: item.prescription ?? null,
       };

@@ -4,7 +4,7 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 import { formatPEN } from "@/lib/utils";
 import { ImageGallery } from "./ImageGallery";
 import { IconosBlueLight } from "./IconosBlueLight";
-import { resolvePricing } from "./LensDrawer";
+import { resolvePricing } from "@/lib/lunas";
 
 // ─── Opciones rápidas ──────────────────────────────────────────────────────────
 // Atajos a dos hojas del árbol de LensDrawer: el precio sale de LENS_TREE, así
@@ -173,7 +173,7 @@ export function LensGallery({
       key={conGif ? "foto" : "base"}
       images={conGif ? [gif, ...images] : images}
       name={name}
-      superpuesto={choice === "blue" ? <IconosBlueLight /> : undefined}
+      superpuesto={choice === "blue" ? <IconosBlueLight enFicha /> : undefined}
     />
   );
 }

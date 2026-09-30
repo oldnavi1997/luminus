@@ -63,6 +63,17 @@ export const useCartStore = create<CartStore>()(
       subtotal: () =>
         get().items.reduce((acc, i) => acc + (i.price + (i.lensPrice ?? 0)) * i.quantity, 0),
     }),
-    { name: "luminus-cart" }
+    {
+      name: "luminus-cart",
+      // Sólo los productos: guardar `isDrawerOpen` reabría el carrito en cada
+      // página que se cargaba después de agregar algo.
+      partialize: (state) => ({ items: state.items }),
+      // Y al leer, sólo los productos: los navegadores que ya guardaron
+      // `isDrawerOpen: true` lo seguirían mezclando al cargar.
+      merge: (guardado, actual) => ({
+        ...actual,
+        items: (guardado as { items?: CartItem[] } | undefined)?.items ?? actual.items,
+      }),
+    }
   )
 );
