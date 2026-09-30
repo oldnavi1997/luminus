@@ -39,6 +39,13 @@ Next.js 16 App Router, React 19. No `src/` dir. All pages under `app/`, componen
 
 **Route protection:** `app/admin/layout.tsx` is a Server Component that checks `getServerSession()` and redirects non-ADMIN users.
 
+**Catalogue banners:** the image + text strip above a listing is a
+`CatalogBanner` row, one per category (`categoryId` null = the "Ver todo" one on
+`/lentes`), edited in `/admin/banners` and written by `PUT/DELETE
+/api/catalog-banners`. Images must be our Cloudinary (uploaded with the
+`luminus-products` preset from the admin). No row, or `active: false`, means the
+listing starts straight with the products.
+
 **Dynamic pages:** `app/page.tsx` and `app/lentes/page.tsx` export `export const dynamic = "force-dynamic"` to prevent static generation errors during build when DB is unreachable.
 
 ## Critical: Shared Prisma schema with POS
@@ -136,6 +143,14 @@ baked into `Order.total`. `POST /api/payments/create-order` takes
 
 Switching tabs re-derives the fee client-side (a `useMemo`, not state), and the
 server recomputes it from scratch — the client's number is never trusted.
+
+**The lens price is not trusted either.** `create-order` recomputes each line's
+lens with `precioDeLuna()` from `lib/lunas.ts` — the same tree and prescription
+table the drawer uses — and accepts the cart's `lensPrice` only if it is that
+price or, for the two quick lenses on the product page (Fotocromático,
+Blue Light/`descanso`), the model's own `photochromicPrice` / `blueLightPrice`.
+Anything else is a 409 asking the buyer to re-add the item. Lens prices live in
+`LENS_TREE` in `lib/lunas.ts`, not in `LensDrawer.tsx`.
 
 ### Mercado Pago
 
@@ -276,6 +291,11 @@ Wired into every path that can change one:
 | `POST/PUT/DELETE /api/products…` | admin panel edits |
 | `lib/fulfillment.ts` | `aprobarOrden` / `revertirOrden` — after the transaction commits |
 | `POST /api/internal/reindex` | the POS, by shared secret (`REINDEX_SECRET`) |
+
+**`npm run dev` does not write to the index.** There is only one index, so a
+test purchase or an admin edit on the local database would otherwise overwrite
+the live search. In development `sincronizarProductos()` logs and returns;
+set `ALGOLIA_SYNC_LOCAL=1` to make it write on purpose.
 
 **Sync after the transaction, never inside it.** The syncer reads the DB through
 its own connection; called inside the transaction it would read the pre-commit

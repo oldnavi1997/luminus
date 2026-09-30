@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
+import { CatalogBanner } from "@/components/catalog/CatalogBanner";
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
@@ -204,9 +205,21 @@ export default async function LentesPage({
   const categoria = params.category
     ? await prisma.category.findUnique({
         where: { slug: params.category },
-        select: { showsPhotochromic: true, showsBlueLight: true },
+        select: {
+          showsPhotochromic: true,
+          showsBlueLight: true,
+          banner: { select: { imageUrl: true, mobileImageUrl: true, title: true, text: true, active: true } },
+        },
       })
     : null;
+  // La franja de arriba: la de la categoría, o la de "Ver todo" (categoryId
+  // null) sin categoría. Una categoría que no existe no muestra ninguna.
+  const franja = params.category
+    ? categoria?.banner
+    : await prisma.catalogBanner.findFirst({
+        where: { categoryId: null },
+        select: { imageUrl: true, mobileImageUrl: true, title: true, text: true, active: true },
+      });
   const luna: LunaListado = categoria?.showsPhotochromic
     ? "foto"
     : categoria?.showsBlueLight
@@ -215,7 +228,18 @@ export default async function LentesPage({
   const { products, total, pages, page } = await getProducts(params, luna);
 
   return (
-    <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10">
+    <>
+    {franja?.active && (
+      <CatalogBanner
+        imageUrl={franja.imageUrl}
+        mobileImageUrl={franja.mobileImageUrl}
+        title={franja.title}
+        text={franja.text}
+      />
+    )}
+    {/* En el teléfono la barra de orden va casi pegada a lo de arriba —la
+        franja o el menú—: los 40 px de antes dejaban un hueco. */}
+    <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-2 sm:pt-10 pb-10">
       <Suspense>
         <CatalogToolbar total={total} />
       </Suspense>
@@ -229,5 +253,6 @@ export default async function LentesPage({
 
       <CatalogPagination page={page} pages={pages} params={params as Record<string, string | undefined>} />
     </div>
+    </>
   );
 }

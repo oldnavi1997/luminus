@@ -101,8 +101,26 @@ model Category {
   parent                Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
   children              Category[] @relation("CategoryChildren")
   products              Product[]  @relation("ProductCategories")
+  banner                CatalogBanner?
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
+}
+
+/// La franja de imagen + texto arriba del listado del catálogo, editable en
+/// /admin/banners. Una por categoría; `categoryId` null es la de "Ver todo"
+/// (/lentes sin categoría). Sin fila, o inactiva, el listado no la muestra.
+model CatalogBanner {
+  id         String    @id @default(cuid())
+  categoryId String?   @unique
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  imageUrl   String
+  /// La del teléfono (arriba, 4:3). Null = el teléfono usa `imageUrl`.
+  mobileImageUrl String?
+  title      String
+  text       String?
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 model Product {
