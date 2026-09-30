@@ -66,3 +66,15 @@ export function primeraEsFoto(images: string[]): boolean {
 
 export const MENSAJE_PRIMERA_FOTO =
   "La primera posición tiene que ser una foto, no un video";
+
+/**
+ * `Product.photochromicGif`. Se sirve **sin loader**: pasado por
+ * `cloudinary-loader` recibiría `w_…,f_auto` y Cloudinary transcodificaría el
+ * GIF animado entero una vez por cada ancho del `srcset`, que se factura por
+ * frame y roza el tope de 50 MP por transformación del plan Free.
+ */
+export function esGif(url: string): boolean {
+  return /\.gif$/i.test(url);
+}
+
+export const MENSAJE_GIF = "El GIF fotocromático tiene que ser una URL .gif";

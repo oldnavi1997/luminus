@@ -5,7 +5,7 @@ import Image from "next/image";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, X, ZoomIn, Play } from "lucide-react";
 import type Hls from "hls.js";
-import { esVideo, esHls, posterDeVideo } from "@/lib/media";
+import { esVideo, esHls, esGif, posterDeVideo } from "@/lib/media";
 import cloudinaryLoader from "@/lib/cloudinary-loader";
 
 interface ImageGalleryProps {
@@ -267,7 +267,7 @@ function FotoConZoom({
    */
   const [vista, setVista] = useState({ escala: 1, x: 0, y: 0 });
   const { escala } = vista;
-  const [hiResLista, setHiResLista] = useState(false);
+  const [hiResLista, setHiResLista] = useState(() => esGif(src));
   const cajaRef = useRef<HTMLDivElement>(null);
   const punteros = useRef(new Map<number, { x: number; y: number }>());
   const pellizco = useRef<{ dist: number; escala: number; centro: { x: number; y: number } } | null>(null);
@@ -434,14 +434,16 @@ function FotoConZoom({
           transition: gesto ? "none" : "transform 0.15s ease-out",
         }}
       >
-        <Image src={src} alt={alt} fill className="object-contain" sizes="90vw" priority />
+        <Image src={src} alt={alt} fill className="object-contain" sizes="90vw" priority unoptimized={esGif(src)} />
         {/* La capa nítida se pide al abrir el lightbox, no al acercar: es la
             única forma de que el zoom sea instantáneo. Esperar al gesto dejaba
             la foto borrosa casi un segundo, y el cliente no tiene cómo saber que
             viene una versión mejor — ve eso y concluye que la foto es así.
             Se revela al terminar de cargar, no antes, para no tapar la foto
             ajustada con un hueco en blanco. */}
-        {
+        {/* Un GIF ya es el original: no hay versión más nítida que pedir, y un
+            w_3840 de un GIF animado es de las transformaciones más caras. */}
+        {!esGif(src) && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={cloudinaryLoader({ src, width: ANCHO_ZOOM })}
@@ -463,7 +465,7 @@ function FotoConZoom({
               hiResLista ? "opacity-100" : "opacity-0"
             }`}
           />
-        }
+        )}
       </div>
 
       {/* Un aviso por vez, en el mismo lugar: primero cómo acercar, y una vez
@@ -641,6 +643,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                   fill
                   className="object-cover"
                   sizes="68px"
+                  unoptimized={esGif(img)}
                 />
                 {esVideo(img) && (
                   <span className="absolute inset-0 flex items-center justify-center bg-black/20">
@@ -681,6 +684,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                     idx === selectedIdx ? "opacity-100" : "opacity-0"
                   }`}
                   sizes="(max-width: 1024px) 45vw, 500px"
+                  unoptimized={esGif(img)}
                   priority={idx === 0}
                   loading={idx === 0 ? undefined : "eager"}
                 />
@@ -717,6 +721,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                     fill
                     className="object-contain"
                     sizes="80vw"
+                    unoptimized={esGif(img)}
                     priority={idx === 0}
                   />
                 </button>

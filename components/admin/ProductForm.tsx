@@ -152,6 +152,10 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<string[]>(product?.images || []);
+  const [gif, setGif] = useState<string | null>(product?.photochromicGif ?? null);
+  const [precioFoto, setPrecioFoto] = useState<string>(
+    product?.photochromicPrice != null ? String(product.photochromicPrice) : ""
+  );
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [subidas, setSubidas] = useState<SubidaVideo[]>([]);
   const inputVideoRef = useRef<HTMLInputElement>(null);
@@ -436,6 +440,8 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
         stockAlmacen: parseInt(data.stockAlmacen),
         stockTienda: parseInt(data.stockTienda),
         images,
+        photochromicGif: gif,
+        photochromicPrice: precioFoto.trim() ? parseFloat(precioFoto) : null,
         categoryIds: selectedCategoryIds,
         primaryCategoryId: primaryCategoryId || selectedCategoryIds[0],
         variantIds: selectedVariants.map((v) => v.id),
@@ -773,6 +779,69 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
           currentImages={images}
           onConfirm={(newUrls) => setImages((prev) => [...prev, ...newUrls])}
         />
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-3">
+        <h2 className="font-semibold text-[#111111]">GIF fotocromático (opcional)</h2>
+        <p className="text-sm text-gray-500">
+          La ficha sólo ofrece la luna Fotocromático si hay un GIF. Al elegirla, el GIF
+          pasa a ser la primera imagen de la galería.
+        </p>
+
+        {gif && (
+          <div className="flex items-start gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element -- el GIF se muestra tal cual, ver esGif() */}
+            <img src={gif} alt="GIF fotocromático" className="w-40 h-40 object-cover rounded-lg border border-gray-200" />
+            <button
+              type="button"
+              onClick={() => setGif(null)}
+              className="text-xs text-gray-400 hover:text-red-600"
+            >
+              Quitar
+            </button>
+          </div>
+        )}
+
+        <CldUploadWidget
+          uploadPreset="luminus-products"
+          options={{
+            multiple: false,
+            resourceType: "image",
+            clientAllowedFormats: ["gif"],
+            maxImageFileSize: 10_000_000,
+          }}
+          onSuccess={(result) => {
+            const info = result.info as { secure_url: string };
+            if (info?.secure_url) setGif(info.secure_url);
+          }}
+        >
+          {({ open }) => (
+            <button
+              type="button"
+              onClick={() => open()}
+              className="flex items-center gap-2 px-4 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-[#111111] hover:text-[#111111] transition-colors"
+            >
+              {gif ? "Reemplazar GIF" : "+ Subir GIF"}
+            </button>
+          )}
+        </CldUploadWidget>
+
+        <div className="max-w-xs pt-2">
+          <Input
+            id="photochromicPrice"
+            label="Precio fotocromático (S/)"
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            value={precioFoto}
+            onChange={(e) => setPrecioFoto(e.target.value)}
+            placeholder="200"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Vacío = precio normal (S/200). Sólo el botón rápido de la ficha; el drawer de lunas no cambia.
+          </p>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
