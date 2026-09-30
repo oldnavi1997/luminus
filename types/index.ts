@@ -4,6 +4,19 @@ export type ProductWithCategory = Product & {
   categories: Category[];
 };
 
+/**
+ * Lo que la ficha le pasa al botón de agregar y al LensDrawer, que son Client
+ * Components: sólo valores planos. El producto de Prisma trae `Decimal`, que
+ * React no puede serializar de servidor a cliente.
+ */
+export type ProductoAlCarrito = Pick<
+  Product,
+  "id" | "name" | "slug" | "images" | "skipCharges" | "stockAlmacen" | "stockTienda"
+> & {
+  price: number;
+  needsLens: boolean;
+};
+
 export type OrderWithItems = Order & {
   items: (OrderItem & {
     product: Product;

@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/stores/cart";
+import { useMontado } from "@/hooks/useMontado";
 import { CheckoutForm, CheckoutFormHandle } from "@/components/checkout/CheckoutForm";
 import { OrderSummary } from "@/components/checkout/OrderSummary";
 import { CustomCardForm } from "@/components/checkout/CardPaymentBrick";
@@ -32,6 +33,7 @@ interface PaymentResultData {
 
 export function CheckoutClient({ izipayEnabled }: { izipayEnabled: boolean }) {
   const { items, subtotal, clearCart } = useCartStore();
+  const montado = useMontado();
   const router = useRouter();
   const formRef = useRef<CheckoutFormHandle>(null);
   const currentOrderIdRef = useRef<string | null>(null);
@@ -83,11 +85,13 @@ export function CheckoutClient({ izipayEnabled }: { izipayEnabled: boolean }) {
     });
   }
 
+  // Hasta montar, `items` es el carrito del servidor (vacío): decidir con eso
+  // mandaba a /carrito a cualquiera que entrara con el carrito lleno.
   useEffect(() => {
-    if (itemList.length === 0 && !showResult && !isRedirectingRef.current) {
+    if (montado && itemList.length === 0 && !showResult && !isRedirectingRef.current) {
       router.push("/carrito");
     }
-  }, [itemList.length, showResult, router]);
+  }, [montado, itemList.length, showResult, router]);
 
   if (itemList.length === 0 && !showResult && !isRedirectingRef.current) return null;
 
@@ -127,8 +131,9 @@ export function CheckoutClient({ izipayEnabled }: { izipayEnabled: boolean }) {
 
 
       if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || "Error creando la orden");
+        const err = await res.json().catch(() => ({}));
+        // Un 400 de zod trae `error` como lista de issues, no como texto.
+        alert(typeof err.error === "string" ? err.error : "Error creando la orden");
         return null;
       }
 

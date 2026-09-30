@@ -94,12 +94,33 @@ model Category {
   /// GIF como imagen, precio con luna, y la ficha abre con esa luna elegida.
   /// Sólo entran los productos con GIF y selector de lunas.
   showsPhotochromic     Boolean    @default(false)
+  /// Igual, con la luna Blue Light Blocking: foto normal con los íconos de la
+  /// luna encima y precio con luna. Entran todos los que tienen selector de lunas.
+  showsBlueLight        Boolean    @default(false)
   sortOrder            Int        @default(0)
   parent                Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
   children              Category[] @relation("CategoryChildren")
   products              Product[]  @relation("ProductCategories")
+  banner                CatalogBanner?
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
+}
+
+/// La franja de imagen + texto arriba del listado del catálogo, editable en
+/// /admin/banners. Una por categoría; `categoryId` null es la de "Ver todo"
+/// (/lentes sin categoría). Sin fila, o inactiva, el listado no la muestra.
+model CatalogBanner {
+  id         String    @id @default(cuid())
+  categoryId String?   @unique
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  imageUrl   String
+  /// La del teléfono (arriba, 4:3). Null = el teléfono usa `imageUrl`.
+  mobileImageUrl String?
+  title      String
+  text       String?
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 model Product {
@@ -120,6 +141,8 @@ model Product {
   /// Precio de la luna Fotocromático en el botón rápido de la ficha, propio de
   /// este modelo. Null = rige el de LENS_TREE (S/200). El drawer no lo usa.
   photochromicPrice Decimal?              @db.Decimal(10, 2)
+  /// Lo mismo para la luna Blue Light Blocking. Null = S/80 de LENS_TREE.
+  blueLightPrice    Decimal?              @db.Decimal(10, 2)
   brand             String?
   frameType         String?
   frameMaterial     String?

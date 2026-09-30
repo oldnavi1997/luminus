@@ -38,7 +38,11 @@ export async function sendOrderConfirmation(orderId: string): Promise<void> {
         const lensRow = lensLabel
           ? `<tr>
               <td colspan="4" style="padding:2px 12px 8px;font-size:11px;color:#888;">
-                Luna: ${lensLabel}${lensPriceRange ? ` &nbsp;·&nbsp; ${lensPriceRange}` : ""}
+                Luna: ${lensLabel}${
+                  item.lensPrice && Number(item.lensPrice) > 0
+                    ? ` &nbsp;·&nbsp; ${formatPEN(Number(item.lensPrice))}`
+                    : lensPriceRange ? ` &nbsp;·&nbsp; ${lensPriceRange}` : ""
+                }
                 ${prescriptionUrl ? ` &nbsp;·&nbsp; <a href="${prescriptionUrl}" style="color:#c9a84c;">Ver ficha</a>` : ""}
               </td>
             </tr>`

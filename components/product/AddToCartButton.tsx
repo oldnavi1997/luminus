@@ -5,12 +5,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/Button";
 import { LensDrawer } from "./LensDrawer";
 import { QUICK_LENSES, useLensChoice } from "./LensChoice";
-import { ProductWithCategory } from "@/types";
+import { ProductoAlCarrito } from "@/types";
 import { useCartStore } from "@/stores/cart";
 import { stockDisponible } from "@/lib/stock";
 
 interface AddToCartButtonProps {
-  product: ProductWithCategory;
+  product: ProductoAlCarrito;
 }
 
 export function AddToCartButton({ product }: AddToCartButtonProps) {
@@ -31,16 +31,14 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
     );
   }
 
-  const needsLens = product.categories.some((c) => c.requiresLensSelection);
-
-  if (!needsLens) {
+  if (!product.needsLens) {
     return (
       <Button
         onClick={() => {
           addItem({
             id: product.id,
             name: product.name,
-            price: Number(product.price),
+            price: product.price,
             image: product.images?.[0],
             imageUrl: product.images?.[0],
             slug: product.slug,
@@ -61,7 +59,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
 
   // Misma forma y cartKey que LensDrawer.handleAddToCart: si el cliente agrega
   // la misma luna por el drawer, se suma a esta línea en vez de duplicarla.
-  // Salvo el Fotocromático con precio propio del modelo: el drawer lo cobra a
+  // Salvo la luna con precio propio del modelo: el drawer la cobra a
   // precio normal, y fusionarlos dejaría la línea con el precio de la primera.
   const agregarConLuna = () => {
     const { lensType, subType } = QUICK_LENSES[choice];
@@ -69,7 +67,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
       id: product.id,
       cartKey: `${product.id}_${lensType}_${subType ?? ""}_${esPromo ? "promo" : ""}`,
       name: product.name,
-      price: Number(product.price),
+      price: product.price,
       image: product.images[0],
       imageUrl: product.images[0],
       quantity: 1,

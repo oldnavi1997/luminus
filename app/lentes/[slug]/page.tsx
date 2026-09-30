@@ -15,6 +15,7 @@ import {
 } from "@/components/product/LensChoice";
 import { getPrimaryCategory } from "@/lib/utils";
 import { PARAM_LUNA_FOTO } from "@/lib/fotocromatico";
+import { PARAM_LUNA_BLUE } from "@/lib/blue-light";
 import { ColorVariantProduct } from "@/types";
 import AccordionItem from "@/components/product/AccordionItem";
 
@@ -91,13 +92,21 @@ export default async function ProductPage({ params, searchParams }: Props) {
     : 0;
 
   const needsLens = product.categories.some((c) => c.requiresLensSelection);
-  // Precio del Fotocromático propio del modelo; null = el de LENS_TREE.
-  const precioFoto =
-    product.photochromicPrice !== null ? Number(product.photochromicPrice) : null;
-  // `?luna=foto` viene de una categoría con `showsPhotochromic`: la ficha abre con la luna
-  // que la tarjeta mostró. Sólo si la ofrece (selector de lunas + GIF).
+  // Precios de luna propios del modelo; null = el de LENS_TREE.
+  const precios = {
+    foto: product.photochromicPrice !== null ? Number(product.photochromicPrice) : null,
+    blue: product.blueLightPrice !== null ? Number(product.blueLightPrice) : null,
+  };
+  // `?luna=foto` / `?luna=blue` viene de una categoría con `showsPhotochromic` /
+  // `showsBlueLight`: la ficha abre con la luna que la tarjeta mostró, si la
+  // ofrece (Fotocromático pide selector de lunas + GIF; Blue Light, el selector).
   const conFoto = needsLens && !!product.photochromicGif;
-  const lunaInicial = conFoto && luna === PARAM_LUNA_FOTO ? "foto" : "regular";
+  const lunaInicial =
+    conFoto && luna === PARAM_LUNA_FOTO
+      ? "foto"
+      : needsLens && luna === PARAM_LUNA_BLUE
+        ? "blue"
+        : "regular";
 
   const specs = [
     { label: "Tipo de armazón", value: product.frameType },
@@ -141,7 +150,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
 
       {/* El provider envuelve galería y detalles: la luna elegida cambia el
           precio y, con Fotocromático, pone su GIF al frente de la galería. */}
-      <LensChoiceProvider precioFoto={precioFoto} inicial={lunaInicial}>
+      <LensChoiceProvider propios={precios} inicial={lunaInicial}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-16">
         {/* Gallery */}
         <div className="-mx-5 sm:mx-0">
@@ -246,7 +255,19 @@ export default async function ProductPage({ params, searchParams }: Props) {
           <div className="border-t border-[#111111]/8" />
 
           {/* Add to cart */}
-          <AddToCartButton product={product} />
+          <AddToCartButton
+            product={{
+              id: product.id,
+              name: product.name,
+              slug: product.slug,
+              images: product.images,
+              skipCharges: product.skipCharges,
+              stockAlmacen: product.stockAlmacen,
+              stockTienda: product.stockTienda,
+              price: Number(product.price),
+              needsLens,
+            }}
+          />
 
           {/* Divider */}
           <div className="border-t border-[#111111]/8" />

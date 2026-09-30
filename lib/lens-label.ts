@@ -3,7 +3,8 @@ export const LENS_LABELS: Record<string, string> = {
   sin_medida: "Sin medida",
   con_medida: "Con medida",
   solo_montura: "Solo montura",
-  descanso: "Descanso",
+  // En la ficha se elige como "Blue Light Blocking"; el drawer la llama Descanso.
+  descanso: "Descanso (Blue Light)",
   nk: "Lunas NK",
   policarbonato: "Policarbonato",
   fotocromatico: "Fotocromático clásico",

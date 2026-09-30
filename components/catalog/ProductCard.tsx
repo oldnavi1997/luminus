@@ -5,26 +5,34 @@ import { formatPEN, getPrimaryCategory } from "@/lib/utils";
 import { stockDisponible } from "@/lib/stock";
 import { esGif } from "@/lib/media";
 import { PARAM_LUNA_FOTO, precioLunaFoto } from "@/lib/fotocromatico";
+import { PARAM_LUNA_BLUE, precioLunaBlue } from "@/lib/blue-light";
+import { IconosBlueLight } from "@/components/product/IconosBlueLight";
+
+/** La luna con que la categoría lista sus modelos; null = la tarjeta normal. */
+export type LunaListado = "foto" | "blue" | null;
 
 interface ProductCardProps {
   product: ProductWithCategory;
   view?: "dense" | "normal" | "list";
   /**
-   * La tarjeta con la luna Fotocromático puesta: GIF en vez de foto, precio con
-   * luna y la ficha abre con esa luna elegida. Sólo si el producto tiene GIF.
+   * La tarjeta con una luna puesta: precio con luna y la ficha abre con esa luna
+   * elegida. Fotocromático cambia la foto por el GIF (sólo si el producto lo
+   * tiene); Blue Light deja la foto y le pone encima los íconos de la luna.
    */
-  conLunaFoto?: boolean;
+  luna?: LunaListado;
 }
 
-export function ProductCard({ product, view = "dense", conLunaFoto = false }: ProductCardProps) {
+export function ProductCard({ product, view = "dense", luna: lunaListado = null }: ProductCardProps) {
   const primaryCategory = getPrimaryCategory(product);
   const sinStock = stockDisponible(product) === 0;
-  const gif = conLunaFoto ? product.photochromicGif : null;
+  const gif = lunaListado === "foto" ? product.photochromicGif : null;
+  const conBlue = lunaListado === "blue";
   const imageUrl = gif || product.images[0] || null;
   // Igual que ProductPrice en la ficha: la luna se suma al precio y al tachado.
-  const luna = gif ? precioLunaFoto(product) : 0;
+  const luna = gif ? precioLunaFoto(product) : conBlue ? precioLunaBlue(product) : 0;
   const precio = Number(product.price) + luna;
-  const href = gif ? `/lentes/${product.slug}?luna=${PARAM_LUNA_FOTO}` : `/lentes/${product.slug}`;
+  const param = gif ? PARAM_LUNA_FOTO : conBlue ? PARAM_LUNA_BLUE : null;
+  const href = param ? `/lentes/${product.slug}?luna=${param}` : `/lentes/${product.slug}`;
   const hasDiscount = product.comparePrice && Number(product.comparePrice) > Number(product.price);
   const discount = hasDiscount
     ? Math.round((1 - Number(product.price) / Number(product.comparePrice)) * 100)
@@ -33,7 +41,7 @@ export function ProductCard({ product, view = "dense", conLunaFoto = false }: Pr
   if (view === "dense") {
     return (
       <Link href={href} className="group block">
-        <div className="relative aspect-square bg-[#f5f5f4] overflow-hidden">
+        <div className="@container relative aspect-square bg-[#f5f5f4] overflow-hidden">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -51,6 +59,7 @@ export function ProductCard({ product, view = "dense", conLunaFoto = false }: Pr
               </svg>
             </div>
           )}
+          {conBlue && <IconosBlueLight />}
           {sinStock && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-[1px]">
               <span className="text-[10px] font-medium text-[#111111]/50 uppercase tracking-[0.2em] border border-[#111111]/20 px-3 py-1.5">
@@ -77,7 +86,7 @@ export function ProductCard({ product, view = "dense", conLunaFoto = false }: Pr
       className="group block bg-white border border-[#dadadd] overflow-hidden hover:border-[#1c1c1c]/20 hover:shadow-sm transition-all duration-400"
     >
       {/* Image container */}
-      <div className="relative aspect-square bg-[#f9f8f4] overflow-hidden cursor-pointer">
+      <div className="@container relative aspect-square bg-[#f9f8f4] overflow-hidden cursor-pointer">
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -95,6 +104,7 @@ export function ProductCard({ product, view = "dense", conLunaFoto = false }: Pr
             </svg>
           </div>
         )}
+        {conBlue && <IconosBlueLight />}
 
         {/* Badges */}
         {product.featured && !hasDiscount && (

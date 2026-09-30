@@ -1,29 +1,7 @@
 import Image from "next/image";
 import { CartItem } from "@/types";
 import { formatPEN } from "@/lib/utils";
-
-const LENS_LABELS: Record<string, string> = {
-  sin_medida: "Sin medida",
-  con_medida: "Con medida",
-  solo_montura: "Solo montura",
-  descanso: "Descanso",
-  nk: "Lunas NK",
-  policarbonato: "Policarbonato",
-  fotocromatico: "Fotocromático clásico",
-  transition: "Transition Gen S",
-  alto_indice: "Alto índice",
-  convencional: "Convencional",
-  crizal_sapphire: "Crizal Sapphire",
-  con_ficha: "Con ficha",
-  ar16: "Base Kodak",
-  sapphire: "Sapphire",
-};
-
-function buildLensLabel(type?: string, sub?: string, variant?: string): string | null {
-  const parts = [type, sub, variant].filter(Boolean);
-  if (parts.length === 0) return null;
-  return parts.map((k) => LENS_LABELS[k!] ?? k).join(" · ");
-}
+import { buildLensLabel } from "@/lib/lens-label";
 
 interface OrderSummaryProps {
   items: CartItem[];

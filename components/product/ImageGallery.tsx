@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import Image from "next/image";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeft, ChevronRight, X, ZoomIn, Play } from "lucide-react";
@@ -11,6 +11,12 @@ import cloudinaryLoader from "@/lib/cloudinary-loader";
 interface ImageGalleryProps {
   images: string[];
   name: string;
+  /**
+   * Algo que va encima de cada foto —la grande de escritorio y cada una del
+   * carrusel—, no de los videos ni del lightbox. Esas cajas son `@container`,
+   * así que puede medirse en `cqw`. Hoy: los íconos de la luna Blue Light.
+   */
+  superpuesto?: ReactNode;
 }
 
 /** MediaSource clásico o ManagedMediaSource (iPhone con iOS 17.1+): con cualquiera, hls.js. */
@@ -492,7 +498,7 @@ function FotoConZoom({
   );
 }
 
-export function ImageGallery({ images, name }: ImageGalleryProps) {
+export function ImageGallery({ images, name, superpuesto }: ImageGalleryProps) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   /**
    * Qué video puede arrancar solo, uno por capa.
@@ -669,7 +675,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
             type="button"
             onClick={() => setLightboxOpen(true)}
             aria-label="Ampliar imagen"
-            className="flex-1 relative aspect-square bg-white overflow-hidden cursor-zoom-in"
+            className="@container flex-1 relative aspect-square bg-white overflow-hidden cursor-zoom-in"
           >
             {images.map((img, idx) =>
               // Los videos no entran en la pila: sólo las fotos se apilan con
@@ -690,6 +696,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                 />
               )
             )}
+            {superpuesto}
           </button>
         )}
       </div>
@@ -713,7 +720,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                   key={idx}
                   type="button"
                   onClick={() => openLightbox(idx)}
-                  className="w-[80%] flex-shrink-0 relative aspect-square bg-[#f5f5f5]"
+                  className="@container w-[80%] flex-shrink-0 relative aspect-square bg-[#f5f5f5]"
                 >
                   <Image
                     src={img}
@@ -724,6 +731,7 @@ export function ImageGallery({ images, name }: ImageGalleryProps) {
                     unoptimized={esGif(img)}
                     priority={idx === 0}
                   />
+                  {superpuesto}
                 </button>
               )
             )}

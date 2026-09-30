@@ -1,9 +1,11 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
+import { CatalogBanner } from "@/components/catalog/CatalogBanner";
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
+import type { LunaListado } from "@/components/catalog/ProductCard";
 import { CatalogToolbar } from "@/components/catalog/CatalogToolbar";
 import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { Prisma } from "@/app/generated/prisma/client";
@@ -110,18 +112,18 @@ interface SearchParams {
   mview?: string;
 }
 
-async function getProducts(params: SearchParams, conLunaFoto: boolean) {
+async function getProducts(params: SearchParams, luna: LunaListado) {
   const where: Prisma.ProductWhereInput = { active: true, images: { isEmpty: false } };
 
   if (params.category) where.categories = { some: { slug: params.category } };
-  // Una categoría con `showsPhotochromic` lista cada modelo con esa luna puesta,
-  // así que sólo entran los que la ficha puede vender así: con GIF (sin él no
-  // ofrece la opción) y en una categoría con selección de lunas (sin ella no
-  // hay selector).
-  if (conLunaFoto) {
-    where.photochromicGif = { not: null };
+  // Una categoría con `showsPhotochromic` / `showsBlueLight` lista cada modelo
+  // con esa luna puesta, así que sólo entran los que la ficha puede vender así:
+  // en una categoría con selección de lunas (sin ella no hay selector) y, para
+  // Fotocromático, con GIF (sin él la ficha no ofrece la opción).
+  if (luna) {
     where.AND = [{ categories: { some: { requiresLensSelection: true } } }];
   }
+  if (luna === "foto") where.photochromicGif = { not: null };
   if (params.brand) where.brand = params.brand;
   if (params.frameType) where.frameType = params.frameType;
   if (params.gender) where.gender = params.gender;
@@ -200,16 +202,44 @@ export default async function LentesPage({
   const params = await searchParams;
   const view = params.view ?? "dense";
   const mview = params.mview ?? "2";
-  const conLunaFoto = params.category
-    ? (await prisma.category.findUnique({
+  const categoria = params.category
+    ? await prisma.category.findUnique({
         where: { slug: params.category },
-        select: { showsPhotochromic: true },
-      }))?.showsPhotochromic ?? false
-    : false;
-  const { products, total, pages, page } = await getProducts(params, conLunaFoto);
+        select: {
+          showsPhotochromic: true,
+          showsBlueLight: true,
+          banner: { select: { imageUrl: true, mobileImageUrl: true, title: true, text: true, active: true } },
+        },
+      })
+    : null;
+  // La franja de arriba: la de la categoría, o la de "Ver todo" (categoryId
+  // null) sin categoría. Una categoría que no existe no muestra ninguna.
+  const franja = params.category
+    ? categoria?.banner
+    : await prisma.catalogBanner.findFirst({
+        where: { categoryId: null },
+        select: { imageUrl: true, mobileImageUrl: true, title: true, text: true, active: true },
+      });
+  const luna: LunaListado = categoria?.showsPhotochromic
+    ? "foto"
+    : categoria?.showsBlueLight
+      ? "blue"
+      : null;
+  const { products, total, pages, page } = await getProducts(params, luna);
 
   return (
-    <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10">
+    <>
+    {franja?.active && (
+      <CatalogBanner
+        imageUrl={franja.imageUrl}
+        mobileImageUrl={franja.mobileImageUrl}
+        title={franja.title}
+        text={franja.text}
+      />
+    )}
+    {/* En el teléfono la barra de orden va casi pegada a lo de arriba —la
+        franja o el menú—: los 40 px de antes dejaban un hueco. */}
+    <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-2 sm:pt-10 pb-10">
       <Suspense>
         <CatalogToolbar total={total} />
       </Suspense>
@@ -218,10 +248,11 @@ export default async function LentesPage({
         products={products}
         view={view}
         mview={mview}
-        conLunaFoto={conLunaFoto}
+        luna={luna}
       />
 
       <CatalogPagination page={page} pages={pages} params={params as Record<string, string | undefined>} />
     </div>
+    </>
   );
 }

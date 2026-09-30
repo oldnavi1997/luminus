@@ -156,6 +156,9 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
   const [precioFoto, setPrecioFoto] = useState<string>(
     product?.photochromicPrice != null ? String(product.photochromicPrice) : ""
   );
+  const [precioBlue, setPrecioBlue] = useState<string>(
+    product?.blueLightPrice != null ? String(product.blueLightPrice) : ""
+  );
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
   const [subidas, setSubidas] = useState<SubidaVideo[]>([]);
   const inputVideoRef = useRef<HTMLInputElement>(null);
@@ -442,6 +445,7 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
         images,
         photochromicGif: gif,
         photochromicPrice: precioFoto.trim() ? parseFloat(precioFoto) : null,
+        blueLightPrice: precioBlue.trim() ? parseFloat(precioBlue) : null,
         categoryIds: selectedCategoryIds,
         primaryCategoryId: primaryCategoryId || selectedCategoryIds[0],
         variantIds: selectedVariants.map((v) => v.id),
@@ -840,6 +844,26 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
           />
           <p className="text-xs text-gray-400 mt-1">
             Vacío = precio normal (S/200). Sólo el botón rápido de la ficha; el drawer de lunas no cambia.
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-3">
+        <h2 className="font-semibold text-[#111111]">Blue Light Blocking (opcional)</h2>
+        <div className="max-w-xs">
+          <Input
+            id="blueLightPrice"
+            label="Precio Blue Light (S/)"
+            type="number"
+            min="0"
+            step="0.01"
+            inputMode="decimal"
+            value={precioBlue}
+            onChange={(e) => setPrecioBlue(e.target.value)}
+            placeholder="80"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Vacío = precio normal (S/80). Sólo el botón rápido de la ficha y la categoría Blue Light; el drawer de lunas no cambia.
           </p>
         </div>
       </div>

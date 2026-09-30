@@ -3,7 +3,8 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { formatPEN } from "@/lib/utils";
 import { ImageGallery } from "./ImageGallery";
-import { resolvePricing } from "./LensDrawer";
+import { IconosBlueLight } from "./IconosBlueLight";
+import { resolvePricing } from "@/lib/lunas";
 
 // ─── Opciones rápidas ──────────────────────────────────────────────────────────
 // Atajos a dos hojas del árbol de LensDrawer: el precio sale de LENS_TREE, así
@@ -22,9 +23,19 @@ export const QUICK_LENSES: Record<
 
 const ORDEN: QuickLens[] = ["regular", "blue", "foto"];
 
-/** `precioFoto`: precio propio del modelo; sólo reemplaza al Fotocromático. */
-function precioDe(choice: QuickLens, precioFoto: number | null): number {
-  if (choice === "foto" && precioFoto !== null) return precioFoto;
+/**
+ * Precios propios del modelo por luna rápida (`photochromicPrice`,
+ * `blueLightPrice`). Null = el de LENS_TREE.
+ */
+export type PreciosPropios = Partial<Record<QuickLens, number | null>>;
+
+function precioPropio(choice: QuickLens, propios: PreciosPropios): number | null {
+  return propios[choice] ?? null;
+}
+
+function precioDe(choice: QuickLens, propios: PreciosPropios): number {
+  const propio = precioPropio(choice, propios);
+  if (propio !== null) return propio;
   const { lensType, subType } = QUICK_LENSES[choice];
   return resolvePricing(lensType, subType, null).lensPrice;
 }
@@ -36,28 +47,29 @@ function precioDe(choice: QuickLens, precioFoto: number | null): number {
 interface LensChoiceState {
   choice: QuickLens;
   setChoice: (c: QuickLens) => void;
-  precioFoto: number | null;
+  propios: PreciosPropios;
 }
 
 const LensChoiceContext = createContext<LensChoiceState | null>(null);
 
 /**
- * `precioFoto`: el `photochromicPrice` del producto, o null. Con él, el
- * Fotocromático cobra ese precio y no el de LENS_TREE.
- * `inicial`: la luna con que abre la ficha (`?luna=foto` desde una categoría fotocromática).
+ * `propios`: los precios propios del producto por luna; la que lo tenga cobra
+ * ese precio y no el de LENS_TREE.
+ * `inicial`: la luna con que abre la ficha (`?luna=foto` / `?luna=blue` desde
+ * una categoría que lista los modelos con esa luna).
  */
 export function LensChoiceProvider({
   children,
-  precioFoto = null,
+  propios = {},
   inicial = "regular",
 }: {
   children: ReactNode;
-  precioFoto?: number | null;
+  propios?: PreciosPropios;
   inicial?: QuickLens;
 }) {
   const [choice, setChoice] = useState<QuickLens>(inicial);
   return (
-    <LensChoiceContext.Provider value={{ choice, setChoice, precioFoto }}>
+    <LensChoiceContext.Provider value={{ choice, setChoice, propios }}>
       {children}
     </LensChoiceContext.Provider>
   );
@@ -67,13 +79,13 @@ export function LensChoiceProvider({
 export function useLensChoice() {
   const ctx = useContext(LensChoiceContext);
   const choice = ctx?.choice ?? "regular";
-  const precioFoto = ctx?.precioFoto ?? null;
+  const propios = ctx?.propios ?? {};
   return {
     choice,
     setChoice: ctx?.setChoice ?? (() => {}),
-    lensPrice: precioDe(choice, precioFoto),
-    /** Fotocromático a precio propio: va en su propia línea del carrito. */
-    esPromo: choice === "foto" && precioFoto !== null,
+    lensPrice: precioDe(choice, propios),
+    /** Luna a precio propio del modelo: va en su propia línea del carrito. */
+    esPromo: precioPropio(choice, propios) !== null,
   };
 }
 
@@ -141,7 +153,7 @@ export function ProductPrice({ price, comparePrice, discount }: ProductPriceProp
 
 /**
  * La galería de la ficha, con el GIF fotocromático al frente mientras esa luna
- * está elegida. Se remonta al cambiar (`key`) para que la selección vuelva a la
+ * está elegida, o los íconos de Blue Light sobre las fotos con esa otra. Se remonta al cambiar (`key`) para que la selección vuelva a la
  * primera posición en escritorio y en el carrusel sin manejar Embla desde afuera.
  */
 export function LensGallery({
@@ -161,6 +173,7 @@ export function LensGallery({
       key={conGif ? "foto" : "base"}
       images={conGif ? [gif, ...images] : images}
       name={name}
+      superpuesto={choice === "blue" ? <IconosBlueLight enFicha /> : undefined}
     />
   );
 }

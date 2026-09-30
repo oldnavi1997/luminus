@@ -21,12 +21,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
   try {
-    const { name, slug, description, parentId, requiresLensSelection, showsPhotochromic } = await req.json();
+    const { name, slug, description, parentId, requiresLensSelection, showsPhotochromic, showsBlueLight } = await req.json();
     if (!name || !slug) {
       return NextResponse.json({ error: "Nombre y slug son requeridos" }, { status: 400 });
     }
+    if (showsPhotochromic && showsBlueLight) {
+      return NextResponse.json({ error: "Elige una sola luna para mostrar la categoría" }, { status: 400 });
+    }
     const category = await prisma.category.create({
-      data: { name, slug, description: description || null, parentId: parentId || null, requiresLensSelection: requiresLensSelection ?? false, showsPhotochromic: showsPhotochromic ?? false },
+      data: { name, slug, description: description || null, parentId: parentId || null, requiresLensSelection: requiresLensSelection ?? false, showsPhotochromic: showsPhotochromic ?? false, showsBlueLight: showsBlueLight ?? false },
     });
     return NextResponse.json(category, { status: 201 });
   } catch (err: any) {

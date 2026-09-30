@@ -80,6 +80,15 @@ export async function sincronizarProductos(ids: string[]): Promise<ResultadoSync
   const unicos = [...new Set(ids.filter(Boolean))];
   if (unicos.length === 0) return { indexados: 0, borrados: 0 };
 
+  // Hay un solo índice y lo consume el sitio en vivo. Desde `npm run dev` esto
+  // escribiría ahí la base local —una compra de prueba, una edición en el admin—,
+  // así que en desarrollo no escribe salvo que se pida con ALGOLIA_SYNC_LOCAL=1.
+  // `npm run algolia:resync` no pasa por aquí con NODE_ENV=development.
+  if (process.env.NODE_ENV === "development" && process.env.ALGOLIA_SYNC_LOCAL !== "1") {
+    console.info(`[algolia] desarrollo: no se sincronizan ${unicos.length} producto(s)`);
+    return { indexados: 0, borrados: 0 };
+  }
+
   const productos = await prisma.product.findMany({
     where: { id: { in: unicos } },
     select: SELECT,

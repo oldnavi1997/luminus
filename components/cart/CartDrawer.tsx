@@ -7,56 +7,36 @@ import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { useCartStore } from "@/stores/cart";
 import { CartItem } from "@/types";
 import { formatPEN } from "@/lib/utils";
+import { buildLensLabel } from "@/lib/lens-label";
+import { useMontado } from "@/hooks/useMontado";
 
 function lensLabel(item: CartItem): string {
-  const parts: string[] = [];
-  const typeMap: Record<string, string> = {
-    sin_medida: "Sin medida",
-    con_medida: "Con medida",
-    solo_montura: "Solo montura",
-  };
-  if (item.lensType) parts.push(typeMap[item.lensType] ?? item.lensType);
-  if (item.lensSubType) {
-    const subMap: Record<string, string> = {
-      nk: "NK",
-      policarbonato: "Policarbonato",
-      fotocromatico: "Fotocromático",
-      transition: "Transition Gen S",
-      alto_indice: "Alto índice",
-    };
-    parts.push(subMap[item.lensSubType] ?? item.lensSubType);
-  }
-  if (item.lensVariant) {
-    const varMap: Record<string, string> = {
-      convencional: "Convencional",
-      crizal_sapphire: "Crizal Sapphire",
-      con_ficha: "Con ficha",
-      ar16: "Base Kodak",
-      sapphire: "Sapphire",
-    };
-    parts.push(varMap[item.lensVariant] ?? item.lensVariant);
-  }
+  const label = buildLensLabel(item.lensType, item.lensSubType, item.lensVariant) ?? "";
   const priceStr = item.lensPriceRange
     ? item.lensPriceRange
     : item.lensPrice
     ? formatPEN(item.lensPrice)
     : null;
-  return parts.join(" · ") + (priceStr ? ` — ${priceStr}` : "");
+  return label + (priceStr ? ` — ${priceStr}` : "");
 }
 
 export function CartDrawer() {
   const {
     isDrawerOpen,
     closeDrawer,
-    items,
+    items: guardados,
     updateQuantity,
     removeItem,
     itemCount,
     subtotal,
   } = useCartStore();
 
-  const count = itemCount();
-  const total = subtotal();
+  // El carrito vive en localStorage: el servidor lo ve vacío. Hasta montar se
+  // dibuja vacío también aquí, o la hidratación no coincide (como en Navbar).
+  const mounted = useMontado();
+  const items = mounted ? guardados : [];
+  const count = mounted ? itemCount() : 0;
+  const total = mounted ? subtotal() : 0;
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
