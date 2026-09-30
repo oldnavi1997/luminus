@@ -61,7 +61,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
 
   // Misma forma y cartKey que LensDrawer.handleAddToCart: si el cliente agrega
   // la misma luna por el drawer, se suma a esta línea en vez de duplicarla.
-  // Salvo el Fotocromático con precio propio del modelo: el drawer lo cobra a
+  // Salvo la luna con precio propio del modelo: el drawer la cobra a
   // precio normal, y fusionarlos dejaría la línea con el precio de la primera.
   const agregarConLuna = () => {
     const { lensType, subType } = QUICK_LENSES[choice];

@@ -1,15 +1,15 @@
 import { ProductWithCategory } from "@/types";
-import { ProductCard } from "./ProductCard";
+import { ProductCard, type LunaListado } from "./ProductCard";
 
 interface ProductGridProps {
   products: ProductWithCategory[];
   view?: string;
   mview?: string;
-  /** Categoría con `showsPhotochromic`: cada tarjeta con la luna puesta (ver ProductCard). */
-  conLunaFoto?: boolean;
+  /** Categoría con `showsPhotochromic` / `showsBlueLight`: cada tarjeta con esa luna puesta (ver ProductCard). */
+  luna?: LunaListado;
 }
 
-export function ProductGrid({ products, view = "dense", mview = "2", conLunaFoto = false }: ProductGridProps) {
+export function ProductGrid({ products, view = "dense", mview = "2", luna = null }: ProductGridProps) {
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -40,7 +40,7 @@ export function ProductGrid({ products, view = "dense", mview = "2", conLunaFoto
   return (
     <div className={gridClass}>
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} view={cardView as "dense" | "normal" | "list"} conLunaFoto={conLunaFoto} />
+        <ProductCard key={product.id} product={product} view={cardView as "dense" | "normal" | "list"} luna={luna} />
       ))}
     </div>
   );

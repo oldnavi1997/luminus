@@ -5,26 +5,33 @@ import { formatPEN, getPrimaryCategory } from "@/lib/utils";
 import { stockDisponible } from "@/lib/stock";
 import { esGif } from "@/lib/media";
 import { PARAM_LUNA_FOTO, precioLunaFoto } from "@/lib/fotocromatico";
+import { PARAM_LUNA_BLUE, precioLunaBlue } from "@/lib/blue-light";
+
+/** La luna con que la categoría lista sus modelos; null = la tarjeta normal. */
+export type LunaListado = "foto" | "blue" | null;
 
 interface ProductCardProps {
   product: ProductWithCategory;
   view?: "dense" | "normal" | "list";
   /**
-   * La tarjeta con la luna Fotocromático puesta: GIF en vez de foto, precio con
-   * luna y la ficha abre con esa luna elegida. Sólo si el producto tiene GIF.
+   * La tarjeta con una luna puesta: precio con luna y la ficha abre con esa luna
+   * elegida. Fotocromático cambia la foto por el GIF (sólo si el producto lo
+   * tiene); Blue Light deja la foto y le pone encima los íconos de la luna.
    */
-  conLunaFoto?: boolean;
+  luna?: LunaListado;
 }
 
-export function ProductCard({ product, view = "dense", conLunaFoto = false }: ProductCardProps) {
+export function ProductCard({ product, view = "dense", luna: lunaListado = null }: ProductCardProps) {
   const primaryCategory = getPrimaryCategory(product);
   const sinStock = stockDisponible(product) === 0;
-  const gif = conLunaFoto ? product.photochromicGif : null;
+  const gif = lunaListado === "foto" ? product.photochromicGif : null;
+  const conBlue = lunaListado === "blue";
   const imageUrl = gif || product.images[0] || null;
   // Igual que ProductPrice en la ficha: la luna se suma al precio y al tachado.
-  const luna = gif ? precioLunaFoto(product) : 0;
+  const luna = gif ? precioLunaFoto(product) : conBlue ? precioLunaBlue(product) : 0;
   const precio = Number(product.price) + luna;
-  const href = gif ? `/lentes/${product.slug}?luna=${PARAM_LUNA_FOTO}` : `/lentes/${product.slug}`;
+  const param = gif ? PARAM_LUNA_FOTO : conBlue ? PARAM_LUNA_BLUE : null;
+  const href = param ? `/lentes/${product.slug}?luna=${param}` : `/lentes/${product.slug}`;
   const hasDiscount = product.comparePrice && Number(product.comparePrice) > Number(product.price);
   const discount = hasDiscount
     ? Math.round((1 - Number(product.price) / Number(product.comparePrice)) * 100)
@@ -33,7 +40,7 @@ export function ProductCard({ product, view = "dense", conLunaFoto = false }: Pr
   if (view === "dense") {
     return (
       <Link href={href} className="group block">
-        <div className="relative aspect-square bg-[#f5f5f4] overflow-hidden">
+        <div className="@container relative aspect-square bg-[#f5f5f4] overflow-hidden">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -51,6 +58,7 @@ export function ProductCard({ product, view = "dense", conLunaFoto = false }: Pr
               </svg>
             </div>
           )}
+          {conBlue && <IconosBlueLight />}
           {sinStock && (
             <div className="absolute inset-0 bg-white/60 flex items-center justify-center backdrop-blur-[1px]">
               <span className="text-[10px] font-medium text-[#111111]/50 uppercase tracking-[0.2em] border border-[#111111]/20 px-3 py-1.5">
@@ -77,7 +85,7 @@ export function ProductCard({ product, view = "dense", conLunaFoto = false }: Pr
       className="group block bg-white border border-[#dadadd] overflow-hidden hover:border-[#1c1c1c]/20 hover:shadow-sm transition-all duration-400"
     >
       {/* Image container */}
-      <div className="relative aspect-square bg-[#f9f8f4] overflow-hidden cursor-pointer">
+      <div className="@container relative aspect-square bg-[#f9f8f4] overflow-hidden cursor-pointer">
         {imageUrl ? (
           <Image
             src={imageUrl}
@@ -95,6 +103,7 @@ export function ProductCard({ product, view = "dense", conLunaFoto = false }: Pr
             </svg>
           </div>
         )}
+        {conBlue && <IconosBlueLight />}
 
         {/* Badges */}
         {product.featured && !hasDiscount && (
@@ -149,5 +158,36 @@ export function ProductCard({ product, view = "dense", conLunaFoto = false }: Pr
         </div>
       </div>
     </Link>
+  );
+}
+
+const ICONOS_BLUE_LIGHT = [
+  { src: "/iconos/blue-light/filtro-luz-azul.png", label: "Filtro de luz azul" },
+  { src: "/iconos/blue-light/antireflex.png", label: "Antireflex" },
+  // El ícono ya trae el "UV400"; la etiqueta completa lo que falta.
+  { src: "/iconos/blue-light/uv400.png", label: "Protección total" },
+];
+
+/**
+ * Lo que trae la luna Blue Light, en tres recuadros sobre la esquina superior
+ * derecha de la foto. Medido en `cqw` (ancho de la tarjeta, que es `@container`)
+ * para que guarde la proporción en la tarjeta de un teléfono y en la de escritorio.
+ */
+function IconosBlueLight() {
+  return (
+    <div className="absolute top-[4cqw] right-[3cqw] flex gap-[1.5cqw] pointer-events-none">
+      {ICONOS_BLUE_LIGHT.map(({ src, label }) => (
+        <div
+          key={src}
+          className="w-[19cqw] aspect-[0.86] flex flex-col items-center justify-center gap-[1cqw] bg-white/90 border border-[#111111]/10 rounded-[2cqw] px-[1cqw]"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- ícono de 150 px, nada que optimizar */}
+          <img src={src} alt="" className="w-[80%] h-[9cqw] object-contain" />
+          <span className="text-center font-semibold uppercase leading-[1.1] text-[#1b2a4a] text-[max(5px,2.3cqw)]">
+            {label}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }

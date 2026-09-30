@@ -94,6 +94,9 @@ model Category {
   /// GIF como imagen, precio con luna, y la ficha abre con esa luna elegida.
   /// Sólo entran los productos con GIF y selector de lunas.
   showsPhotochromic     Boolean    @default(false)
+  /// Igual, con la luna Blue Light Blocking: foto normal con los íconos de la
+  /// luna encima y precio con luna. Entran todos los que tienen selector de lunas.
+  showsBlueLight        Boolean    @default(false)
   sortOrder            Int        @default(0)
   parent                Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
   children              Category[] @relation("CategoryChildren")
@@ -120,6 +123,8 @@ model Product {
   /// Precio de la luna Fotocromático en el botón rápido de la ficha, propio de
   /// este modelo. Null = rige el de LENS_TREE (S/200). El drawer no lo usa.
   photochromicPrice Decimal?              @db.Decimal(10, 2)
+  /// Lo mismo para la luna Blue Light Blocking. Null = S/80 de LENS_TREE.
+  blueLightPrice    Decimal?              @db.Decimal(10, 2)
   brand             String?
   frameType         String?
   frameMaterial     String?

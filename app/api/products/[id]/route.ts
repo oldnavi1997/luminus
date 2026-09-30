@@ -58,6 +58,7 @@ const updateSchema = z.object({
   images: z.array(z.string()).refine(primeraEsFoto, MENSAJE_PRIMERA_FOTO).optional(),
   photochromicGif: z.string().url().refine(esGif, MENSAJE_GIF).nullable().optional(),
   photochromicPrice: z.number().nonnegative().nullable().optional(),
+  blueLightPrice: z.number().nonnegative().nullable().optional(),
   brand: z.string().optional(),
   frameType: z.string().optional(),
   frameMaterial: z.string().optional(),

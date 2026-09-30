@@ -8,6 +8,7 @@ import { ProductWithCategory, PrescriptionData } from "@/types";
 import { formatPEN } from "@/lib/utils";
 import { stockDisponible } from "@/lib/stock";
 import { PRECIO_FOTOCROMATICO } from "@/lib/fotocromatico";
+import { PRECIO_BLUE_LIGHT } from "@/lib/blue-light";
 import { calcularDesglose, type Desglose } from "@/hooks/useCalculoLunas";
 
 // ─── Lens tree data ────────────────────────────────────────────────────────────
@@ -54,7 +55,7 @@ const LENS_TREE: Level1Option[] = [
         id: "descanso",
         label: "Descanso",
         description: "Luna sin graduación para descanso visual, poseen Filtro de luz azul, Antireflex y UV400",
-        price: 80,
+        price: PRECIO_BLUE_LIGHT,
         action: "direct",
       },
       {

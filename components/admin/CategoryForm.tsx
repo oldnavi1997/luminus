@@ -25,6 +25,7 @@ interface CategoryFormProps {
     parentId: string | null;
     requiresLensSelection: boolean;
     showsPhotochromic: boolean;
+    showsBlueLight: boolean;
   };
   categories: CategoryOption[];
 }
@@ -40,6 +41,7 @@ export function CategoryForm({ category, categories }: CategoryFormProps) {
     parentId: category?.parentId ?? "",
     requiresLensSelection: category?.requiresLensSelection ?? false,
     showsPhotochromic: category?.showsPhotochromic ?? false,
+    showsBlueLight: category?.showsBlueLight ?? false,
   });
 
   // Hierarchical parent options (depth-first, indented)
@@ -80,6 +82,7 @@ export function CategoryForm({ category, categories }: CategoryFormProps) {
           parentId: form.parentId || null,
           requiresLensSelection: form.requiresLensSelection,
           showsPhotochromic: form.showsPhotochromic,
+          showsBlueLight: form.showsBlueLight,
         }),
       });
       if (!res.ok) {
@@ -177,10 +180,22 @@ export function CategoryForm({ category, categories }: CategoryFormProps) {
           </Interruptor>
           <Interruptor
             activo={form.showsPhotochromic}
-            onToggle={() => setForm((f) => ({ ...f, showsPhotochromic: !f.showsPhotochromic }))}
+            onToggle={() =>
+              setForm((f) => ({ ...f, showsPhotochromic: !f.showsPhotochromic, showsBlueLight: false }))
+            }
             ayuda="Cada modelo aparece con su GIF y el precio con luna, y la ficha abre con Fotocromático elegido. Sólo lista los productos con GIF."
           >
             Mostrar con luna fotocromática
+          </Interruptor>
+          {/* Una categoría lista sus modelos con una sola luna: prender una apaga la otra. */}
+          <Interruptor
+            activo={form.showsBlueLight}
+            onToggle={() =>
+              setForm((f) => ({ ...f, showsBlueLight: !f.showsBlueLight, showsPhotochromic: false }))
+            }
+            ayuda="Cada modelo aparece con su foto, los íconos de la luna encima y el precio con luna, y la ficha abre con Blue Light elegido. Lista todos los productos con selector de lunas."
+          >
+            Mostrar con luna Blue Light
           </Interruptor>
           <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#111111]/6">
             <Link href="/admin/categorias">
