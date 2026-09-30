@@ -94,7 +94,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
   // Precio del Fotocromático propio del modelo; null = el de LENS_TREE.
   const precioFoto =
     product.photochromicPrice !== null ? Number(product.photochromicPrice) : null;
-  // `?luna=foto` viene de la categoría Fotocromáticos: la ficha abre con la luna
+  // `?luna=foto` viene de una categoría con `showsPhotochromic`: la ficha abre con la luna
   // que la tarjeta mostró. Sólo si la ofrece (selector de lunas + GIF).
   const conFoto = needsLens && !!product.photochromicGif;
   const lunaInicial = conFoto && luna === PARAM_LUNA_FOTO ? "foto" : "regular";

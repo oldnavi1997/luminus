@@ -5,7 +5,7 @@ interface ProductGridProps {
   products: ProductWithCategory[];
   view?: string;
   mview?: string;
-  /** Categoría Fotocromáticos: cada tarjeta con la luna puesta (ver ProductCard). */
+  /** Categoría con `showsPhotochromic`: cada tarjeta con la luna puesta (ver ProductCard). */
   conLunaFoto?: boolean;
 }
 

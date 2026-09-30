@@ -24,6 +24,7 @@ interface CategoryFormProps {
     description: string | null;
     parentId: string | null;
     requiresLensSelection: boolean;
+    showsPhotochromic: boolean;
   };
   categories: CategoryOption[];
 }
@@ -38,6 +39,7 @@ export function CategoryForm({ category, categories }: CategoryFormProps) {
     description: category?.description ?? "",
     parentId: category?.parentId ?? "",
     requiresLensSelection: category?.requiresLensSelection ?? false,
+    showsPhotochromic: category?.showsPhotochromic ?? false,
   });
 
   // Hierarchical parent options (depth-first, indented)
@@ -77,6 +79,7 @@ export function CategoryForm({ category, categories }: CategoryFormProps) {
           description: form.description,
           parentId: form.parentId || null,
           requiresLensSelection: form.requiresLensSelection,
+          showsPhotochromic: form.showsPhotochromic,
         }),
       });
       if (!res.ok) {
@@ -166,29 +169,19 @@ export function CategoryForm({ category, categories }: CategoryFormProps) {
               className="w-full px-3.5 py-2.5 bg-white border border-[#111111]/15 text-sm text-[#111111] placeholder:text-[#111111]/25 focus:outline-none focus:border-[#d4af37] transition-colors duration-200 resize-none"
             />
           </div>
-          <div className="flex items-center gap-3 py-1">
-            <button
-              type="button"
-              role="switch"
-              aria-checked={form.requiresLensSelection}
-              onClick={() => setForm((f) => ({ ...f, requiresLensSelection: !f.requiresLensSelection }))}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
-                form.requiresLensSelection ? "bg-[#d4af37]" : "bg-[#111111]/15"
-              }`}
-            >
-              <span
-                className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200 ${
-                  form.requiresLensSelection ? "translate-x-4" : "translate-x-0"
-                }`}
-              />
-            </button>
-            <label
-              className="text-sm text-[#111111]/70 select-none cursor-pointer"
-              onClick={() => setForm((f) => ({ ...f, requiresLensSelection: !f.requiresLensSelection }))}
-            >
-              Requiere selección de lunas
-            </label>
-          </div>
+          <Interruptor
+            activo={form.requiresLensSelection}
+            onToggle={() => setForm((f) => ({ ...f, requiresLensSelection: !f.requiresLensSelection }))}
+          >
+            Requiere selección de lunas
+          </Interruptor>
+          <Interruptor
+            activo={form.showsPhotochromic}
+            onToggle={() => setForm((f) => ({ ...f, showsPhotochromic: !f.showsPhotochromic }))}
+            ayuda="Cada modelo aparece con su GIF y el precio con luna, y la ficha abre con Fotocromático elegido. Sólo lista los productos con GIF."
+          >
+            Mostrar con luna fotocromática
+          </Interruptor>
           <div className="flex items-center justify-end gap-3 pt-2 border-t border-[#111111]/6">
             <Link href="/admin/categorias">
               <Button type="button" variant="ghost" size="sm">
@@ -201,6 +194,44 @@ export function CategoryForm({ category, categories }: CategoryFormProps) {
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function Interruptor({
+  activo,
+  onToggle,
+  ayuda,
+  children,
+}: {
+  activo: boolean;
+  onToggle: () => void;
+  ayuda?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="py-1">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={activo}
+          onClick={onToggle}
+          className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+            activo ? "bg-[#d4af37]" : "bg-[#111111]/15"
+          }`}
+        >
+          <span
+            className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200 ${
+              activo ? "translate-x-4" : "translate-x-0"
+            }`}
+          />
+        </button>
+        <label className="text-sm text-[#111111]/70 select-none cursor-pointer" onClick={onToggle}>
+          {children}
+        </label>
+      </div>
+      {ayuda && <p className="text-xs text-[#111111]/40 mt-1.5 ml-12">{ayuda}</p>}
     </div>
   );
 }

@@ -44,7 +44,7 @@ const LensChoiceContext = createContext<LensChoiceState | null>(null);
 /**
  * `precioFoto`: el `photochromicPrice` del producto, o null. Con él, el
  * Fotocromático cobra ese precio y no el de LENS_TREE.
- * `inicial`: la luna con que abre la ficha (`?luna=foto` desde Fotocromáticos).
+ * `inicial`: la luna con que abre la ficha (`?luna=foto` desde una categoría fotocromática).
  */
 export function LensChoiceProvider({
   children,

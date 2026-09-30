@@ -9,7 +9,6 @@ import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { Prisma } from "@/app/generated/prisma/client";
 import { seededShuffle } from "@/lib/utils";
 import { pageMetadata } from "@/lib/seo";
-import { CATEGORIA_FOTOCROMATICO } from "@/lib/fotocromatico";
 
 /**
  * Las categorías viven en el querystring (`/lentes?category=x`), no en una ruta
@@ -111,14 +110,15 @@ interface SearchParams {
   mview?: string;
 }
 
-async function getProducts(params: SearchParams) {
+async function getProducts(params: SearchParams, conLunaFoto: boolean) {
   const where: Prisma.ProductWhereInput = { active: true, images: { isEmpty: false } };
 
   if (params.category) where.categories = { some: { slug: params.category } };
-  // Fotocromáticos lista cada modelo con esa luna puesta, así que sólo entran
-  // los que la ficha puede vender así: con GIF (sin él no ofrece la opción) y
-  // en una categoría con selección de lunas (sin ella no hay selector).
-  if (params.category === CATEGORIA_FOTOCROMATICO) {
+  // Una categoría con `showsPhotochromic` lista cada modelo con esa luna puesta,
+  // así que sólo entran los que la ficha puede vender así: con GIF (sin él no
+  // ofrece la opción) y en una categoría con selección de lunas (sin ella no
+  // hay selector).
+  if (conLunaFoto) {
     where.photochromicGif = { not: null };
     where.AND = [{ categories: { some: { requiresLensSelection: true } } }];
   }
@@ -200,7 +200,13 @@ export default async function LentesPage({
   const params = await searchParams;
   const view = params.view ?? "dense";
   const mview = params.mview ?? "2";
-  const { products, total, pages, page } = await getProducts(params);
+  const conLunaFoto = params.category
+    ? (await prisma.category.findUnique({
+        where: { slug: params.category },
+        select: { showsPhotochromic: true },
+      }))?.showsPhotochromic ?? false
+    : false;
+  const { products, total, pages, page } = await getProducts(params, conLunaFoto);
 
   return (
     <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10">
@@ -212,7 +218,7 @@ export default async function LentesPage({
         products={products}
         view={view}
         mview={mview}
-        conLunaFoto={params.category === CATEGORIA_FOTOCROMATICO}
+        conLunaFoto={conLunaFoto}
       />
 
       <CatalogPagination page={page} pages={pages} params={params as Record<string, string | undefined>} />

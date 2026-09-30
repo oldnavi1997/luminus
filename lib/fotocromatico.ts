@@ -5,12 +5,6 @@
 /** Precio normal de la luna Fotocromático clásico sin medida (LENS_TREE lo usa). */
 export const PRECIO_FOTOCROMATICO = 200;
 
-/**
- * Slug de la categoría que muestra cada modelo con la luna Fotocromático:
- * precio con luna, GIF como imagen, y la ficha abre con esa luna elegida.
- */
-export const CATEGORIA_FOTOCROMATICO = "fotocromaticos";
-
 /** Querystring con que la tarjeta abre la ficha con Fotocromático elegido. */
 export const PARAM_LUNA_FOTO = "foto";
 
