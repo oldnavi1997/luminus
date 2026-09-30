@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/app/generated/prisma/client";
 import { sincronizarProducto } from "@/lib/algolia-sync";
-import { primeraEsFoto, MENSAJE_PRIMERA_FOTO } from "@/lib/media";
+import { primeraEsFoto, MENSAJE_PRIMERA_FOTO, esGif, MENSAJE_GIF } from "@/lib/media";
 
 const variantSelect = {
   id: true,
@@ -56,6 +56,8 @@ const updateSchema = z.object({
   // El vacío es "sin SKU", no la cadena vacía: el POS guarda null y busca por null.
   sku: z.string().trim().transform((v) => v || null).nullable().optional(),
   images: z.array(z.string()).refine(primeraEsFoto, MENSAJE_PRIMERA_FOTO).optional(),
+  photochromicGif: z.string().url().refine(esGif, MENSAJE_GIF).nullable().optional(),
+  photochromicPrice: z.number().nonnegative().nullable().optional(),
   brand: z.string().optional(),
   frameType: z.string().optional(),
   frameMaterial: z.string().optional(),

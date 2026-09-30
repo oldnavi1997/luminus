@@ -281,7 +281,7 @@ function getLensLabel(
   return parts.join(" · ");
 }
 
-function resolvePricing(
+export function resolvePricing(
   lensType: string,
   subType: string | null,
   variant: string | null

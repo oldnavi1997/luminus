@@ -109,6 +109,13 @@ model Product {
   stockAlmacen      Int                   @default(0)
   stockTienda       Int                   @default(0)
   images            String[]
+  /// GIF de la animación fotocromática. Va aparte de `images` porque sólo se
+  /// muestra en la galería cuando el cliente elige la luna Fotocromático; sin
+  /// él, la ficha no ofrece esa opción.
+  photochromicGif   String?
+  /// Precio de la luna Fotocromático en el botón rápido de la ficha, propio de
+  /// este modelo. Null = rige el de LENS_TREE (S/200). El drawer no lo usa.
+  photochromicPrice Decimal?              @db.Decimal(10, 2)
   brand             String?
   frameType         String?
   frameMaterial     String?
