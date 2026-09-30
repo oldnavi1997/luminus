@@ -7,6 +7,7 @@ import { useCartStore } from "@/stores/cart";
 import { ProductWithCategory, PrescriptionData } from "@/types";
 import { formatPEN } from "@/lib/utils";
 import { stockDisponible } from "@/lib/stock";
+import { PRECIO_FOTOCROMATICO } from "@/lib/fotocromatico";
 import { calcularDesglose, type Desglose } from "@/hooks/useCalculoLunas";
 
 // ─── Lens tree data ────────────────────────────────────────────────────────────
@@ -65,7 +66,7 @@ const LENS_TREE: Level1Option[] = [
           "Regresa a claro en interiores",
           "Protección UV integrada",
         ],
-        price: 200,
+        price: PRECIO_FOTOCROMATICO,
         action: "direct",
       },
       {

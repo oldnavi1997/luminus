@@ -44,15 +44,18 @@ const LensChoiceContext = createContext<LensChoiceState | null>(null);
 /**
  * `precioFoto`: el `photochromicPrice` del producto, o null. Con él, el
  * Fotocromático cobra ese precio y no el de LENS_TREE.
+ * `inicial`: la luna con que abre la ficha (`?luna=foto` desde Fotocromáticos).
  */
 export function LensChoiceProvider({
   children,
   precioFoto = null,
+  inicial = "regular",
 }: {
   children: ReactNode;
   precioFoto?: number | null;
+  inicial?: QuickLens;
 }) {
-  const [choice, setChoice] = useState<QuickLens>("regular");
+  const [choice, setChoice] = useState<QuickLens>(inicial);
   return (
     <LensChoiceContext.Provider value={{ choice, setChoice, precioFoto }}>
       {children}

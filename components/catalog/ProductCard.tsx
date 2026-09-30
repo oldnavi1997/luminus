@@ -3,16 +3,28 @@ import Image from "next/image";
 import { ProductWithCategory } from "@/types";
 import { formatPEN, getPrimaryCategory } from "@/lib/utils";
 import { stockDisponible } from "@/lib/stock";
+import { esGif } from "@/lib/media";
+import { PARAM_LUNA_FOTO, precioLunaFoto } from "@/lib/fotocromatico";
 
 interface ProductCardProps {
   product: ProductWithCategory;
   view?: "dense" | "normal" | "list";
+  /**
+   * La tarjeta con la luna Fotocromático puesta: GIF en vez de foto, precio con
+   * luna y la ficha abre con esa luna elegida. Sólo si el producto tiene GIF.
+   */
+  conLunaFoto?: boolean;
 }
 
-export function ProductCard({ product, view = "dense" }: ProductCardProps) {
+export function ProductCard({ product, view = "dense", conLunaFoto = false }: ProductCardProps) {
   const primaryCategory = getPrimaryCategory(product);
   const sinStock = stockDisponible(product) === 0;
-  const imageUrl = product.images[0] || null;
+  const gif = conLunaFoto ? product.photochromicGif : null;
+  const imageUrl = gif || product.images[0] || null;
+  // Igual que ProductPrice en la ficha: la luna se suma al precio y al tachado.
+  const luna = gif ? precioLunaFoto(product) : 0;
+  const precio = Number(product.price) + luna;
+  const href = gif ? `/lentes/${product.slug}?luna=${PARAM_LUNA_FOTO}` : `/lentes/${product.slug}`;
   const hasDiscount = product.comparePrice && Number(product.comparePrice) > Number(product.price);
   const discount = hasDiscount
     ? Math.round((1 - Number(product.price) / Number(product.comparePrice)) * 100)
@@ -20,13 +32,14 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
 
   if (view === "dense") {
     return (
-      <Link href={`/lentes/${product.slug}`} className="group block">
+      <Link href={href} className="group block">
         <div className="relative aspect-square bg-[#f5f5f4] overflow-hidden">
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt={product.name}
               fill
+              unoptimized={esGif(imageUrl)}
               className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
               sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
             />
@@ -51,7 +64,7 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
             {product.name}
           </p>
           <p className="text-[11px] text-[#111111]/50 mt-0.5">
-            {formatPEN(Number(product.price))}
+            {formatPEN(precio)}
           </p>
         </div>
       </Link>
@@ -60,7 +73,7 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
 
   return (
     <Link
-      href={`/lentes/${product.slug}`}
+      href={href}
       className="group block bg-white border border-[#dadadd] overflow-hidden hover:border-[#1c1c1c]/20 hover:shadow-sm transition-all duration-400"
     >
       {/* Image container */}
@@ -70,6 +83,7 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
             src={imageUrl}
             alt={product.name}
             fill
+            unoptimized={esGif(imageUrl)}
             className="object-cover group-hover:scale-[1.03] transition-transform duration-500"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
@@ -125,11 +139,11 @@ export function ProductCard({ product, view = "dense" }: ProductCardProps) {
         )}
         <div className="mt-3 flex items-center gap-2.5">
           <span className="font-semibold text-sm text-[#111111]">
-            {formatPEN(Number(product.price))}
+            {formatPEN(precio)}
           </span>
           {hasDiscount && (
             <span className="text-[11px] text-[#111111]/30 line-through">
-              {formatPEN(Number(product.comparePrice))}
+              {formatPEN(Number(product.comparePrice) + luna)}
             </span>
           )}
         </div>

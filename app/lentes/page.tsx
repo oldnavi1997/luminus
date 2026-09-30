@@ -9,6 +9,7 @@ import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { Prisma } from "@/app/generated/prisma/client";
 import { seededShuffle } from "@/lib/utils";
 import { pageMetadata } from "@/lib/seo";
+import { CATEGORIA_FOTOCROMATICO } from "@/lib/fotocromatico";
 
 /**
  * Las categorías viven en el querystring (`/lentes?category=x`), no en una ruta
@@ -114,6 +115,13 @@ async function getProducts(params: SearchParams) {
   const where: Prisma.ProductWhereInput = { active: true, images: { isEmpty: false } };
 
   if (params.category) where.categories = { some: { slug: params.category } };
+  // Fotocromáticos lista cada modelo con esa luna puesta, así que sólo entran
+  // los que la ficha puede vender así: con GIF (sin él no ofrece la opción) y
+  // en una categoría con selección de lunas (sin ella no hay selector).
+  if (params.category === CATEGORIA_FOTOCROMATICO) {
+    where.photochromicGif = { not: null };
+    where.AND = [{ categories: { some: { requiresLensSelection: true } } }];
+  }
   if (params.brand) where.brand = params.brand;
   if (params.frameType) where.frameType = params.frameType;
   if (params.gender) where.gender = params.gender;
@@ -200,7 +208,12 @@ export default async function LentesPage({
         <CatalogToolbar total={total} />
       </Suspense>
 
-      <ProductGrid products={products} view={view} mview={mview} />
+      <ProductGrid
+        products={products}
+        view={view}
+        mview={mview}
+        conLunaFoto={params.category === CATEGORIA_FOTOCROMATICO}
+      />
 
       <CatalogPagination page={page} pages={pages} params={params as Record<string, string | undefined>} />
     </div>

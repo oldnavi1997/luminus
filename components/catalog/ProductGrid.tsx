@@ -5,9 +5,11 @@ interface ProductGridProps {
   products: ProductWithCategory[];
   view?: string;
   mview?: string;
+  /** Categoría Fotocromáticos: cada tarjeta con la luna puesta (ver ProductCard). */
+  conLunaFoto?: boolean;
 }
 
-export function ProductGrid({ products, view = "dense", mview = "2" }: ProductGridProps) {
+export function ProductGrid({ products, view = "dense", mview = "2", conLunaFoto = false }: ProductGridProps) {
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -38,7 +40,7 @@ export function ProductGrid({ products, view = "dense", mview = "2" }: ProductGr
   return (
     <div className={gridClass}>
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} view={cardView as "dense" | "normal" | "list"} />
+        <ProductCard key={product.id} product={product} view={cardView as "dense" | "normal" | "list"} conLunaFoto={conLunaFoto} />
       ))}
     </div>
   );

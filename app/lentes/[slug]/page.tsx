@@ -14,11 +14,13 @@ import {
   ProductPrice,
 } from "@/components/product/LensChoice";
 import { getPrimaryCategory } from "@/lib/utils";
+import { PARAM_LUNA_FOTO } from "@/lib/fotocromatico";
 import { ColorVariantProduct } from "@/types";
 import AccordionItem from "@/components/product/AccordionItem";
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ luna?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -53,8 +55,9 @@ const variantSelect = {
   active: true,
 } as const;
 
-export default async function ProductPage({ params }: Props) {
+export default async function ProductPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { luna } = await searchParams;
   const product = await prisma.product.findUnique({
     where: { slug, active: true, images: { isEmpty: false } },
     include: {
@@ -91,6 +94,10 @@ export default async function ProductPage({ params }: Props) {
   // Precio del Fotocromático propio del modelo; null = el de LENS_TREE.
   const precioFoto =
     product.photochromicPrice !== null ? Number(product.photochromicPrice) : null;
+  // `?luna=foto` viene de la categoría Fotocromáticos: la ficha abre con la luna
+  // que la tarjeta mostró. Sólo si la ofrece (selector de lunas + GIF).
+  const conFoto = needsLens && !!product.photochromicGif;
+  const lunaInicial = conFoto && luna === PARAM_LUNA_FOTO ? "foto" : "regular";
 
   const specs = [
     { label: "Tipo de armazón", value: product.frameType },
@@ -134,7 +141,7 @@ export default async function ProductPage({ params }: Props) {
 
       {/* El provider envuelve galería y detalles: la luna elegida cambia el
           precio y, con Fotocromático, pone su GIF al frente de la galería. */}
-      <LensChoiceProvider precioFoto={precioFoto}>
+      <LensChoiceProvider precioFoto={precioFoto} inicial={lunaInicial}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 lg:gap-16">
         {/* Gallery */}
         <div className="-mx-5 sm:mx-0">
@@ -220,7 +227,7 @@ export default async function ProductPage({ params }: Props) {
 
           {/* Lens: selector rápido en ópticos, etiqueta en el resto */}
           {needsLens ? (
-            <LensQuickSelect conFoto={!!product.photochromicGif} />
+            <LensQuickSelect conFoto={conFoto} />
           ) : product.lensType && (
             <div className="flex items-center gap-3">
               <span className="text-xs text-[#111111]/50">Lente:</span>
