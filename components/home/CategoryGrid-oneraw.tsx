@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import { CategoryGridCarousel } from "./CategoryGridCarousel";
+import { ProductCard } from "@/components/catalog/ProductCard";
 
 interface Props {
   categorySlug: string;
@@ -40,12 +41,11 @@ export async function CategoryGridOneRow({
       </div>
 
       {/* Carousel with header */}
-      <CategoryGridCarousel
-        products={products}
-        categorySlug={categorySlug}
-        categoryName={category.name}
-        label={label}
-      />
+      <CategoryGridCarousel categorySlug={categorySlug} categoryName={category.name} label={label}>
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} view="normal" />
+        ))}
+      </CategoryGridCarousel>
     </section>
   );
 }

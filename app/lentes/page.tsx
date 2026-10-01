@@ -11,6 +11,7 @@ import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { Prisma } from "@/app/generated/prisma/client";
 import { seededShuffle } from "@/lib/utils";
 import { pageMetadata } from "@/lib/seo";
+import { filtroDeLuna, lunaDeCategoria } from "@/lib/listado";
 
 /**
  * Las categorías viven en el querystring (`/lentes?category=x`), no en una ruta
@@ -113,17 +114,15 @@ interface SearchParams {
 }
 
 async function getProducts(params: SearchParams, luna: LunaListado) {
-  const where: Prisma.ProductWhereInput = { active: true, images: { isEmpty: false } };
+  // Una categoría con `showsPhotochromic` / `showsBlueLight` lista cada modelo
+  // con esa luna puesta: sólo los que la ficha puede vender así (lib/listado).
+  const where: Prisma.ProductWhereInput = {
+    active: true,
+    images: { isEmpty: false },
+    ...filtroDeLuna(luna),
+  };
 
   if (params.category) where.categories = { some: { slug: params.category } };
-  // Una categoría con `showsPhotochromic` / `showsBlueLight` lista cada modelo
-  // con esa luna puesta, así que sólo entran los que la ficha puede vender así:
-  // en una categoría con selección de lunas (sin ella no hay selector) y, para
-  // Fotocromático, con GIF (sin él la ficha no ofrece la opción).
-  if (luna) {
-    where.AND = [{ categories: { some: { requiresLensSelection: true } } }];
-  }
-  if (luna === "foto") where.photochromicGif = { not: null };
   if (params.brand) where.brand = params.brand;
   if (params.frameType) where.frameType = params.frameType;
   if (params.gender) where.gender = params.gender;
@@ -220,11 +219,7 @@ export default async function LentesPage({
         where: { categoryId: null },
         select: { imageUrl: true, mobileImageUrl: true, title: true, text: true, active: true },
       });
-  const luna: LunaListado = categoria?.showsPhotochromic
-    ? "foto"
-    : categoria?.showsBlueLight
-      ? "blue"
-      : null;
+  const luna: LunaListado = lunaDeCategoria(categoria);
   const { products, total, pages, page } = await getProducts(params, luna);
 
   return (
