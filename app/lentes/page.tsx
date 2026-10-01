@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import { CatalogBanner } from "@/components/catalog/CatalogBanner";
+import { MetricasCategoria } from "@/components/catalog/MetricasCategoria";
 import { Suspense } from "react";
 import { prisma } from "@/lib/prisma";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
@@ -244,12 +245,14 @@ export default async function LentesPage({
         <CatalogToolbar total={total} />
       </Suspense>
 
-      <ProductGrid
-        products={products}
-        view={view}
-        mview={mview}
-        luna={luna}
-      />
+      {/* Sólo las categorías que existen entran al embudo del Dashboard. */}
+      {categoria && params.category ? (
+        <MetricasCategoria categoria={params.category}>
+          <ProductGrid products={products} view={view} mview={mview} luna={luna} />
+        </MetricasCategoria>
+      ) : (
+        <ProductGrid products={products} view={view} mview={mview} luna={luna} />
+      )}
 
       <CatalogPagination page={page} pages={pages} params={params as Record<string, string | undefined>} />
     </div>

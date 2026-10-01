@@ -4,10 +4,18 @@ import { StatsCard } from "@/components/admin/StatsCard";
 import { PaymentStatusBadge } from "@/components/admin/OrderStatusBadge";
 import { Package, ShoppingCart, DollarSign, Users, Plus, Tag, ArrowRight } from "lucide-react";
 import { formatPEN } from "@/lib/utils";
+import { EmbudoCategorias, RANGOS, type Rango } from "@/components/admin/EmbudoCategorias";
 
 export const metadata = { title: "Dashboard | Admin" };
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ rango?: string }>;
+}) {
+  const { rango: rangoParam } = await searchParams;
+  const rango: Rango = RANGOS.find((r) => String(r) === rangoParam) ?? 7;
+
   const [totalProducts, totalOrders, totalUsers, totalCategories, revenueData, recentOrders] =
     await Promise.all([
       prisma.product.count({ where: { active: true } }),
@@ -73,6 +81,11 @@ export default async function AdminDashboard() {
           value={totalUsers}
           icon={<Users className="h-4.5 w-4.5" />}
         />
+      </div>
+
+      {/* Interés por categoría */}
+      <div className="mb-8">
+        <EmbudoCategorias rango={rango} />
       </div>
 
       {/* Content grid */}
