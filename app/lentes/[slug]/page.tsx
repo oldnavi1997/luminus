@@ -86,11 +86,6 @@ export default async function ProductPage({ params, searchParams }: Props) {
     return true;
   });
 
-  const hasDiscount = product.comparePrice && Number(product.comparePrice) > Number(product.price);
-  const discount = hasDiscount
-    ? Math.round((1 - Number(product.price) / Number(product.comparePrice)) * 100)
-    : 0;
-
   const needsLens = product.categories.some((c) => c.requiresLensSelection);
   // Precios de luna propios del modelo; null = el de LENS_TREE.
   const precios = {
@@ -178,8 +173,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
           {/* Price — suma la luna elegida en LensQuickSelect */}
           <ProductPrice
             price={Number(product.price)}
-            comparePrice={hasDiscount ? Number(product.comparePrice) : undefined}
-            discount={discount}
+            comparePrice={product.comparePrice != null ? Number(product.comparePrice) : null}
           />
 
           {/* Color variants */}
