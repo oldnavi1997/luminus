@@ -1,21 +1,24 @@
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
-import { useCallback, useEffect, useState } from "react";
+import { Children, useCallback, useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { ProductCard } from "@/components/catalog/ProductCard";
-import { ProductWithCategory } from "@/types";
 
 interface Props {
-  products: ProductWithCategory[];
+  /**
+   * Las tarjetas, ya dibujadas en el servidor (ProductCard). Así el producto de
+   * Prisma, con sus Decimal, nunca cruza a este componente de cliente: React no
+   * los puede serializar y la portada se llenaba de errores.
+   */
+  children: ReactNode;
   categorySlug: string;
   categoryName: string;
   label?: string;
 }
 
 export function CategoryGridCarousel({
-  products,
+  children,
   categorySlug,
   categoryName,
   label = "Colección",
@@ -99,12 +102,9 @@ export function CategoryGridCarousel({
       {/* Carousel */}
       <div className="overflow-hidden" ref={emblaRef}>
         <div className="flex gap-3">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="flex-[0_0_calc(66.667%-8px)] sm:flex-[0_0_calc(50%-8px)] md:flex-[0_0_calc(33.333%-10px)] lg:flex-[0_0_calc(25%-12px)] min-w-0"
-            >
-              <ProductCard product={product} view="normal" />
+          {Children.map(children, (tarjeta) => (
+            <div className="flex-[0_0_calc(66.667%-8px)] sm:flex-[0_0_calc(50%-8px)] md:flex-[0_0_calc(33.333%-10px)] lg:flex-[0_0_calc(25%-12px)] min-w-0">
+              {tarjeta}
             </div>
           ))}
         </div>

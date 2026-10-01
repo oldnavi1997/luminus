@@ -7,6 +7,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { TrustBar } from "@/components/home/CategoryGrid";
 import { FeaturedProducts } from "@/components/home/FeaturedProducts";
 import { CategoryGridOneRow } from "@/components/home/CategoryGrid-oneraw";
+import { CategoriaDeslizable } from "@/components/home/CategoriaDeslizable";
 
 export const metadata: Metadata = pageMetadata({
   // absoluteTitle porque el template del layout dejaba "Luminus … | Luminus".
@@ -28,6 +29,8 @@ export default async function HomePage() {
   return (
     <>
       <HeroSection />
+      {/* Debajo del video de Transitions: los fotocromáticos, con su GIF y su precio con luna. */}
+      <CategoriaDeslizable categorySlug="fotocromaticos" label="Se oscurecen con el sol" />
       <CategoryGridOneRow
         categorySlug="aviador"
         heroImage="https://res.cloudinary.com/sztba5xb/image/upload/Gemini_Generated_Image_a17166a17166a171_12_03_2026_jnzkta.webp"
