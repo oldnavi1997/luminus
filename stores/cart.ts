@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { CartItem } from "@/types";
+import { avisarCarrito } from "@/lib/metricas-cliente";
 
 interface CartStore {
   items: CartItem[];
@@ -24,6 +25,8 @@ export const useCartStore = create<CartStore>()(
       closeDrawer: () => set({ isDrawerOpen: false }),
 
       addItem: (item) => {
+        // Embudo por categoría: cuenta si esta ficha se abrió desde un listado.
+        avisarCarrito(item.slug);
         set((state) => {
           const key = item.cartKey ?? item.id;
           const existing = state.items.find((i) => (i.cartKey ?? i.id) === key);

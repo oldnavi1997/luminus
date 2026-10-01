@@ -46,6 +46,16 @@ Next.js 16 App Router, React 19. No `src/` dir. All pages under `app/`, componen
 `luminus-products` preset from the admin). No row, or `active: false`, means the
 listing starts straight with the products.
 
+**Category funnel (admin Dashboard):** `CategoriaMetrica` keeps one row per
+day (Lima time), category and event — `vista`, `clic`, `carrito` — incremented
+with a single `INSERT … ON CONFLICT` by `POST /api/metricas` (`lib/metricas.ts`).
+The browser side (`lib/metricas-cliente.ts`) sends them with `sendBeacon`: the
+view and click from `MetricasCategoria`, which wraps the grid of
+`/lentes?category=`, and the cart event from `stores/cart.ts` `addItem`, only if
+that product was opened from a category in the last 30 min. No cookies and no
+per-visitor data, so it counts visits, not people. "Vendidos" in the table
+comes from paid orders, not from this table.
+
 **Dynamic pages:** `app/page.tsx` and `app/lentes/page.tsx` export `export const dynamic = "force-dynamic"` to prevent static generation errors during build when DB is unreachable.
 
 ## Critical: Shared Prisma schema with POS

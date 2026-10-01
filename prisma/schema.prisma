@@ -102,6 +102,7 @@ model Category {
   children              Category[] @relation("CategoryChildren")
   products              Product[]  @relation("ProductCategories")
   banner                CatalogBanner?
+  metricas              CategoriaMetrica[]
   createdAt             DateTime   @default(now())
   updatedAt             DateTime   @updatedAt
 }
@@ -611,4 +612,19 @@ model PushToken {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+/// Cuántas veces pasó algo en una categoría, sumado por día (hora de Lima):
+/// `vista` (se abrió el listado), `clic` (de ahí a una ficha) y `carrito` (esa
+/// ficha terminó en el carrito). Una fila por día, categoría y evento —no una
+/// por visita— y sin cookies ni datos de quién fue. Lo escribe
+/// POST /api/metricas; lo lee el Dashboard del admin.
+model CategoriaMetrica {
+  dia        DateTime @db.Date
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  evento     String
+  cantidad   Int      @default(0)
+
+  @@id([dia, categoryId, evento])
 }
