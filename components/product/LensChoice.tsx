@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, type ReactNode } from "react";
 import { formatPEN } from "@/lib/utils";
+import { precioConLuna } from "@/lib/precio-con-luna";
 import { ImageGallery } from "./ImageGallery";
 import { IconosBlueLight } from "./IconosBlueLight";
 import { resolvePricing } from "@/lib/lunas";
@@ -84,6 +85,8 @@ export function useLensChoice() {
     choice,
     setChoice: ctx?.setChoice ?? (() => {}),
     lensPrice: precioDe(choice, propios),
+    /** La misma luna sin el precio propio del modelo: lo que se tacha. */
+    lensPriceNormal: precioDe(choice, {}),
     /** Luna a precio propio del modelo: va en su propia línea del carrito. */
     esPromo: precioPropio(choice, propios) !== null,
   };
@@ -125,25 +128,35 @@ export function LensQuickSelect({ conFoto }: { conFoto: boolean }) {
 
 interface ProductPriceProps {
   price: number;
-  comparePrice?: number;
-  discount?: number;
+  /** Precio de lista de la montura; sólo cuenta si es mayor que `price`. */
+  comparePrice?: number | null;
 }
 
-export function ProductPrice({ price, comparePrice, discount }: ProductPriceProps) {
-  const { lensPrice } = useLensChoice();
+/**
+ * Montura + luna elegida. Tacha la montura de lista + la luna a precio normal
+ * cuando algo de eso es más caro que lo que se cobra (lib/precio-con-luna.ts):
+ * así el precio propio de la luna se ve como descuento.
+ */
+export function ProductPrice({ price, comparePrice }: ProductPriceProps) {
+  const { lensPrice, lensPriceNormal } = useLensChoice();
+  const { precio, tachado, descuento } = precioConLuna(
+    { price, comparePrice },
+    lensPrice,
+    lensPriceNormal
+  );
 
   return (
     <div className="flex items-baseline gap-4">
       <span className="text-xl font-normal text-[#111111]">
-        {formatPEN(price + lensPrice)}
+        {formatPEN(precio)}
       </span>
-      {comparePrice !== undefined && (
+      {tachado !== null && (
         <>
           <span className="text-base text-[#111111]/25 line-through">
-            {formatPEN(comparePrice + lensPrice)}
+            {formatPEN(tachado)}
           </span>
           <span className="bg-[#111111] text-white text-[9px] font-bold uppercase tracking-[0.1em] px-2 py-1 rounded-full">
-            -{discount}%
+            -{descuento}%
           </span>
         </>
       )}

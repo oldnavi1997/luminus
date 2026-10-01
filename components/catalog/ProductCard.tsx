@@ -4,8 +4,9 @@ import { ProductWithCategory } from "@/types";
 import { formatPEN, getPrimaryCategory } from "@/lib/utils";
 import { stockDisponible } from "@/lib/stock";
 import { esGif } from "@/lib/media";
-import { PARAM_LUNA_FOTO, precioLunaFoto } from "@/lib/fotocromatico";
-import { PARAM_LUNA_BLUE, precioLunaBlue } from "@/lib/blue-light";
+import { PARAM_LUNA_FOTO, PRECIO_FOTOCROMATICO, precioLunaFoto } from "@/lib/fotocromatico";
+import { PARAM_LUNA_BLUE, PRECIO_BLUE_LIGHT, precioLunaBlue } from "@/lib/blue-light";
+import { precioConLuna } from "@/lib/precio-con-luna";
 import { IconosBlueLight } from "@/components/product/IconosBlueLight";
 
 /** La luna con que la categoría lista sus modelos; null = la tarjeta normal. */
@@ -28,15 +29,21 @@ export function ProductCard({ product, view = "dense", luna: lunaListado = null 
   const gif = lunaListado === "foto" ? product.photochromicGif : null;
   const conBlue = lunaListado === "blue";
   const imageUrl = gif || product.images[0] || null;
-  // Igual que ProductPrice en la ficha: la luna se suma al precio y al tachado.
+  // Igual que ProductPrice en la ficha: la luna se suma al precio, y si la del
+  // modelo cuesta menos que la normal, la diferencia sale como descuento.
   const luna = gif ? precioLunaFoto(product) : conBlue ? precioLunaBlue(product) : 0;
-  const precio = Number(product.price) + luna;
+  const lunaNormal = gif ? PRECIO_FOTOCROMATICO : conBlue ? PRECIO_BLUE_LIGHT : 0;
+  const { precio, tachado, descuento } = precioConLuna(
+    {
+      price: Number(product.price),
+      comparePrice: product.comparePrice != null ? Number(product.comparePrice) : null,
+    },
+    luna,
+    lunaNormal
+  );
   const param = gif ? PARAM_LUNA_FOTO : conBlue ? PARAM_LUNA_BLUE : null;
   const href = param ? `/lentes/${product.slug}?luna=${param}` : `/lentes/${product.slug}`;
-  const hasDiscount = product.comparePrice && Number(product.comparePrice) > Number(product.price);
-  const discount = hasDiscount
-    ? Math.round((1 - Number(product.price) / Number(product.comparePrice)) * 100)
-    : 0;
+  const hasDiscount = tachado !== null;
 
   if (view === "dense") {
     return (
@@ -74,6 +81,9 @@ export function ProductCard({ product, view = "dense", luna: lunaListado = null 
           </p>
           <p className="text-[11px] text-[#111111]/50 mt-0.5">
             {formatPEN(precio)}
+            {tachado !== null && (
+              <span className="ml-1.5 text-[#111111]/30 line-through">{formatPEN(tachado)}</span>
+            )}
           </p>
         </div>
       </Link>
@@ -117,7 +127,7 @@ export function ProductCard({ product, view = "dense", luna: lunaListado = null 
         {hasDiscount && (
           <div className="absolute top-3 left-3">
             <span className="bg-[#d4af37] text-[#111111] text-[9px] font-bold uppercase tracking-[0.1em] px-2.5 py-1">
-              -{discount}%
+              -{descuento}%
             </span>
           </div>
         )}
@@ -151,9 +161,9 @@ export function ProductCard({ product, view = "dense", luna: lunaListado = null 
           <span className="font-semibold text-sm text-[#111111]">
             {formatPEN(precio)}
           </span>
-          {hasDiscount && (
+          {tachado !== null && (
             <span className="text-[11px] text-[#111111]/30 line-through">
-              {formatPEN(Number(product.comparePrice) + luna)}
+              {formatPEN(tachado)}
             </span>
           )}
         </div>
