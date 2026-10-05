@@ -17,7 +17,7 @@ export const QUICK_LENSES: Record<
   QuickLens,
   { label: string; lensType: "solo_montura" | "sin_medida"; subType: string | null }
 > = {
-  regular: { label: "Regular", lensType: "solo_montura", subType: null },
+  regular: { label: "Montura", lensType: "solo_montura", subType: null },
   blue: { label: "Blue Light Blocking", lensType: "sin_medida", subType: "descanso" },
   foto: { label: "Fotocromático", lensType: "sin_medida", subType: "fotocromatico" },
 };
