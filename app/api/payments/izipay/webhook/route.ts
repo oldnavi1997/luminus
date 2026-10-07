@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { enviarPushNuevaVenta } from "@/lib/push";
+import { NextRequest, NextResponse, after } from "next/server";
+import { notificarVentaAprobada } from "@/lib/notificar-venta";
 import { izipayConfigured } from "@/lib/izipay";
 import { procesarResultadoIzipay } from "@/lib/izipay-result";
 
@@ -31,13 +30,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: resultado.error }, { status: resultado.status });
     }
 
-    // Recién aprobado → avisar a los admins por push (una sola vez).
+    // Recién aprobado → correo al comprador y push a los admins (una sola vez).
+    // El IPN suele ganarle al navegador, así que sin esto el correo no saldría.
     if (resultado.aprobado && !resultado.yaProcesada) {
-      const order = await prisma.order.findUnique({
-        where: { id: resultado.orderId },
-        select: { id: true, orderNumber: true, total: true, shippingName: true },
-      });
-      if (order) await enviarPushNuevaVenta(order);
+      const { orderId } = resultado;
+      after(() => notificarVentaAprobada(orderId));
     }
 
     return NextResponse.json({ received: true });

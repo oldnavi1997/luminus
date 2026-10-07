@@ -155,12 +155,22 @@ export async function sendOrderConfirmation(orderId: string): Promise<void> {
 </body>
 </html>`;
 
-    await getResend().emails.send({
-      from: process.env.EMAIL_FROM!,
+    if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM) {
+      console.error("sendOrderConfirmation: faltan RESEND_API_KEY o EMAIL_FROM");
+      return;
+    }
+
+    // El SDK de Resend no lanza: los rechazos (dominio sin verificar, remitente
+    // de prueba, clave inválida) vuelven en `error` y hay que mirarlos.
+    const { error } = await getResend().emails.send({
+      from: process.env.EMAIL_FROM,
       to: order.shippingEmail,
       subject: `Confirmación de pedido ${order.orderNumber} — Luminus`,
       html,
     });
+    if (error) {
+      console.error(`sendOrderConfirmation: Resend rechazó el pedido ${order.orderNumber}:`, error);
+    }
   } catch (error) {
     console.error("sendOrderConfirmation error:", error);
   }

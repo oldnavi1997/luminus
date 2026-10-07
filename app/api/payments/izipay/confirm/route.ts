@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { z } from "zod";
-import { sendOrderConfirmation } from "@/lib/email";
+import { notificarVentaAprobada } from "@/lib/notificar-venta";
 import { izipayConfigured } from "@/lib/izipay";
 import { procesarResultadoIzipay } from "@/lib/izipay-result";
 
@@ -38,8 +38,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (resultado.aprobado && !resultado.yaProcesada) {
-      // Fuera de la transacción: hace red y se traga sus propios errores.
-      sendOrderConfirmation(resultado.orderId).catch(console.error);
+      // Fuera de la transacción y tras la respuesta (`after`), sin que Vercel la corte.
+      const { orderId } = resultado;
+      after(() => notificarVentaAprobada(orderId));
     }
 
     return NextResponse.json({
