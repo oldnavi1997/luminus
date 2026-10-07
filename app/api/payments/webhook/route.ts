@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createHmac } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { paymentClient } from "@/lib/mercadopago";
-import { enviarPushNuevaVenta } from "@/lib/push";
+import { notificarVentaAprobada } from "@/lib/notificar-venta";
 import { aprobarOrden } from "@/lib/fulfillment";
 
 function mapMpStatusToPaymentStatus(mpStatus: string) {
@@ -73,13 +73,10 @@ export async function POST(request: NextRequest) {
         paymentMethod: payment.payment_method_id === "yape" ? "YAPE" : "TARJETA",
       });
 
-      // Recién aprobado → avisar a los admins por push (una sola vez)
+      // Recién aprobado → correo al comprador y push a los admins (una sola vez).
       if (!result.yaProcesada) {
-        const order = await prisma.order.findUnique({
-          where: { id: payment.external_reference },
-          select: { id: true, orderNumber: true, total: true, shippingName: true },
-        });
-        if (order) await enviarPushNuevaVenta(order);
+        const orderId = payment.external_reference;
+        after(() => notificarVentaAprobada(orderId));
       }
     } else {
       await prisma.order.update({

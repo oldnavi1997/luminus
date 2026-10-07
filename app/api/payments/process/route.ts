@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { paymentClient } from "@/lib/mercadopago";
-import { sendOrderConfirmation } from "@/lib/email";
+import { notificarVentaAprobada } from "@/lib/notificar-venta";
 import { aprobarOrden } from "@/lib/fulfillment";
 
 const processSchema = z.object({
@@ -95,8 +95,8 @@ export async function POST(request: NextRequest) {
         providerStatus: mpStatus,
         paymentMethod: data.paymentMethodId === "yape" ? "YAPE" : "TARJETA",
       });
-      // El email va fuera de la transacción: hace red y se traga sus propios errores.
-      if (!result.yaProcesada) sendOrderConfirmation(order.id).catch(console.error);
+      // Fuera de la transacción y tras la respuesta (`after`), sin que Vercel la corte.
+      if (!result.yaProcesada) after(() => notificarVentaAprobada(order.id));
     } else {
       // No aprobado: sólo se refleja el estado del pago, sin tocar `orderStatus`
       // para no pisar hacia atrás un PAID que el webhook pudo haber escrito ya.
