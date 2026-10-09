@@ -628,3 +628,16 @@ model CategoriaMetrica {
 
   @@id([dia, categoryId, evento])
 }
+
+/// Un carrito armado por el admin y compartido con un cliente por enlace
+/// (`/p/{id}`). No es una orden: al abrirlo, el cliente recibe estos ítems en su
+/// carrito y compra como cualquiera. El id es el token del enlace.
+model PedidoCompartido {
+  id          String   @id
+  /// `CartItem[]` tal como estaba en el carrito del admin (luna y receta incluidas).
+  /// Nombre, precio, foto y stock se vuelven a leer del producto al abrirlo.
+  items       Json
+  createdById String?
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+}

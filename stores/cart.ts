@@ -12,6 +12,8 @@ interface CartStore {
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
+  /** Reemplaza el carrito entero — para el pedido que el admin comparte por enlace. */
+  replaceItems: (items: CartItem[]) => void;
   itemCount: () => number;
   subtotal: () => number;
 }
@@ -60,6 +62,8 @@ export const useCartStore = create<CartStore>()(
       },
 
       clearCart: () => set({ items: [] }),
+
+      replaceItems: (items) => set({ items }),
 
       itemCount: () => get().items.reduce((acc, i) => acc + i.quantity, 0),
 

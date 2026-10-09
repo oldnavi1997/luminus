@@ -11,6 +11,7 @@ import { YapeForm } from "@/components/checkout/YapeForm";
 import { DevBypassForm } from "@/components/checkout/DevBypassForm";
 import { IzipayForm } from "@/components/checkout/IzipayForm";
 import { PaymentResult } from "@/components/checkout/PaymentResult";
+import { CompartirPedido } from "@/components/cart/CompartirPedido";
 import { formatPEN } from "@/lib/utils";
 import { getShippingCost, getPaymentFee, type PaymentProvider } from "@/lib/shipping";
 
@@ -283,7 +284,8 @@ export function CheckoutClient({ izipayEnabled }: { izipayEnabled: boolean }) {
           </div>
 
           {/* RIGHT PANEL — sticky en desktop, colapsable en mobile */}
-          <div className="order-first lg:order-none lg:sticky lg:top-6">
+          <div className="order-first lg:order-none lg:sticky lg:top-6 space-y-4">
+            <CompartirPedido items={itemList} />
             {/* Mobile: colapsable */}
             <div className="lg:hidden">
               <button
