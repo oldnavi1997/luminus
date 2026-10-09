@@ -56,6 +56,16 @@ that product was opened from a category in the last 30 min. No cookies and no
 per-visitor data, so it counts visits, not people. "Vendidos" in the table
 comes from paid orders, not from this table.
 
+**Shared orders (`/p/{token}`):** an ADMIN on `/checkout` sees "Compartir
+pedido", which saves the current cart as a `PedidoCompartido` row
+(`POST /api/pedidos-compartidos`, admin only) and returns a link valid for 7
+days. Opening it replaces the visitor's cart with those lines and sends them to
+`/checkout`, where they fill in their own data and pay like any buyer — it is a
+cart, not an `Order`. Only product id, quantity and lens/prescription are stored;
+name, price, photo and stock are re-read from `Product` on open
+(`lib/pedido-compartido.ts`), and `create-order` re-validates the lens price as
+always.
+
 **Dynamic pages:** `app/page.tsx` and `app/lentes/page.tsx` export `export const dynamic = "force-dynamic"` to prevent static generation errors during build when DB is unreachable.
 
 ## Critical: Shared Prisma schema with POS
