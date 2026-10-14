@@ -355,6 +355,7 @@ model SaleDocument {
   submittedAt         DateTime?
   items               SaleDocumentItem[]
   sunatEnvios         SunatEnvio[]
+  datosEnvio          SaleDocumentEnvio?
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
 
@@ -364,6 +365,31 @@ model SaleDocument {
   @@index([posSessionId])
   @@index([buyerDocNumber])
   @@index([channel, createdAt])
+}
+
+/// Etiqueta del paquete de una venta que se despacha por courier (POS).
+/// Aparte de SaleDocument a proposito: el comprobante no la lee, asi que el
+/// celular y la agencia nunca salen impresos en el ticket ni en el PDF.
+model SaleDocumentEnvio {
+  id              String       @id @default(cuid())
+  saleDocumentId  String       @unique
+  saleDocument    SaleDocument @relation(fields: [saleDocumentId], references: [id], onDelete: Cascade)
+  nombre          String
+  tipoDocumento   String?
+  numeroDocumento String?
+  celular         String
+  ciudad          String
+  /// "SHALOM", "OLVA" o el nombre que se escriba en "Otro".
+  courier         String
+  /// "AGENCIA" | "DIRECCION": dice si `destino` es la sede o la direccion.
+  modalidad       String       @default("AGENCIA")
+  destino         String
+  /// Tamano para la carga masiva de Shalom ("SOBRE", "PAQUETE XXS"...). Nulo = el valor por defecto del POS.
+  mercaderia      String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("sale_document_envios")
 }
 
 model SaleDocumentItem {
