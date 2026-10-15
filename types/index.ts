@@ -59,6 +59,12 @@ export type ColorVariantProduct = {
   frameColor: string | null;
   images: string[];
   active: boolean;
+  // Sólo vienen en los resultados de búsqueda del formulario (fila completa).
+  dimTotalWidth?: string | null;
+  dimLensWidth?: string | null;
+  dimFrameHeight?: string | null;
+  dimBridgeWidth?: string | null;
+  dimTempleLength?: string | null;
 };
 
 export type ShippingFormData = {

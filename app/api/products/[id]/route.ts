@@ -6,6 +6,7 @@ import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/app/generated/prisma/client";
 import { sincronizarProducto } from "@/lib/algolia-sync";
 import { primeraEsFoto, MENSAJE_PRIMERA_FOTO, esGif, MENSAJE_GIF } from "@/lib/media";
+import { CAMPOS_DIMENSION, sincronizarDimensiones } from "@/lib/dimensiones";
 
 const variantSelect = {
   id: true,
@@ -121,19 +122,24 @@ export async function PUT(
       include: { categories: true },
     });
 
-    if (variantIds !== undefined) {
-      await prisma.$transaction([
-        prisma.productColorVariant.deleteMany({
-          where: { OR: [{ productId: id }, { variantId: id }] },
-        }),
-        prisma.productColorVariant.createMany({
-          data: variantIds.flatMap((vid) => [
-            { productId: id, variantId: vid },
-            { productId: vid, variantId: id },
-          ]),
-          skipDuplicates: true,
-        }),
-      ]);
+    const tocaDimensiones = CAMPOS_DIMENSION.some((c) => rest[c] !== undefined);
+    if (variantIds !== undefined || tocaDimensiones) {
+      await prisma.$transaction(async (tx) => {
+        if (variantIds !== undefined) {
+          await tx.productColorVariant.deleteMany({
+            where: { OR: [{ productId: id }, { variantId: id }] },
+          });
+          await tx.productColorVariant.createMany({
+            data: variantIds.flatMap((vid) => [
+              { productId: id, variantId: vid },
+              { productId: vid, variantId: id },
+            ]),
+            skipDuplicates: true,
+          });
+        }
+        // Mismo armazón, mismas medidas: con los vínculos ya escritos.
+        await sincronizarDimensiones(tx, id);
+      });
     }
 
     // Por id y después de escribir: si la edición lo desactivó o lo dejó sin
