@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Category } from "@/app/generated/prisma/client";
 import { ProductWithCategory, ColorVariantProduct } from "@/types";
 import { slugify } from "@/lib/utils";
+import { CAMPOS_DIMENSION } from "@/lib/dimensiones";
 import {
   DndContext,
   closestCenter,
@@ -410,6 +411,11 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
 
   const addVariant = (v: ColorVariantProduct) => {
     setSelectedVariants((prev) => [...prev, v]);
+    // Mismo armazón: las medidas que falten acá se toman de la variante. Las
+    // que ya hay mandan, y al guardar se copian a todo el grupo.
+    const completadas = CAMPOS_DIMENSION.filter((c) => !getValues(c)?.trim() && v[c]?.trim());
+    for (const c of completadas) setValue(c, v[c]!.trim(), { shouldDirty: true });
+    if (completadas.length > 0) toast.success(`Dimensiones completadas desde ${v.name}`);
     setVariantSearch("");
     setVariantResults([]);
     setShowDropdown(false);
@@ -635,6 +641,12 @@ export function ProductForm({ categories, product, bunnyHabilitado = false }: Pr
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
         <h2 className="font-semibold text-[#111111]">Dimensiones</h2>
         <p className="text-sm text-gray-500">Medidas en mm (ej: "52" o "52 mm")</p>
+        {selectedVariants.length > 0 && (
+          <p className="text-sm text-gray-500">
+            Al guardar se copian a {selectedVariants.length === 1 ? "su variante" : `sus ${selectedVariants.length} variantes`} de color
+            (las vacías se completan con las de las variantes).
+          </p>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <Input label="A — Ancho total"     {...register("dimTotalWidth")} />
           <Input label="B — Ancho de lente"  {...register("dimLensWidth")} />
