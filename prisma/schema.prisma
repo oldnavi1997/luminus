@@ -158,6 +158,15 @@ model Product {
   sku               String?
   storePrice        Decimal?              @db.Decimal(10, 2)
   trackInventory    Boolean               @default(true)
+  /// Al venderlo en el POS descuenta, por unidad, un estuche y/o un líquido
+  /// limpiador del inventario (los productos marcados con `accesorioVenta`).
+  /// No salen en el comprobante: es solo stock. El estuche viene activado
+  /// porque casi todo lo que se vende es montura; las lunas lo desactivan.
+  incluyeEstuche    Boolean               @default(true)
+  incluyeLiquido    Boolean               @default(false)
+  /// Este producto ES el estuche o el líquido que descuentan los anteriores.
+  /// Único: a lo sumo un producto por tipo. Null = producto normal.
+  accesorioVenta    AccesorioVenta?       @unique
   featured          Boolean               @default(false)
   /// Vende este producto sin costo de envío ni comisión de pasarela: el
   /// comprador paga exactamente el precio. Pensado para pagos de prueba en
@@ -356,6 +365,7 @@ model SaleDocument {
   items               SaleDocumentItem[]
   sunatEnvios         SunatEnvio[]
   datosEnvio          SaleDocumentEnvio?
+  movimientosStock    StockMovimiento[]
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
 
@@ -610,6 +620,14 @@ enum TipoMovimientoStock {
   RETORNO // tienda → almacén (traslado inverso)
   VENTA_WEB // salida por venta del ecommerce (almacén y/o tienda)
   ANULACION_WEB // reingreso por cancelación/reembolso de una venta web
+  ACCESORIO_POS // salida del estuche/líquido que acompaña una venta del POS
+  ANULACION_ACCESORIO_POS // reingreso de ese accesorio al anular o borrar la venta
+}
+
+/// Qué accesorio representa un producto para el descuento automático del POS.
+enum AccesorioVenta {
+  ESTUCHE
+  LIQUIDO
 }
 
 model StockMovimiento {
@@ -623,9 +641,15 @@ model StockMovimiento {
   userId                 String
   user                   User                @relation(fields: [userId], references: [id])
   nota                   String?
+  /// Venta del POS que originó el movimiento (accesorios). Es lo que se lee
+  /// para devolverlos al anular: lo que se descontó, no lo que digan hoy las
+  /// marcas del producto.
+  saleDocumentId         String?
+  saleDocument           SaleDocument?       @relation(fields: [saleDocumentId], references: [id], onDelete: SetNull)
   createdAt              DateTime            @default(now())
 
   @@index([productId, createdAt])
+  @@index([saleDocumentId])
 }
 
 model PushToken {
