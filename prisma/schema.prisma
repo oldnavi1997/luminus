@@ -158,6 +158,9 @@ model Product {
   sku               String?
   storePrice        Decimal?              @db.Decimal(10, 2)
   trackInventory    Boolean               @default(true)
+  /// Stock total (tienda + almacén) a partir del cual el POS lo marca como
+  /// «stock bajo». Null = rige el general de `PosConfig.stockMinimo`.
+  stockMinimo       Int?
   /// Al venderlo en el POS descuenta, por unidad, un estuche y/o un líquido
   /// limpiador del inventario (los productos marcados con `accesorioVenta`).
   /// No salen en el comprobante: es solo stock. El estuche viene activado
@@ -428,6 +431,15 @@ model CajaConfig {
   lastRetiroAt        DateTime?
   lastRetiroFondo     Decimal?  @db.Decimal(10, 2)
   updatedAt           DateTime  @updatedAt
+}
+
+/// Ajustes generales del POS. Una sola fila, id "main".
+model PosConfig {
+  id          String   @id @default("main")
+  /// Umbral general de «stock bajo»: un producto con stock entre 1 y este valor
+  /// necesita reposición. Cada producto puede reemplazarlo con su `stockMinimo`.
+  stockMinimo Int      @default(5)
+  updatedAt   DateTime @updatedAt
 }
 
 model CajaRetiro {
